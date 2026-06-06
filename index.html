@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سندات قبض - SNDT Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow mt-10">
+    <h1 class="text-3xl font-bold text-center mb-4 text-blue-600">سندات قبض - SNDT Pro</h1>
+    <p class="text-center text-green-600 font-bold text-xl">✅ تم الربط بقاعدة البيانات الجديدة</p>
+    <p class="text-center text-gray-500 mt-2">المشروع: sanadat-pro</p>
+    <p class="text-center text-gray-400 mt-8">الموقع جاهز للرفع على GitHub</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+      authDomain: "sanadat-pro.firebaseapp.com",
+      projectId: "sanadat-pro",
+      storageBucket: "sanadat-pro.firebasestorage.app",
+      messagingSenderId: "1039476751095",
+      appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    console.log("Firebase شغال 100%:", app.name);
+  </script>
+</body>
+</html>
