@@ -1,39 +1,273 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<meta name="theme-color" content="#16a085">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سندات قبض - SNDT Pro</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المدير - SNDT Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-100 p-4">
+<body class="bg-gray-100">
 
-  <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow mt-10">
-    <h1 class="text-3xl font-bold text-center mb-4 text-blue-600">سندات قبض - SNDT Pro</h1>
-    <p class="text-center text-green-600 font-bold text-xl">✅ تم الربط بقاعدة البيانات الجديدة</p>
-    <p class="text-center text-gray-500 mt-2">المشروع: sanadat-pro</p>
-    <p class="text-center text-gray-400 mt-8">الموقع جاهز للرفع على GitHub</p>
-  </div>
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-96">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-user-shield text-5xl text-blue-600 mb-3"></i>
+                <h1 class="text-2xl font-bold">دخول المدير</h1>
+            </div>
+            <input id="admin-phone" type="tel" placeholder="جوال المدير" value="0597087767" class="w-full p-3 mb-3 border rounded-lg">
+            <input id="admin-password" type="password" placeholder="كلمة المرور" value="123123" class="w-full p-3 mb-3 border rounded-lg">
+            <button onclick="adminLogin()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">دخول</button>
+            <p id="admin-error" class="text-red-500 text-sm mt-3 text-center font-bold"></p>
+            <p id="admin-success" class="text-green-600 text-sm mt-3 text-center font-bold"></p>
+        </div>
+    </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <div id="admin-screen" class="hidden p-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow">
+                <h1 class="text-2xl font-bold"><i class="fa-solid fa-gear text-blue-600 ml-2"></i>لوحة تحكم المدير</h1>
+                <div class="flex gap-2">
+                    <a href="./bonds.html" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-users ml-1"></i>صفحة المناديب</a>
+                    <a href="https://console.firebase.google.com/project/sndt-pro-v2/authentication/users" target="_blank" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-database ml-1"></i>قاعدة المناديب</a>
+                    <button onclick="adminLogout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-power-off ml-1"></i>خروج</button>
+                </div>
+            </div>
+
+            <div class="bg-red-100 border-l-4 border-red-500 p-4 rounded-xl mb-6">
+                <p class="font-bold text-sm"><i class="fa-solid fa-triangle-exclamation ml-1"></i> طريقة الحذف الصحيحة 100%:</p>
+                <p class="text-sm">1. احذف من الجدول تحت بزر "حذف" → 2. روح "قاعدة المناديب" البرتقالي واحذف نفس الرقم من Authentication. لو ما حذفته من الاثنين ما تقدر تستخدم الرقم مرة ثانية.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                <h3 class="text-xl font-bold mb-4"><i class="fa-solid fa-user-plus text-green-600 ml-2"></i>إضافة مندوب جديد</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <input id="name" placeholder="الاسم" class="p-2 border rounded-lg">
+                    <input id="phone" type="tel" placeholder="الجوال 05xxx" class="p-2 border rounded-lg">
+                    <input id="password" type="password" placeholder="كلمة المرور" class="p-2 border rounded-lg">
+                    <input id="nationalId" placeholder="رقم الهوية" class="p-2 border rounded-lg">
+                    <input id="dailyStart" type="number" placeholder="بداية التسلسل اليومي" value="1" class="p-2 border rounded-lg">
+                    <input id="dailyEnd" type="number" placeholder="نهاية التسلسل اليومي" value="999999999" class="p-2 border rounded-lg">
+                    <input id="totalStart" type="number" placeholder="بداية التسلسل الكلي" value="1" class="p-2 border rounded-lg">
+                    <input id="totalEnd" type="number" placeholder="نهاية التسلسل الكلي" value="999999999" class="p-2 border rounded-lg">
+                    <input id="dailyAmountLimit" type="number" placeholder="الحد اليومي للمبالغ" value="999999999" class="p-2 border rounded-lg">
+                    <input id="totalAmountLimit" type="number" placeholder="الحد الكلي للمبالغ" value="999999999" class="p-2 border rounded-lg">
+                </div>
+                <div class="mt-3">
+                    <label class="font-bold text-sm">أنواع السندات المسموح بها:</label>
+                    <div id="bond-types-list" class="flex gap-4 mt-2"></div>
+                </div>
+                <button onclick="addDelegate()" class="w-full bg-green-600 text-white p-3 rounded-lg mt-4 font-bold"><i class="fa-solid fa-plus ml-2"></i>إضافة المندوب</button>
+                <p id="add-error" class="text-red-500 text-sm mt-2 text-center font-bold"></p>
+                <p id="add-success" class="text-green-600 text-sm mt-2 text-center font-bold"></p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-bold mb-4"><i class="fa-solid fa-users text-blue-600 ml-2"></i>المناديب الحاليين</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-right">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-3">الاسم</th>
+                                <th class="p-3">الجوال</th>
+                                <th class="p-3">التسلسل اليومي</th>
+                                <th class="p-3">التسلسل الكلي</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delegates-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, query, where, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
-      authDomain: "sanadat-pro.firebaseapp.com",
-      projectId: "sanadat-pro",
-      storageBucket: "sanadat-pro.firebasestorage.app",
-      messagingSenderId: "1039476751095",
-      appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+        apiKey: "AIzaSyCxKr-2tej7PaBmJLXKJVudl00HnPkqH5Q",
+        authDomain: "sndt-pro-v2.firebaseapp.com",
+        projectId: "sndt-pro-v2",
+        storageBucket: "sndt-pro-v2.firebasestorage.app",
+        messagingSenderId: "255580444878",
+        appId: "1:255580444878:web:80400b33c29ba0b174589f"
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
-    console.log("Firebase شغال 100%:", app.name);
-  </script>
+    const phoneToEmail = (phone) => `${phone}@sndt.pro`;
+    const UNLIMITED = 999999999;
+    
+    const ADMIN_PHONE = '0597087767';
+    const ADMIN_PASS = '123123';
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists() && userDoc.data().role === 'admin') {
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('admin-screen').classList.remove('hidden');
+                await loadDelegates();
+                await loadBondTypes();
+            } else {
+                signOut(auth);
+            }
+        } else {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+        }
+    });
+
+    window.adminLogin = async () => {
+        const phone = document.getElementById('admin-phone').value.trim();
+        const password = document.getElementById('admin-password').value;
+        const errorEl = document.getElementById('admin-error');
+        const successEl = document.getElementById('admin-success');
+        errorEl.textContent = '';
+        successEl.textContent = '';
+        
+        try {
+            await signInWithEmailAndPassword(auth, phoneToEmail(phone), password);
+        } catch (e) {
+            if (phone === ADMIN_PHONE && password === ADMIN_PASS) {
+                if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+                    try {
+                        successEl.textContent = 'جاري إنشاء حساب المدير الثابت...';
+                        const userCred = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), password);
+                        await setDoc(doc(db, 'users', userCred.user.uid), {
+                            name: 'المدير الرئيسي',
+                            phone: phone,
+                            role: 'admin',
+                            active: true,
+                            createdAt: new Date()
+                        });
+                        successEl.textContent = 'تم إنشاء حساب المدير. جاري الدخول...';
+                    } catch (err) {
+                        if (err.code === 'auth/email-already-in-use') {
+                            errorEl.textContent = 'الحساب موجود بس كلمة السر غلط. روح "قاعدة المناديب" واحذف 0597087767 من Authentication وسجل دخول مرة ثانية';
+                        } else {
+                            errorEl.textContent = 'فشل إنشاء المدير: ' + err.code;
+                        }
+                    }
+                } else if (e.code === 'auth/wrong-password') {
+                    errorEl.textContent = 'كلمة السر غلط. روح "قاعدة المناديب" واحذف 0597087767 من Authentication وسجل دخول مرة ثانية عشان تنشئه من جديد';
+                } else {
+                    errorEl.textContent = 'خطأ: ' + e.code;
+                }
+            } else {
+                errorEl.textContent = 'بيانات المدير خطأ';
+            }
+        }
+    };
+
+    window.adminLogout = () => signOut(auth);
+
+    async function loadBondTypes() {
+        const settingsSnap = await getDoc(doc(db, 'settings', 'main'));
+        const types = settingsSnap.exists() ? (settingsSnap.data().bondTypes || []) : [];
+        const list = document.getElementById('bond-types-list');
+        list.innerHTML = '<label><input type="checkbox" id="all-types" value="all" checked> الكل</label>';
+        types.forEach(t => {
+            list.innerHTML += `<label><input type="checkbox" value="${t.name}"> ${t.name}</label>`;
+        });
+    }
+
+    function formatLimit(num) {
+        return num >= UNLIMITED ? '∞' : num;
+    }
+
+    async function loadDelegates() {
+        const q = query(collection(db, 'users'), where('role', '==', 'delegate'));
+        const snapshot = await getDocs(q);
+        const tbody = document.getElementById('delegates-list');
+        tbody.innerHTML = '';
+        snapshot.forEach(docSnap => {
+            const d = docSnap.data();
+            tbody.innerHTML += `
+                <tr class="border-b">
+                    <td class="p-3">${d.name}</td>
+                    <td class="p-3">${d.phone}</td>
+                    <td class="p-3">${d.dailyStart} - ${formatLimit(d.dailyEnd)}</td>
+                    <td class="p-3">${d.totalStart} - ${formatLimit(d.totalEnd)}</td>
+                    <td class="p-3">${d.active ? '<span class="text-green-600">نشط</span>' : '<span class="text-red-600">موقوف</span>'}</td>
+                    <td class="p-3 flex gap-2">
+                        <button onclick="toggleActive('${docSnap.id}', ${!d.active})" class="text-blue-600 text-xs">${d.active ? 'إيقاف' : 'تفعيل'}</button>
+                        <button onclick="deleteDelegate('${docSnap.id}', '${d.phone}')" class="text-red-600 text-xs font-bold">حذف</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    window.toggleActive = async (id, active) => {
+        await updateDoc(doc(db, 'users', id), { active });
+        loadDelegates();
+    };
+
+    window.deleteDelegate = async (uid, phone) => {
+        if (!confirm(`تحذف المندوب ${phone} من قاعدة البيانات؟\n\nبعدها لازم تحذفه من Authentication يدوي من الزر البرتقالي "قاعدة المناديب"`)) return;
+        try {
+            await deleteDoc(doc(db, 'users', uid));
+            alert('انحذف من قاعدة البيانات ✓\n\nالحين روح "قاعدة المناديب" البرتقالي واحذفه من Authentication عشان تقدر تستخدم الرقم مرة ثانية');
+            loadDelegates();
+        } catch (e) {
+            alert('خطأ في الحذف: ' + e.message);
+        }
+    };
+
+    window.addDelegate = async () => {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const password = document.getElementById('password').value;
+        const nationalId = document.getElementById('nationalId').value.trim();
+        const dailyStart = Number(document.getElementById('dailyStart').value) || 1;
+        const dailyEnd = Number(document.getElementById('dailyEnd').value) || UNLIMITED;
+        const totalStart = Number(document.getElementById('totalStart').value) || 1;
+        const totalEnd = Number(document.getElementById('totalEnd').value) || UNLIMITED;
+        const dailyAmountLimit = Number(document.getElementById('dailyAmountLimit').value) || UNLIMITED;
+        const totalAmountLimit = Number(document.getElementById('totalAmountLimit').value) || UNLIMITED;
+        
+        const checkboxes = document.querySelectorAll('#bond-types-list input[type="checkbox"]:checked');
+        const allowedBondTypes = Array.from(checkboxes).map(cb => cb.value);
+
+        if (!name || !phone || !password) {
+            document.getElementById('add-error').textContent = 'عبي الاسم والجوال وكلمة المرور';
+            return;
+        }
+
+        try {
+            const userCred = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), password);
+            await setDoc(doc(db, 'users', userCred.user.uid), {
+                name, phone, nationalId, role: 'delegate', active: true,
+                dailyStart, dailyEnd, totalStart, totalEnd,
+                dailyAmountLimit, totalAmountLimit, allowedBondTypes,
+                createdAt: new Date()
+            });
+            document.getElementById('add-success').textContent = 'تمت إضافة المندوب بنجاح ✓';
+            document.getElementById('add-error').textContent = '';
+            loadDelegates();
+            document.getElementById('name').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('nationalId').value = '';
+        } catch (e) {
+            if (e.code === 'auth/email-already-in-use') {
+                document.getElementById('add-error').textContent = 'الجوال مسجل من قبل. احذفه من Authentication أول من الزر البرتقالي "قاعدة المناديب"';
+            } else {
+                document.getElementById('add-error').textContent = 'خطأ: ' + e.code;
+            }
+        }
+    };
+</script>
 </body>
 </html>
