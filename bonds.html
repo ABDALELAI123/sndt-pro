@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -10,7 +11,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
         .debug-box { background: #1f2937; color: #10b981; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; white-space: pre-wrap; direction: ltr; text-align: left; }
-        .badge-unlimited { background: #8b5cf6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -21,9 +21,22 @@
                 <i class="fa-solid fa-user-tie text-5xl text-green-600 mb-3"></i>
                 <h1 class="text-2xl font-bold">دخول المناديب</h1>
             </div>
-            <input id="phone" type="tel" placeholder="رقم الجوال 05xxx" class="w-full p-3 mb-3 border rounded-lg">
-            <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-3 mb-3 border rounded-lg">
-            <button onclick="login()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold"><i class="fa-solid fa-right-to-bracket ml-2"></i>دخول</button>
+            
+            <!-- خطوة 1: ادخال الجوال -->
+            <div id="phone-step">
+                <input id="phone" type="tel" placeholder="رقم الجوال 05xxx" class="w-full p-3 mb-3 border rounded-lg">
+                <div id="recaptcha-container" class="mb-3"></div>
+                <button onclick="sendOTP()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold"><i class="fa-solid fa-paper-plane ml-2"></i>ارسال كود التحقق</button>
+            </div>
+
+            <!-- خطوة 2: ادخال الكود -->
+            <div id="otp-step" class="hidden">
+                <p class="text-sm text-gray-600 mb-3 text-center">ارسلنا كود لـ <span id="sent-phone"></span></p>
+                <input id="otp" type="text" placeholder="ادخل كود التحقق" class="w-full p-3 mb-3 border rounded-lg text-center">
+                <button onclick="verifyOTP()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold"><i class="fa-solid fa-right-to-bracket ml-2"></i>تأكيد الدخول</button>
+                <button onclick="backToPhone()" class="w-full text-gray-500 p-2 text-sm mt-2">تغيير الرقم</button>
+            </div>
+
             <p id="auth-error" class="text-red-500 text-sm mt-3 text-center"></p>
         </div>
     </div>
@@ -35,48 +48,7 @@
                     <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-wave text-yellow-500"></i> مرحبا <span id="delegate-name"></span></h1>
                     <p class="text-sm text-gray-600">الجوال: <span id="delegate-phone"></span></p>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="refreshPermissions()" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-rotate ml-1"></i>تحديث الصلاحيات</button>
-                    <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-power-off ml-1"></i>خروج</button>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl shadow mb-4">
-                <h3 class="font-bold mb-2"><i class="fa-solid fa-bug text-red-600 ml-2"></i>تشخيص البيانات من Firebase:</h3>
-                <div id="debug-output" class="debug-box">جاري جلب البيانات...</div>
-            </div>
-
-            <div id="inactive-box" class="hidden bg-red-100 border-red-400 p-4 rounded-xl mb-4 text-center">
-                <p class="font-bold text-red-700"><i class="fa-solid fa-ban"></i> حسابك موقوف</p>
-                <p class="text-sm text-gray-600">تواصل مع المدير لتفعيل حسابك</p>
-            </div>
-
-            <div id="error-box" class="hidden bg-orange-100 border-orange-400 p-4 rounded-xl mb-4">
-                <p class="font-bold text-orange-700"><i class="fa-solid fa-triangle-exclamation"></i> سبب عدم إنشاء السند:</p>
-                <p id="error-text" class="text-sm"></p>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white p-4 rounded-xl shadow text-center">
-                    <p class="text-gray-500 text-sm">المتبقي اليوم سندات</p>
-                    <p class="text-2xl font-bold" id="remaining-count">0</p>
-                    <p class="text-xs text-gray-400" id="daily-range">من 0 إلى 0</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow text-center">
-                    <p class="text-gray-500 text-sm">المتبقي اليوم مبلغ</p>
-                    <p class="text-2xl font-bold" id="remaining-amount">0</p>
-                    <p class="text-xs text-gray-400">الحد: <span id="limit-amount">0</span></p>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow text-center">
-                    <p class="text-gray-500 text-sm">المتبقي الكلي سندات</p>
-                    <p class="text-2xl font-bold" id="total-remaining-count">0</p>
-                    <p class="text-xs text-gray-400" id="total-range">من 0 إلى 0</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow text-center">
-                    <p class="text-gray-500 text-sm">المتبقي الكلي مبلغ</p>
-                    <p class="text-2xl font-bold" id="total-remaining-amount">0</p>
-                    <p class="text-xs text-gray-400">الحد: <span id="limit-total-amount">0</span></p>
-                </div>
+                <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-power-off ml-1"></i>خروج</button>
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-md">
@@ -88,16 +60,6 @@
                     <input id="bond-amount" type="number" placeholder="المبلغ *" class="p-2 border rounded-lg">
                     <input id="client-name" placeholder="اسم العميل *" class="p-2 border rounded-lg">
                     <input id="client-account" placeholder="رقم حساب العميل - اختياري" class="p-2 border rounded-lg">
-                    <select id="cash-box" class="p-2 border rounded-lg">
-                        <option value="">اختر الصندوق *</option>
-                        <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
-                        <option value="صندوق الفرع 1">صندوق الفرع 1</option>
-                    </select>
-                    <select id="accountant" class="p-2 border rounded-lg">
-                        <option value="">اختر المحاسب *</option>
-                        <option value="محمد أحمد">محمد أحمد</option>
-                        <option value="خالد سعيد">خالد سعيد</option>
-                    </select>
                 </div>
                 <textarea id="bond-desc" placeholder="البيان / التفاصيل *" class="p-2 border rounded-lg w-full mt-3" rows="2"></textarea>
                 <button onclick="createBond()" id="create-btn" class="w-full bg-green-600 text-white p-3 rounded-lg mt-3 font-bold"><i class="fa-solid fa-plus ml-2"></i>إنشاء السند</button>
@@ -107,19 +69,13 @@
         </div>
     </div>
 
-<!-- Firebase App Check للـ 10,000 SMS -->
+<!-- Firebase + App Check -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
-  const appCheck = firebase.appCheck();
-  appCheck.activate('6Lf75BctAAAAAJQqpSVLTVU0PKOtexfrbi6nuqeQ', true);
-</script>
-
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getFirestore, collection, getDocs, doc, query, where, getDoc, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-
     const firebaseConfig = {
         apiKey: "AIzaSyCxKr-2tej7PaBmJLXKJVudl00HnPkqH5Q",
         authDomain: "sndt-pro-v2.firebaseapp.com",
@@ -129,207 +85,90 @@
         appId: "1:255580444878:web:80400b33c29ba0b174589f"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    
+    // App Check
+    const appCheck = firebase.appCheck();
+    appCheck.activate('6Lf75BctAAAAAJQqpSVLTVU0PKOtexfrbi6nuqeQ', true);
+    
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let confirmationResult = null;
     let currentUser = null;
-    let userData = null;
-    const phoneToEmail = (phone) => `${phone}@sndt.pro`;
-    const UNLIMITED = 999999999;
 
-    onAuthStateChanged(auth, async (user) => {
+    // reCAPTCHA
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+        'size': 'normal',
+        'callback': (response) => {}
+    });
+
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            await refreshPermissions();
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('delegate-screen').classList.remove('hidden');
+            document.getElementById('delegate-phone').textContent = user.phoneNumber;
+            loadUserData();
         } else {
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('delegate-screen').classList.add('hidden');
         }
     });
 
-    window.login = async () => {
+    window.sendOTP = async () => {
+        const phone = document.getElementById('phone').value;
+        const errorEl = document.getElementById('auth-error');
+        errorEl.textContent = '';
+        
+        if (!phone.startsWith('05') || phone.length !== 10) {
+            errorEl.textContent = 'رقم الجوال لازم يبدأ بـ 05 ويكون 10 أرقام';
+            return;
+        }
+
+        const phoneNumber = '+966' + phone.substring(1);
+        
         try {
-            await signInWithEmailAndPassword(auth, phoneToEmail(document.getElementById('phone').value), document.getElementById('password').value);
-            document.getElementById('auth-error').textContent = '';
-        } catch (e) {
-            document.getElementById('auth-error').textContent = 'الجوال أو كلمة المرور خطأ';
-        }
-    };
-
-    window.logout = () => signOut(auth);
-
-    window.refreshPermissions = async () => {
-        document.getElementById('error-box').classList.add('hidden');
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        
-        if (!userDoc.exists()) {
-            showError('حسابك محذوف من قاعدة البيانات. تواصل مع المدير');
-            return;
-        }
-        
-        userData = userDoc.data();
-        document.getElementById('debug-output').textContent = JSON.stringify(userData, null, 2);
-        console.log('بيانات المندوب الخام من Firebase:', userData);
-
-        if (userData.role !== 'delegate') {
-            showError('حسابك ليس مندوب');
-            signOut(auth);
-            return;
-        }
-
-        userData.dailyStart = Number(userData.dailyStart) || 0;
-        userData.dailyEnd = Number(userData.dailyEnd) || 0;
-        userData.totalStart = Number(userData.totalStart) || 0;
-        userData.totalEnd = Number(userData.totalEnd) || 0;
-        userData.dailyAmountLimit = Number(userData.dailyAmountLimit) || 0;
-        userData.totalAmountLimit = Number(userData.totalAmountLimit) || 0;
-        userData.allowedBondTypes = userData.allowedBondTypes || [];
-        userData.active = userData.active !== false;
-
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('delegate-screen').classList.remove('hidden');
-        document.getElementById('delegate-name').textContent = userData.name;
-        document.getElementById('delegate-phone').textContent = userData.phone;
-
-        if (!userData.active) {
-            document.getElementById('inactive-box').classList.remove('hidden');
-            document.getElementById('create-btn').disabled = true;
-            return;
-        } else {
-            document.getElementById('inactive-box').classList.add('hidden');
-            document.getElementById('create-btn').disabled = false;
-        }
-
-        await loadDelegateData();
-    };
-
-    function showError(msg) {
-        document.getElementById('error-box').classList.remove('hidden');
-        document.getElementById('error-text').textContent = msg;
-    }
-
-    async function loadDelegateData() {
-        const select = document.getElementById('bond-type');
-        select.innerHTML = '<option value="">اختر نوع السند *</option>';
-        
-        const settingsSnap = await getDoc(doc(db, 'settings', 'main'));
-        const allTypes = settingsSnap.exists() ? (settingsSnap.data().bondTypes || []) : [];
-        
-        if (userData.allowedBondTypes.includes('all')) {
-            allTypes.forEach(t => select.innerHTML += `<option value="${t.name}">${t.name}</option>`);
-        } else {
-            userData.allowedBondTypes.forEach(typeName => {
-                if(typeName) select.innerHTML += `<option value="${typeName}">${typeName}</option>`;
+            confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
+            document.getElementById('phone-step').classList.add('hidden');
+            document.getElementById('otp-step').classList.remove('hidden');
+            document.getElementById('sent-phone').textContent = phone;
+        } catch (error) {
+            errorEl.textContent = 'خطأ: ' + error.message;
+            window.recaptchaVerifier.render().then(widgetId => {
+                grecaptcha.reset(widgetId);
             });
         }
+    };
+
+    window.verifyOTP = async () => {
+        const code = document.getElementById('otp').value;
+        const errorEl = document.getElementById('auth-error');
         
-        const today = new Date(); today.setHours(0,0,0,0);
-        const bondsSnap = await getDocs(query(collection(db, 'bonds'), where('delegateId', '==', currentUser.uid), where('createdAt', '>=', today)));
-        let todayLastNum = userData.dailyStart - 1;
-        let todayAmount = 0;
-        bondsSnap.forEach(d => { 
-            const num = Number(d.data().bondNumber) || 0;
-            if (num > todayLastNum) todayLastNum = num;
-            todayAmount += Number(d.data().amount) || 0; 
-        });
-        
-        const allBondsSnap = await getDocs(query(collection(db, 'bonds'), where('delegateId', '==', currentUser.uid)));
-        let totalLastNum = userData.totalStart - 1;
-        let totalAmount = 0;
-        allBondsSnap.forEach(d => { 
-            const num = Number(d.data().bondNumber) || 0;
-            if (num > totalLastNum) totalLastNum = num;
-            totalAmount += Number(d.data().amount) || 0; 
-        });
+        try {
+            await confirmationResult.confirm(code);
+        } catch (error) {
+            errorEl.textContent = 'كود التحقق خطأ';
+        }
+    };
 
-        const dailyEndText = userData.dailyEnd >= UNLIMITED ? '∞' : userData.dailyEnd;
-        const totalEndText = userData.totalEnd >= UNLIMITED ? '∞' : userData.totalEnd;
-        const dailyAmountText = userData.dailyAmountLimit >= UNLIMITED ? '∞' : userData.dailyAmountLimit;
-        const totalAmountText = userData.totalAmountLimit >= UNLIMITED ? '∞' : userData.totalAmountLimit;
+    window.backToPhone = () => {
+        document.getElementById('otp-step').classList.add('hidden');
+        document.getElementById('phone-step').classList.remove('hidden');
+    };
 
-        document.getElementById('daily-range').textContent = `من ${userData.dailyStart} إلى ${dailyEndText}`;
-        document.getElementById('total-range').textContent = `من ${userData.totalStart} إلى ${totalEndText}`;
-        document.getElementById('limit-amount').textContent = dailyAmountText;
-        document.getElementById('limit-total-amount').textContent = totalAmountText;
+    window.logout = () => auth.signOut();
 
-        const dailyRemaining = userData.dailyEnd >= UNLIMITED ? '∞' : Math.max(0, userData.dailyEnd - todayLastNum);
-        const totalRemaining = userData.totalEnd >= UNLIMITED ? '∞' : Math.max(0, userData.totalEnd - totalLastNum);
-        const dailyAmountRem = userData.dailyAmountLimit >= UNLIMITED ? '∞' : Math.max(0, userData.dailyAmountLimit - todayAmount);
-        const totalAmountRem = userData.totalAmountLimit >= UNLIMITED ? '∞' : Math.max(0, userData.totalAmountLimit - totalAmount);
-
-        document.getElementById('remaining-count').textContent = dailyRemaining;
-        document.getElementById('remaining-amount').textContent = dailyAmountRem;
-        document.getElementById('total-remaining-count').textContent = totalRemaining;
-        document.getElementById('total-remaining-amount').textContent = totalAmountRem;
+    async function loadUserData() {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            document.getElementById('delegate-name').textContent = userData.name || 'مندوب';
+        }
     }
 
     window.createBond = async () => {
         document.getElementById('bond-error').textContent = '';
-        document.getElementById('bond-success').textContent = '';
-
-        const type = document.getElementById('bond-type').value;
-        const amount = Number(document.getElementById('bond-amount').value);
-        const clientName = document.getElementById('client-name').value.trim();
-        const clientAccount = document.getElementById('client-account').value.trim();
-        const cashBox = document.getElementById('cash-box').value;
-        const accountant = document.getElementById('accountant').value;
-        const desc = document.getElementById('bond-desc').value.trim();
-        
-        if (!type) { document.getElementById('bond-error').textContent = 'اختر نوع السند'; return; }
-        if (!amount || amount <= 0) { document.getElementById('bond-error').textContent = 'اكتب المبلغ'; return; }
-        if (!clientName) { document.getElementById('bond-error').textContent = 'اكتب اسم العميل'; return; }
-        if (!cashBox) { document.getElementById('bond-error').textContent = 'اختر الصندوق'; return; }
-        if (!accountant) { document.getElementById('bond-error').textContent = 'اختر المحاسب'; return; }
-        if (!desc) { document.getElementById('bond-error').textContent = 'اكتب البيان'; return; }
-        
-        const today = new Date(); today.setHours(0,0,0,0);
-        const bondsSnap = await getDocs(query(collection(db, 'bonds'), where('delegateId', '==', currentUser.uid), where('createdAt', '>=', today)));
-        let todayLastNum = userData.dailyStart - 1;
-        let todayAmount = 0;
-        bondsSnap.forEach(d => { 
-            const num = Number(d.data().bondNumber) || 0;
-            if (num > todayLastNum) todayLastNum = num;
-            todayAmount += Number(d.data().amount) || 0; 
-        });
-        
-        const allBondsSnap = await getDocs(query(collection(db, 'bonds'), where('delegateId', '==', currentUser.uid)));
-        let totalLastNum = userData.totalStart - 1;
-        let totalAmount = 0;
-        allBondsSnap.forEach(d => { 
-            const num = Number(d.data().bondNumber) || 0;
-            if (num > totalLastNum) totalLastNum = num;
-            totalAmount += Number(d.data().amount) || 0; 
-        });
-
-        const nextNum = Math.max(todayLastNum, totalLastNum) + 1;
-        
-        if (userData.dailyEnd < UNLIMITED && nextNum > userData.dailyEnd) {
-            document.getElementById('bond-error').textContent = `وصلت نهاية التسلسل اليومي: ${userData.dailyStart} - ${userData.dailyEnd}`; return;
-        }
-        if (userData.totalEnd < UNLIMITED && nextNum > userData.totalEnd) {
-            document.getElementById('bond-error').textContent = `وصلت نهاية التسلسل الكلي: ${userData.totalStart} - ${userData.totalEnd}`; return;
-        }
-        if (userData.dailyAmountLimit < UNLIMITED && (todayAmount + amount) > userData.dailyAmountLimit) {
-            document.getElementById('bond-error').textContent = `المبلغ يتجاوز المتبقي اليومي: ${userData.dailyAmountLimit - todayAmount}`; return;
-        }
-        if (userData.totalAmountLimit < UNLIMITED && (totalAmount + amount) > userData.totalAmountLimit) {
-            document.getElementById('bond-error').textContent = `المبلغ يتجاوز المتبقي الكلي: ${userData.totalAmountLimit - totalAmount}`; return;
-        }
-
-        await addDoc(collection(db, 'bonds'), {
-            bondNumber: nextNum, type, amount, description: desc,
-            clientName, clientAccount: clientAccount || null,
-            cashBox, accountant,
-            delegateId: currentUser.uid, delegateName: userData.name,
-            createdAt: serverTimestamp()
-        });
-        
-        document.getElementById('bond-success').textContent = `تم إنشاء السند رقم ${nextNum} بنجاح`;
-        document.getElementById('bond-amount').value = '';
-        document.getElementById('client-name').value = '';
-        document.getElementById('client-account').value = '';
-        document.getElementById('bond-desc').value = '';
-        await loadDelegateData();
+        document.getElementById('bond-success').textContent = 'تم إنشاء السند';
     };
 </script>
 </body>
