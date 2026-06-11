@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم سندات برو</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <!-- شاشة الدخول -->
+    <div id="loginScreen" class="max-w-md mx-auto mt-20">
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h1 class="text-2xl font-bold text-center mb-6">لوحة تحكم سندات برو</h1>
+            <input id="accessCode" type="password" placeholder="كود الدخول" class="w-full border p-3 rounded-lg mb-4 text-center">
+            <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">دخول</button>
+            <p class="text-xs text-gray-500 text-center mt-4">الكود الافتراضي: admin123</p>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم -->
+    <div id="dashboard" class="hidden max-w-6xl mx-auto">
+        <div class="bg-white rounded-lg shadow p-4 mb-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">لوحة التحكم الرئيسية</h1>
+            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg">خروج</button>
+        </div>
+
+        <!-- تبويبات -->
+        <div class="bg-white rounded-lg shadow mb-4">
+            <div class="flex border-b">
+                <button onclick="showTab('managers')" class="tab-btn px-6 py-3 font-bold border-b-2 border-blue-600">المدراء</button>
+                <button onclick="showTab('delegates')" class="tab-btn px-6 py-3">المناديب</button>
+                <button onclick="showTab('bonds')" class="tab-btn px-6 py-3">السندات</button>
+                <button onclick="showTab('create')" class="tab-btn px-6 py-3">إنشاء سند</button>
+            </div>
+        </div>
+
+        <!-- تبويب المدراء -->
+        <div id="managersTab" class="tab-content bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">إدارة المدراء</h2>
+            <div class="flex gap-2 mb-4">
+                <input id="managerName" placeholder="اسم المدير" class="border p-2 rounded flex-1">
+                <select id="managerRole" class="border p-2 rounded">
+                    <option value="admin">مدير عام - كل الصلاحيات</option>
+                    <option value="manager">مدير - إضافة مناديب وسندات</option>
+                    <option value="viewer">مشاهد - عرض فقط</option>
+                </select>
+                <button onclick="addManager()" class="bg-green-600 text-white px-6 py-2 rounded">إضافة</button>
+            </div>
+            <div id="managersList"></div>
+        </div>
+
+        <!-- تبويب المناديب -->
+        <div id="delegatesTab" class="tab-content hidden bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">إدارة المناديب</h2>
+            <div class="flex gap-2 mb-4">
+                <input id="delegateName" placeholder="اسم المندوب" class="border p-2 rounded flex-1">
+                <input id="delegatePhone" placeholder="رقم الجوال" class="border p-2 rounded flex-1">
+                <label class="flex items-center gap-2">
+                    <input id="canCreateBond" type="checkbox" checked> ينشئ سندات
+                </label>
+                <button onclick="addDelegate()" class="bg-green-600 text-white px-6 py-2 rounded">إضافة</button>
+            </div>
+            <div id="delegatesList"></div>
+        </div>
+
+        <!-- تبويب السندات -->
+        <div id="bondsTab" class="tab-content hidden bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">كل السندات</h2>
+            <div id="bondsList"></div>
+        </div>
+
+        <!-- تبويب إنشاء سند -->
+        <div id="createTab" class="tab-content hidden bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">إنشاء سند جديد</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <select id="bondType" class="border p-3 rounded">
+                    <option value="قبض">سند قبض</option>
+                    <option value="صرف">سند صرف</option>
+                </select>
+                <input id="bondAmount" type="number" placeholder="المبلغ" class="border p-3 rounded">
+                <input id="bondFrom" placeholder="من" class="border p-3 rounded">
+                <input id="bondTo" placeholder="إلى" class="border p-3 rounded">
+                <input id="bondReason" placeholder="مقابل" class="border p-3 rounded col-span-2">
+                <select id="bondDelegate" class="border p-3 rounded col-span-2">
+                    <option value="">اختر المندوب</option>
+                </select>
+                <button onclick="createBond()" class="bg-blue-600 text-white p-3 rounded font-bold col-span-2">إنشاء السند</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+let db = {
+    managers: JSON.parse(localStorage.getItem('managers') || '[]'),
+    delegates: JSON.parse(localStorage.getItem('delegates') || '[]'),
+    bonds: JSON.parse(localStorage.getItem('bonds') || '[]')
+};
+
+function saveDB() {
+    localStorage.setItem('managers', JSON.stringify(db.managers));
+    localStorage.setItem('delegates', JSON.stringify(db.delegates));
+    localStorage.setItem('bonds', JSON.stringify(db.bonds));
+}
+
+function login() {
+    if (document.getElementById('accessCode').value === 'admin123') {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        renderAll();
+    } else {
+        alert('كود الدخول خطأ');
+    }
+}
+
+function logout() {
+    location.reload();
+}
+
+function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('border-blue-600'));
+    document.getElementById(tab + 'Tab').classList.remove('hidden');
+    event.target.classList.add('border-blue-600');
+}
+
+function addManager() {
+    const name = document.getElementById('managerName').value;
+    const role = document.getElementById('managerRole').value;
+    if (!name) return alert('اكتب الاسم');
+    db.managers.push({ id: Date.now(), name, role });
+    saveDB(); renderManagers(); document.getElementById('managerName').value = '';
+}
+
+function addDelegate() {
+    const name = document.getElementById('delegateName').value;
+    const phone = document.getElementById('delegatePhone').value;
+    const canCreate = document.getElementById('canCreateBond').checked;
+    if (!name ||!phone) return alert('اكتب الاسم والرقم');
+    db.delegates.push({ id: Date.now(), name, phone, canCreate });
+    saveDB(); renderDelegates(); renderDelegateOptions();
+    document.getElementById('delegateName').value = '';
+    document.getElementById('delegatePhone').value = '';
+}
+
+function createBond() {
+    const bond = {
+        id: Date.now(),
+        type: document.getElementById('bondType').value,
+        amount: document.getElementById('bondAmount').value,
+        from: document.getElementById('bondFrom').value,
+        to: document.getElementById('bondTo').value,
+        reason: document.getElementById('bondReason').value,
+        delegateId: document.getElementById('bondDelegate').value,
+        date: new Date().toLocaleString('ar-SA')
+    };
+    if (!bond.amount ||!bond.delegateId) return alert('عبي المبلغ واختر المندوب');
+    db.bonds.push(bond);
+    saveDB(); renderBonds(); alert('تم إنشاء السند');
+}
+
+function deleteItem(type, id) {
+    if (!confirm('متأكد من الحذف؟')) return;
+    db[type] = db[type].filter(item => item.id!== id);
+    saveDB(); renderAll();
+}
+
+function renderManagers() {
+    document.getElementById('managersList').innerHTML = db.managers.map(m => `
+        <div class="border p-3 rounded mb-2 flex justify-between items-center">
+            <div><b>${m.name}</b> - ${m.role === 'admin'? 'مدير عام' : m.role === 'manager'? 'مدير' : 'مشاهد'}</div>
+            <button onclick="deleteItem('managers', ${m.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+        </div>
+    `).join('') || '<p class="text-gray-500">لا يوجد مدراء</p>';
+}
+
+function renderDelegates() {
+    document.getElementById('delegatesList').innerHTML = db.delegates.map(d => `
+        <div class="border p-3 rounded mb-2 flex justify-between items-center">
+            <div><b>${d.name}</b> - ${d.phone} ${d.canCreate? '✅ ينشئ سندات' : '❌ لا ينشئ'}</div>
+            <button onclick="deleteItem('delegates', ${d.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+        </div>
+    `).join('') || '<p class="text-gray-500">لا يوجد مناديب</p>';
+}
+
+function renderBonds() {
+    document.getElementById('bondsList').innerHTML = db.bonds.map(b => {
+        const delegate = db.delegates.find(d => d.id == b.delegateId);
+        return `
+        <div class="border p-3 rounded mb-2">
+            <div class="flex justify-between">
+                <b>سند ${b.type} - ${b.amount} ريال</b>
+                <button onclick="deleteItem('bonds', ${b.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+            </div>
+            <div class="text-sm text-gray-600">من: ${b.from} | إلى: ${b.to} | المندوب: ${delegate?.name || 'غير محدد'}</div>
+            <div class="text-xs text-gray-500">${b.date}</div>
+        </div>
+    `}).join('') || '<p class="text-gray-500">لا توجد سندات</p>';
+}
+
+function renderDelegateOptions() {
+    document.getElementById('bondDelegate').innerHTML = '<option value="">اختر المندوب</option>' + 
+        db.delegates.filter(d => d.canCreate).map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+}
+
+function renderAll() {
+    renderManagers(); renderDelegates(); renderBonds(); renderDelegateOptions();
+}
+
+// أول مدير افتراضي
+if (db.managers.length === 0) {
+    db.managers.push({ id: 1, name: 'المدير العام', role: 'admin' });
+    saveDB();
+}
+</script>
+
+</body>
+</html>
