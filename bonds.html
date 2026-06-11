@@ -1,54 +1,110 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة المناديب - SNDT Pro</title>
+    <title>SNDT Pro - النظام</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
-        .debug-box { background: #1f2937; color: #10b981; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; white-space: pre-wrap; direction: ltr; text-align: left; }
     </style>
 </head>
 <body class="bg-gray-100">
 
+    <!-- شاشة تسجيل الدخول -->
     <div id="auth-screen" class="min-h-screen flex items-center justify-center">
         <div class="bg-white p-8 rounded-xl shadow-lg w-96">
             <div class="text-center mb-6">
-                <i class="fa-solid fa-user-tie text-5xl text-green-600 mb-3"></i>
-                <h1 class="text-2xl font-bold">دخول المناديب</h1>
+                <i class="fa-solid fa-building text-5xl text-green-600 mb-3"></i>
+                <h1 class="text-2xl font-bold">SNDT Pro</h1>
             </div>
             
-            <!-- خطوة 1: ادخال الجوال -->
-            <div id="phone-step">
-                <input id="phone" type="tel" placeholder="رقم الجوال 05xxx" class="w-full p-3 mb-3 border rounded-lg">
-                <div id="recaptcha-container" class="mb-3"></div>
-                <button onclick="sendOTP()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold"><i class="fa-solid fa-paper-plane ml-2"></i>ارسال كود التحقق</button>
+            <!-- اختيار نوع الدخول -->
+            <div id="role-step">
+                <button onclick="showManagerLogin()" class="w-full bg-blue-600 text-white p-4 rounded-lg font-bold mb-3">
+                    <i class="fa-solid fa-user-shield ml-2"></i>دخول المدراء
+                </button>
+                <button onclick="showDelegateLogin()" class="w-full bg-green-600 text-white p-4 rounded-lg font-bold">
+                    <i class="fa-solid fa-user-tie ml-2"></i>دخول المناديب
+                </button>
             </div>
 
-            <!-- خطوة 2: ادخال الكود -->
-            <div id="otp-step" class="hidden">
-                <p class="text-sm text-gray-600 mb-3 text-center">ارسلنا كود لـ <span id="sent-phone"></span></p>
-                <input id="otp" type="text" placeholder="ادخل كود التحقق" class="w-full p-3 mb-3 border rounded-lg text-center">
-                <button onclick="verifyOTP()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold"><i class="fa-solid fa-right-to-bracket ml-2"></i>تأكيد الدخول</button>
-                <button onclick="backToPhone()" class="w-full text-gray-500 p-2 text-sm mt-2">تغيير الرقم</button>
+            <!-- دخول المدراء OTP -->
+            <div id="manager-step" class="hidden">
+                <p class="text-center text-sm text-gray-600 mb-3">دخول المدراء بـ SMS</p>
+                <input id="manager-phone" type="tel" placeholder="رقم الجوال 05xxxxxxxx" class="w-full p-3 mb-3 border rounded-lg">
+                <div id="recaptcha-container" class="mb-3"></div>
+                <button onclick="sendManagerOTP()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold mb-2">ارسال كود</button>
+                <button onclick="backToRole()" class="w-full text-gray-500 p-2 text-sm">رجوع</button>
+            </div>
+
+            <!-- ادخال كود المدير -->
+            <div id="manager-otp-step" class="hidden">
+                <input id="manager-otp" type="text" placeholder="ادخل كود التحقق" class="w-full p-3 mb-3 border rounded-lg text-center">
+                <button onclick="verifyManagerOTP()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">تأكيد</button>
+            </div>
+
+            <!-- دخول المناديب -->
+            <div id="delegate-step" class="hidden">
+                <p class="text-center text-sm text-gray-600 mb-3">دخول المناديب</p>
+                <input id="delegate-phone" type="tel" placeholder="رقم الجوال 05xxxxxxxx" class="w-full p-3 mb-3 border rounded-lg">
+                <input id="delegate-password" type="password" placeholder="كلمة المرور" class="w-full p-3 mb-3 border rounded-lg">
+                <button onclick="delegateLogin()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold mb-2">دخول</button>
+                <button onclick="backToRole()" class="w-full text-gray-500 p-2 text-sm">رجوع</button>
+            </div>
+
+            <!-- تغيير كلمة مرور المندوب اختياري -->
+            <div id="change-pass-step" class="hidden">
+                <p class="text-sm text-orange-600 mb-4 text-center font-bold">يمكنك تغيير كلمة المرور</p>
+                <input id="new-password" type="password" placeholder="كلمة مرور جديدة" class="w-full p-3 mb-3 border rounded-lg">
+                <input id="confirm-password" type="password" placeholder="تأكيد كلمة المرور" class="w-full p-3 mb-3 border rounded-lg">
+                <button onclick="changeDelegatePassword()" class="w-full bg-orange-600 text-white p-3 rounded-lg font-bold mb-2">تغيير</button>
+                <button onclick="skipChangePass()" class="w-full text-gray-500 p-2 text-sm">تخطي</button>
             </div>
 
             <p id="auth-error" class="text-red-500 text-sm mt-3 text-center"></p>
         </div>
     </div>
 
+    <!-- شاشة المدراء -->
+    <div id="manager-screen" class="hidden p-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow">
+                <h1 class="text-2xl font-bold"><i class="fa-solid fa-user-shield text-blue-600 ml-2"></i>لوحة المدير</h1>
+                <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm">خروج</button>
+            </div>
+
+            <!-- اضافة مندوب -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-user-plus ml-2"></i>إضافة مندوب جديد</h2>
+                <div class="grid grid-cols-3 gap-3">
+                    <input id="new-delegate-name" placeholder="اسم المندوب *" class="p-3 border rounded-lg">
+                    <input id="new-delegate-phone" type="tel" placeholder="رقم الجوال 05xxxxxxxx *" class="p-3 border rounded-lg">
+                    <button onclick="addDelegate()" class="bg-green-600 text-white p-3 rounded-lg font-bold">إضافة</button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">كلمة المرور الافتراضية: 123456</p>
+                <p id="manager-msg" class="text-sm mt-3 text-center font-bold"></p>
+            </div>
+
+            <!-- قائمة المناديب -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-list ml-2"></i>المناديب</h2>
+                <div id="delegates-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة المندوب -->
     <div id="delegate-screen" class="hidden p-6">
         <div class="max-w-5xl mx-auto">
             <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow">
                 <div>
                     <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-wave text-yellow-500"></i> مرحبا <span id="delegate-name"></span></h1>
-                    <p class="text-sm text-gray-600">الجوال: <span id="delegate-phone"></span></p>
+                    <p class="text-sm text-gray-600">الجوال: <span id="delegate-phone-display"></span></p>
                 </div>
-                <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-power-off ml-1"></i>خروج</button>
+                <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm">خروج</button>
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-md">
@@ -56,20 +112,20 @@
                 <div class="grid grid-cols-2 gap-3">
                     <select id="bond-type" class="p-2 border rounded-lg">
                         <option value="">اختر نوع السند *</option>
+                        <option value="قبض">قبض</option>
+                        <option value="صرف">صرف</option>
                     </select>
                     <input id="bond-amount" type="number" placeholder="المبلغ *" class="p-2 border rounded-lg">
                     <input id="client-name" placeholder="اسم العميل *" class="p-2 border rounded-lg">
                     <input id="client-account" placeholder="رقم حساب العميل - اختياري" class="p-2 border rounded-lg">
                 </div>
                 <textarea id="bond-desc" placeholder="البيان / التفاصيل *" class="p-2 border rounded-lg w-full mt-3" rows="2"></textarea>
-                <button onclick="createBond()" id="create-btn" class="w-full bg-green-600 text-white p-3 rounded-lg mt-3 font-bold"><i class="fa-solid fa-plus ml-2"></i>إنشاء السند</button>
-                <p id="bond-error" class="text-red-500 text-sm mt-2 text-center font-bold"></p>
-                <p id="bond-success" class="text-green-600 text-sm mt-2 text-center font-bold"></p>
+                <button onclick="createBond()" class="w-full bg-green-600 text-white p-3 rounded-lg mt-3 font-bold">إنشاء السند</button>
+                <p id="bond-msg" class="text-sm mt-2 text-center font-bold"></p>
             </div>
         </div>
     </div>
 
-<!-- Firebase + App Check -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check-compat.js"></script>
@@ -86,8 +142,6 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    
-    // App Check
     const appCheck = firebase.appCheck();
     appCheck.activate('6Lf75BctAAAAAJQqpSVLTVU0PKOtexfrbi6nuqeQ', true);
     
@@ -96,80 +150,232 @@
     let confirmationResult = null;
     let currentUser = null;
 
-    // reCAPTCHA
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-        'size': 'normal',
-        'callback': (response) => {}
-    });
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('delegate-screen').classList.remove('hidden');
-            document.getElementById('delegate-phone').textContent = user.phoneNumber;
-            loadUserData();
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists) {
+                const role = userDoc.data().role;
+                if (role === 'manager') {
+                    showManagerScreen();
+                } else {
+                    showDelegateScreen();
+                }
+            }
         } else {
-            document.getElementById('auth-screen').classList.remove('hidden');
-            document.getElementById('delegate-screen').classList.add('hidden');
+            showAuthScreen();
         }
     });
 
-    window.sendOTP = async () => {
-        const phone = document.getElementById('phone').value;
+    function showAuthScreen() {
+        hideAll();
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('role-step').classList.remove('hidden');
+    }
+
+    function showManagerScreen() {
+        hideAll();
+        document.getElementById('manager-screen').classList.remove('hidden');
+        loadDelegates();
+    }
+
+    function showDelegateScreen() {
+        hideAll();
+        document.getElementById('delegate-screen').classList.remove('hidden');
+        loadDelegateData();
+    }
+
+    function hideAll() {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('manager-screen').classList.add('hidden');
+        document.getElementById('delegate-screen').classList.add('hidden');
+        document.getElementById('manager-step').classList.add('hidden');
+        document.getElementById('manager-otp-step').classList.add('hidden');
+        document.getElementById('delegate-step').classList.add('hidden');
+        document.getElementById('change-pass-step').classList.add('hidden');
+        document.getElementById('role-step').classList.add('hidden');
+    }
+
+    window.showManagerLogin = () => {
+        hideAll();
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('manager-step').classList.remove('hidden');
+    };
+
+    window.showDelegateLogin = () => {
+        hideAll();
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('delegate-step').classList.remove('hidden');
+    };
+
+    window.backToRole = () => {
+        hideAll();
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('role-step').classList.remove('hidden');
+    };
+
+    // دخول المدراء OTP
+    window.sendManagerOTP = async () => {
+        const phone = document.getElementById('manager-phone').value.trim();
+        const errorEl = document.getElementById('auth-error');
+        if (!phone.startsWith('05') || phone.length !== 10) {
+            errorEl.textContent = 'رقم الجوال لازم 10 أرقام ويبدأ بـ 05';
+            return;
+        }
+        const phoneNumber = '+966' + phone.substring(1);
+        try {
+            confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
+            document.getElementById('manager-step').classList.add('hidden');
+            document.getElementById('manager-otp-step').classList.remove('hidden');
+            errorEl.textContent = '';
+        } catch (error) {
+            errorEl.textContent = 'خطأ: ' + error.message;
+        }
+    };
+
+    window.verifyManagerOTP = async () => {
+        const code = document.getElementById('manager-otp').value;
+        try {
+            const result = await confirmationResult.confirm(code);
+            const userDoc = await db.collection('users').doc(result.user.uid).get();
+            if (!userDoc.exists) {
+                await db.collection('users').doc(result.user.uid).set({
+                    role: 'manager',
+                    phone: document.getElementById('manager-phone').value,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        } catch (error) {
+            document.getElementById('auth-error').textContent = 'كود التحقق خطأ';
+        }
+    };
+
+    // دخول المناديب
+    window.delegateLogin = async () => {
+        const phone = document.getElementById('delegate-phone').value.trim();
+        const password = document.getElementById('delegate-password').value;
         const errorEl = document.getElementById('auth-error');
         errorEl.textContent = '';
         
         if (!phone.startsWith('05') || phone.length !== 10) {
-            errorEl.textContent = 'رقم الجوال لازم يبدأ بـ 05 ويكون 10 أرقام';
+            errorEl.textContent = 'رقم الجوال لازم 10 أرقام ويبدأ بـ 05';
+            return;
+        }
+        if (!password) {
+            errorEl.textContent = 'ادخل كلمة المرور';
             return;
         }
 
-        const phoneNumber = '+966' + phone.substring(1);
-        
+        const email = phone + '@sndt.local';
         try {
-            confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
-            document.getElementById('phone-step').classList.add('hidden');
-            document.getElementById('otp-step').classList.remove('hidden');
-            document.getElementById('sent-phone').textContent = phone;
+            const userCred = await auth.signInWithEmailAndPassword(email, password);
+            const userDoc = await db.collection('users').doc(userCred.user.uid).get();
+            if (userDoc.data().mustChangePassword) {
+                document.getElementById('delegate-step').classList.add('hidden');
+                document.getElementById('change-pass-step').classList.remove('hidden');
+            }
         } catch (error) {
-            errorEl.textContent = 'خطأ: ' + error.message;
-            window.recaptchaVerifier.render().then(widgetId => {
-                grecaptcha.reset(widgetId);
-            });
+            errorEl.textContent = 'رقم الجوال أو كلمة المرور خاطئة';
         }
     };
 
-    window.verifyOTP = async () => {
-        const code = document.getElementById('otp').value;
+    window.changeDelegatePassword = async () => {
+        const newPass = document.getElementById('new-password').value;
+        const confirmPass = document.getElementById('confirm-password').value;
         const errorEl = document.getElementById('auth-error');
         
+        if (newPass.length < 6) {
+            errorEl.textContent = 'كلمة المرور لازم 6 أحرف على الأقل';
+            return;
+        }
+        if (newPass !== confirmPass) {
+            errorEl.textContent = 'كلمة المرور غير متطابقة';
+            return;
+        }
+        
+        await auth.currentUser.updatePassword(newPass);
+        await db.collection('users').doc(auth.currentUser.uid).update({ mustChangePassword: false });
+        showDelegateScreen();
+    };
+
+    window.skipChangePass = () => {
+        showDelegateScreen();
+    };
+
+    // المدير يضيف مندوب - بدون Cloud Function
+    window.addDelegate = async () => {
+        const name = document.getElementById('new-delegate-name').value.trim();
+        const phone = document.getElementById('new-delegate-phone').value.trim();
+        const msgEl = document.getElementById('manager-msg');
+        
+        if (!name || !phone.startsWith('05') || phone.length !== 10) {
+            msgEl.textContent = 'تأكد من البيانات';
+            msgEl.className = 'text-sm mt-3 text-center font-bold text-red-500';
+            return;
+        }
+
+        const email = phone + '@sndt.local';
+        const password = '123456';
+
         try {
-            await confirmationResult.confirm(code);
+            const userCred = await auth.createUserWithEmailAndPassword(email, password);
+            await db.collection('users').doc(userCred.user.uid).set({
+                name: name,
+                phone: phone,
+                role: 'delegate',
+                mustChangePassword: true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            await auth.signOut(); // نسجل خروج عشان نرجع للمدير
+            
+            msgEl.textContent = 'تم إضافة المندوب ✅ سجل دخولك مرة ثانية';
+            msgEl.className = 'text-sm mt-3 text-center font-bold text-green-600';
+            document.getElementById('new-delegate-name').value = '';
+            document.getElementById('new-delegate-phone').value = '';
+            
+            setTimeout(() => location.reload(), 2000);
         } catch (error) {
-            errorEl.textContent = 'كود التحقق خطأ';
+            msgEl.textContent = 'خطأ: ' + error.message;
+            msgEl.className = 'text-sm mt-3 text-center font-bold text-red-500';
         }
     };
 
-    window.backToPhone = () => {
-        document.getElementById('otp-step').classList.add('hidden');
-        document.getElementById('phone-step').classList.remove('hidden');
+    async function loadDelegates() {
+        const listEl = document.getElementById('delegates-list');
+        const snapshot = await db.collection('users').where('role', '==', 'delegate').get();
+        listEl.innerHTML = '';
+        if (snapshot.empty) {
+            listEl.innerHTML = '<p class="text-gray-500 text-center">لا يوجد مناديب</p>';
+            return;
+        }
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            listEl.innerHTML += `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div><p class="font-bold">${data.name}</p><p class="text-sm text-gray-600">${data.phone}</p></div>
+                    <span class="text-xs px-2 py-1 rounded ${data.mustChangePassword ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">
+                        ${data.mustChangePassword ? 'لم يغير كلمته' : 'نشط'}
+                    </span>
+                </div>`;
+        });
+    }
+
+    async function loadDelegateData() {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const data = userDoc.data();
+        document.getElementById('delegate-name').textContent = data.name;
+        document.getElementById('delegate-phone-display').textContent = data.phone;
+    }
+
+    window.createBond = () => {
+        document.getElementById('bond-msg').textContent = 'تم إنشاء السند';
+        document.getElementById('bond-msg').className = 'text-sm mt-2 text-center font-bold text-green-600';
     };
 
     window.logout = () => auth.signOut();
-
-    async function loadUserData() {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            document.getElementById('delegate-name').textContent = userData.name || 'مندوب';
-        }
-    }
-
-    window.createBond = async () => {
-        document.getElementById('bond-error').textContent = '';
-        document.getElementById('bond-success').textContent = 'تم إنشاء السند';
-    };
 </script>
 </body>
 </html>
