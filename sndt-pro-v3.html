@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السندات الذكية V3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; }
+        @media print {
+          .no-print { display: none!important; }
+          .print-only { display: block!important; }
+          .bond-number { position: absolute; top: 10px; left: 10px; color: red; font-weight: bold; font-size: 24px; border: 2px solid red; padding: 5px 15px; border-radius: 8px; }
+          .qr-box { position: absolute; bottom: 20px; left: 20px; }
+          .no-signature { text-align: center; font-weight: bold; margin-top: 40px; border-top: 2px dashed #333; padding-top: 15px; }
+        }
+      .company-logo { max-height: 80px; max-width: 200px; object-fit: contain; }
+      .qr-small { width: 80px; height: 80px; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- شاشة الدخول -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-6">
+                <img id="loginLogo" src="" class="company-logo mx-auto mb-3 hidden">
+                <h1 id="companyNameLogin" class="text-3xl font-bold text-blue-600">السندات الذكية</h1>
+            </div>
+            <input id="loginPhone" type="tel" placeholder="رقم الجوال" class="w-full border-2 p-3 rounded-lg mb-3 text-center text-lg">
+            <input id="loginPass" type="password" placeholder="الرقم السري" class="w-full border-2 p-3 rounded-lg mb-4 text-center text-lg">
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg">دخول</button>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم -->
+    <div id="mainApp" class="hidden">
+        <div class="bg-white shadow-md p-4 no-print">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <img id="headerLogo" src="" class="company-logo hidden">
+                    <div>
+                        <h1 id="companyNameHeader" class="text-2xl font-bold text-blue-600">السندات الذكية</h1>
+                        <p class="text-sm text-gray-600">مرحباً: <span id="userName" class="font-bold"></span> | <span id="userRole"></span></p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="showChangePass()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg">تغيير كلمة المرور</button>
+                    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg">خروج</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-4">
+            <!-- تبويبات المدير -->
+            <div id="adminTabs" class="bg-white rounded-lg shadow mb-4 no-print hidden">
+                <div class="flex border-b overflow-x-auto">
+                    <button onclick="showTab('dashboard')" class="tab-btn px-4 py-3 font-bold border-b-2 border-blue-600 whitespace-nowrap">الرئيسية</button>
+                    <button onclick="showTab('managers')" class="tab-btn px-4 py-3 whitespace-nowrap">المدراء</button>
+                    <button onclick="showTab('delegates')" class="tab-btn px-4 py-3 whitespace-nowrap">المناديب</button>
+                    <button onclick="showTab('bondTypes')" class="tab-btn px-4 py-3 whitespace-nowrap">أنواع السندات</button>
+                    <button onclick="showTab('payments')" class="tab-btn px-4 py-3 whitespace-nowrap">طرق الدفع</button>
+                    <button onclick="showTab('accountants')" class="tab-btn px-4 py-3 whitespace-nowrap">المحاسبين</button>
+                    <button onclick="showTab('funds')" class="tab-btn px-4 py-3 whitespace-nowrap">الصناديق</button>
+                    <button onclick="showTab('company')" class="tab-btn px-4 py-3 whitespace-nowrap">إعدادات الشركة</button>
+                    <button onclick="showTab('printSettings')" class="tab-btn px-4 py-3 whitespace-nowrap" id="printTabBtn" style="display:none">إعدادات الطباعة</button>
+                    <button onclick="showTab('bonds')" class="tab-btn px-4 py-3 whitespace-nowrap">السندات</button>
+                </div>
+            </div>
+
+            <!-- تبويبات المندوب -->
+            <div id="delegateTabs" class="bg-white rounded-lg shadow mb-4 no-print hidden">
+                <div class="flex border-b">
+                    <button onclick="showTab('createBond')" class="tab-btn px-6 py-3 font-bold border-b-2 border-blue-600">إنشاء سند</button>
+                    <button onclick="showTab('myBonds')" class="tab-btn px-6 py-3">سنداتي</button>
+                </div>
+            </div>
+
+            <div id="tabContent"></div>
+        </div>
+    </div>
+
+<script>
+let db = {
+    users: JSON.parse(localStorage.getItem('v3_users') || '[]'),
+    bondTypes: JSON.parse(localStorage.getItem('v3_bondTypes') || '[]'),
+    payments: JSON.parse(localStorage.getItem('v3_payments') || '[]'),
+    accountants: JSON.parse(localStorage.getItem('v3_accountants') || '[]'),
+    funds: JSON.parse(localStorage.getItem('v3_funds') || '[]'),
+    bonds: JSON.parse(localStorage.getItem('v3_bonds') || '[]'),
+    company: JSON.parse(localStorage.getItem('v3_company') || '{"name":"السندات الذكية","address":"","cr":"","logo":""}'),
+    printSettings: JSON.parse(localStorage.getItem('v3_printSettings') || '{"extraText":"","extraTextPos":"bottom","allowManagerPrint":1,"allowDelegatePrint":1}')
+};
+
+let currentUser = null;
+
+if (db.users.length === 0) {
+    db.users.push({
+        id: 1, phone: '0597087767', password: '500600', name: 'المدير العام', 
+        role: 'superadmin', active: true, permissions: { all: true }
+    });
+    saveDB();
+}
+
+function saveDB() {
+    localStorage.setItem('v3_users', JSON.stringify(db.users));
+    localStorage.setItem('v3_bondTypes', JSON.stringify(db.bondTypes));
+    localStorage.setItem('v3_payments', JSON.stringify(db.payments));
+    localStorage.setItem('v3_accountants', JSON.stringify(db.accountants));
+    localStorage.setItem('v3_funds', JSON.stringify(db.funds));
+    localStorage.setItem('v3_bonds', JSON.stringify(db.bonds));
+    localStorage.setItem('v3_company', JSON.stringify(db.company));
+    localStorage.setItem('v3_printSettings', JSON.stringify(db.printSettings));
+    updateCompanyDisplay();
+}
+
+function updateCompanyDisplay() {
+    document.getElementById('companyNameLogin').textContent = db.company.name;
+    document.getElementById('companyNameHeader').textContent = db.company.name;
+    if (db.company.logo) {
+        document.getElementById('loginLogo').src = db.company.logo;
+        document.getElementById('loginLogo').classList.remove('hidden');
+        document.getElementById('headerLogo').src = db.company.logo;
+        document.getElementById('headerLogo').classList.remove('hidden');
+    }
+}
+updateCompanyDisplay();
+
+function login() {
+    const phone = document.getElementById('loginPhone').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    const user = db.users.find(u => u.phone === phone && u.password === pass);
+    
+    if (!user) return Swal.fire('خطأ', 'رقم الجوال أو كلمة المرور خطأ', 'error');
+    if (!user.active) return Swal.fire('موقوف', 'حسابك موقوف. راجع الإدارة', 'error');
+    
+    currentUser = user;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('userName').textContent = user.name;
+    document.getElementById('userRole').textContent = user.role === 'superadmin'? 'مدير عام' : user.role === 'manager'? 'مدير' : 'مندوب';
+    
+    if (user.role === 'delegate') {
+        document.getElementById('delegateTabs').classList.remove('hidden');
+        showTab('createBond');
+    } else {
+        document.getElementById('adminTabs').classList.remove('hidden');
+        if(user.role === 'superadmin') document.getElementById('printTabBtn').style.display = 'block';
+        showTab('dashboard');
+    }
+}
+
+function logout() { location.reload(); }
+function showChangePass() {
+    Swal.fire({
+        title: 'تغيير كلمة المرور',
+        html: '<input id="newPass" type="password" class="swal2-input" placeholder="كلمة المرور الجديدة">',
+        confirmButtonText: 'حفظ',
+        preConfirm: () => {
+            const newPass = document.getElementById('newPass').value;
+            if (!newPass || newPass.length < 4) Swal.showValidationMessage('كلمة المرور قصيرة');
+            return newPass;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            currentUser.password = result.value;
+            const idx = db.users.findIndex(u => u.id === currentUser.id);
+            db.users[idx] = currentUser;
+            saveDB();
+            Swal.fire('تم', 'تم تغيير كلمة المرور', 'success');
+        }
+    });
+}
+
+function showTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('border-blue-600', 'font-bold'));
+    if(event.target) event.target.classList.add('border-blue-600', 'font-bold');
+    
+    const content = document.getElementById('tabContent');
+    const tabs = {
+        dashboard: renderDashboard, managers: renderManagers, delegates: renderDelegates,
+        bondTypes: renderBondTypes, payments: renderPayments, accountants: renderAccountants,
+        funds: renderFunds, company: renderCompany, bonds: renderBonds,
+        createBond: renderCreateBond, myBonds: renderMyBonds, printSettings: renderPrintSettings
+    };
+    content.innerHTML = tabs[tab]();
+}
+
+function renderDashboard() {
+    const cashBonds = db.bonds.filter(b => b.affectsFund).length;
+    return `<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-blue-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${db.bonds.length}</div><div>إجمالي السندات</div></div>
+        <div class="bg-green-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${cashBonds}</div><div>سندات مؤثرة على الصندوق</div></div>
+        <div class="bg-purple-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${db.users.filter(u=>u.role==='manager').length}</div><div>المدراء</div></div>
+        <div class="bg-orange-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${db.bondTypes.length}</div><div>أنواع السندات</div></div>
+    </div>`;
+}
+
+function addUser(role) {
+    const paymentsOptions = db.payments.map(p => `<label class="flex items-center gap-2"><input type="checkbox" value="${p.name}" class="payment-check"> ${p.name}</label>`).join('');
+    Swal.fire({
+        title: `إضافة ${role === 'manager'? 'مدير' : 'مندوب'} جديد`,
+        html: `
+            <input id="swal-name" class="swal2-input" placeholder="الاسم">
+            <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال 05xxxxxxxx">
+            ${role === 'delegate'? `
+                <input id="swal-limit" type="number" class="swal2-input" placeholder="السقف اليومي لعدد السندات">
+                <input id="swal-maxamount" type="number" class="swal2-input" placeholder="أكبر مبلغ للسند الواحد">
+                <div class="text-right mt-3 mb-2 font-bold">طرق الدفع المتاحة:</div>
+                <div class="text-right">${paymentsOptions || 'لا توجد طرق دفع. أضفها أولاً'}</div>
+            ` : ''}
+        `,
+        confirmButtonText: 'إضافة',
+        preConfirm: () => {
+            const name = document.getElementById('swal-name').value;
+            const phone = document.getElementById('swal-phone').value;
+            if (!name ||!phone) Swal.showValidationMessage('املأ الاسم والجوال');
+            if (db.users.find(u => u.phone === phone)) Swal.showValidationMessage('رقم الجوال مسجل مسبقاً');
+            const allowedPayments = Array.from(document.querySelectorAll('.payment-check:checked')).map(cb => cb.value);
+            return { 
+                name, phone, 
+                limit: document.getElementById('swal-limit')?.value || 0,
+                maxAmount: document.getElementById('swal-maxamount')?.value || 0,
+                allowedPayments
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            db.users.push({
+                id: Date.now(), phone: result.value.phone, password: '123456',
+                name: result.value.name, role: role, active: true,
+                dailyLimit: parseInt(result.value.limit), 
+                maxAmount: parseInt(result.value.maxAmount),
+                allowedPayments: result.value.allowedPayments,
+                bondsToday: 0, bondsTodayDate: ''
+            });
+            saveDB();
+            showTab(role === 'manager'? 'managers' : 'delegates');
+            Swal.fire('تم', 'تمت الإضافة. كلمة المرور: 123456', 'success');
+        }
+    });
+}
+
+function toggleUserActive(id) {
+    const user = db.users.find(u => u.id === id);
+    user.active =!user.active;
+    saveDB();
+    showTab('delegates');
+}
+
+function renderManagers() {
+    const managers = db.users.filter(u => u.role === 'manager');
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between mb-4"><h2 class="text-xl font-bold">إدارة المدراء</h2>
+        ${currentUser.role === 'superadmin'? '<button onclick="addUser(\'manager\')" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ إضافة مدير</button>' : ''}
+        </div>
+        <div class="space-y-2">${managers.map(m => `
+            <div class="border p-4 rounded-lg flex justify-between items-center">
+                <div><div class="font-bold">${m.name}</div><div class="text-sm text-gray-600">${m.phone}</div></div>
+                ${currentUser.role === 'superadmin'? `<button onclick="deleteUser(${m.id})" class="bg-red-500 text-white px-3 py-1 rounded">حذف</button>` : ''}
+            </div>`).join('') || '<p class="text-gray-500 text-center py-8">لا يوجد مدراء</p>'}
+        </div></div>`;
+}
+
+function renderDelegates() {
+    const delegates = db.users.filter(u => u.role === 'delegate');
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between mb-4"><h2 class="text-xl font-bold">إدارة المناديب</h2>
+        <button onclick="addUser('delegate')" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ إضافة مندوب</button>
+        </div>
+        <div class="space-y-2">${delegates.map(d => `
+            <div class="border p-4 rounded-lg">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <div class="font-bold text-lg">${d.name} ${d.active? '<span class="text-green-600 text-sm">● نشط</span>' : '<span class="text-red-600 text-sm">● موقوف</span>'}</div>
+                        <div class="text-sm text-gray-600">${d.phone}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="toggleUserActive(${d.id})" class="${d.active? 'bg-orange-500' : 'bg-green-500'} text-white px-3 py-1 rounded text-sm">${d.active? 'إيقاف' : 'تنشيط'}</button>
+                        <button onclick="deleteUser(${d.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-500 grid grid-cols-2 gap-2">
+                    <div>السقف اليومي: ${d.dailyLimit || 'غير محدد'} سند</div>
+                    <div>أكبر مبلغ: ${d.maxAmount || 'غير محدد'} ريال</div>
+                    <div class="col-span-2">طرق الدفع: ${d.allowedPayments?.join(', ') || 'الكل'}</div>
+                </div>
+            </div>`).join('') || '<p class="text-gray-500 text-center py-8">لا يوجد مناديب</p>'}
+        </div></div>`;
+}
+
+function deleteUser(id) {
+    Swal.fire({title: 'متأكد؟', text: 'سيتم حذف المستخدم نهائياً', icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم احذف', cancelButtonText: 'إلغاء'}).then((result) => {
+        if (result.isConfirmed) {
+            db.users = db.users.filter(u => u.id!== id);
+            saveDB(); showTab('delegates');
+            Swal.fire('تم الحذف', '', 'success');
+        }
+    });
+}
+
+function addBondType() {
+    Swal.fire({
+        title: 'إضافة نوع سند',
+        html: `
+            <input id="bt-name" class="swal2-input" placeholder="اسم النوع: قبض/صرف/اشعار دائن">
+            <input id="bt-start" type="number" class="swal2-input" placeholder="بداية التسلسل">
+            <input id="bt-end" type="number" class="swal2-input" placeholder="نهاية التسلسل">
+            <label class="flex items-center gap-2 mt-3"><input type="checkbox" id="bt-affects" checked> <span>يؤثر على الصندوق</span></label>
+            <p class="text-xs text-gray-500 mt-1">فعلها فقط لسندات القبض والصرف</p>
+        `,
+        preConfirm: () => {
+            return {
+                name: document.getElementById('bt-name').value,
+                start: parseInt(document.getElementById('bt-start').value),
+                end: parseInt(document.getElementById('bt-end').value),
+                current: parseInt(document.getElementById('bt-start').value),
+                affectsFund: document.getElementById('bt-affects').checked
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            db.bondTypes.push({id: Date.now(),...result.value});
+            saveDB(); showTab('bondTypes');
+        }
+    });
+}
+
+function editBondType(id) {
+    const bt = db.bondTypes.find(t => t.id === id);
+    Swal.fire({
+        title: 'تعديل نوع السند',
+        html: `
+            <input id="bt-name" class="swal2-input" placeholder="اسم النوع" value="${bt.name}">
+            <input id="bt-start" type="number" class="swal2-input" placeholder="بداية التسلسل" value="${bt.start}">
+            <input id="bt-end" type="number" class="swal2-input" placeholder="نهاية التسلسل" value="${bt.end}">
+            <input id="bt-current" type="number" class="swal2-input" placeholder="الرقم الحالي" value="${bt.current}">
+            <label class="flex items-center gap-2 mt-3"><input type="checkbox" id="bt-affects" ${bt.affectsFund?'checked':''}> <span>يؤثر على الصندوق</span></label>
+        `,
+        confirmButtonText: 'حفظ',
+        preConfirm: () => {
+            bt.name = document.getElementById('bt-name').value;
+            bt.start = parseInt(document.getElementById('bt-start').value);
+            bt.end = parseInt(document.getElementById('bt-end').value);
+            bt.current = parseInt(document.getElementById('bt-current').value);
+            bt.affectsFund = document.getElementById('bt-affects').checked;
+            saveDB(); showTab('bondTypes');
+        }
+    });
+}
+
+function deleteBondType(id) {
+    Swal.fire({title: 'متأكد؟', text: 'سيتم حذف نوع السند', icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم احذف'}).then((result) => {
+        if (result.isConfirmed) {
+            db.bondTypes = db.bondTypes.filter(t => t.id!== id);
+            saveDB(); showTab('bondTypes');
+        }
+    });
+}
+
+function renderBondTypes() {
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between mb-4"><h2 class="text-xl font-bold">أنواع السندات والتسلسل</h2>
+        <button onclick="addBondType()" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ إضافة نوع</button></div>
+        <div class="space-y-2">${db.bondTypes.map(bt => `
+            <div class="border p-4 rounded-lg">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-bold text-lg">${bt.name} ${bt.affectsFund? '<span class="text-green-600 text-xs">● يؤثر على الصندوق</span>' : '<span class="text-gray-400 text-xs">● لا يؤثر</span>'}</div>
+                        <div class="text-sm text-gray-600">التسلسل: ${bt.start} → ${bt.end} | الحالي: ${bt.current}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editBondType(${bt.id})" class="bg-blue-500 text-white px-3 py-1 rounded text-sm">تعديل</button>
+                        <button onclick="deleteBondType(${bt.id})" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+                    </div>
+                </div>
+            </div>`).join('') || '<p class="text-gray-500 text-center py-8">لا توجد أنواع</p>'}
+        </div></div>`;
+}
+
+function addSimpleItem(type, title) {
+    Swal.fire({title: `إضافة ${title}`, input: 'text', inputPlaceholder: 'الاسم', confirmButtonText: 'إضافة'}).then((result) => {
+        if (result.isConfirmed && result.value) {
+            db[type].push({id: Date.now(), name: result.value, balance: 0});
+            saveDB(); showTab(type);
+        }
+    });
+}
+
+function renderPayments() { return renderSimpleList('payments', 'طرق الدفع'); }
+function renderAccountants() { return renderSimpleList('accountants', 'المحاسبين'); }
+function renderFunds() { return renderFundsList(); }
+
+function renderSimpleList(type, title) {
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between mb-4"><h2 class="text-xl font-bold">${title}</h2>
+        <button onclick="addSimpleItem('${type}', '${title}')" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ إضافة</button></div>
+        <div class="space-y-2">${db[type].map(item => `
+            <div class="border p-3 rounded-lg flex justify-between items-center">
+                <span class="font-bold">${item.name}</span>
+                <button onclick="db.${type}=db.${type}.filter(i=>i.id!==${item.id});saveDB();showTab('${type}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+            </div>`).join('') || '<p class="text-gray-500 text-center py-8">لا يوجد</p>'}
+        </div></div>`;
+}
+
+function renderFundsList() {
+    // حساب رصيد كل صندوق من السندات المؤثرة فقط
+    db.funds.forEach(f => {
+        const cashBonds = db.bonds.filter(b => b.fund === f.name && b.affectsFund && b.status === 'مورد');
+        let bal = 0;
+        cashBonds.forEach(b => {
+            if(b.type.includes('قبض')) bal += b.amount;
+            if(b.type.includes('صرف')) bal -= b.amount;
+        });
+        f.balance = bal;
+    });
+    
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between mb-4"><h2 class="text-xl font-bold">الصناديق</h2>
+        <button onclick="addSimpleItem('funds', 'الصناديق')" class="bg-green-600 text-white px-4 py-2 rounded-lg">+ إضافة صندوق</button></div>
+        <div class="space-y-2">${db.funds.map(item => `
+            <div class="border p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-lg">${item.name}</div>
+                        <div class="text-2xl font-bold ${item.balance>=0?'text-green-600':'text-red-600'}">${item.balance.toLocaleString()} ريال</div>
+                    </div>
+                    <button onclick="showFundDetails('${item.name}')" class="bg-blue-500 text-white px-4 py-2 rounded">تفاصيل التوريد</button>
+                </div>
+            </div>`).join('') || '<p class="text-gray-500 text-center py-8">لا يوجد</p>'}
+        </div></div>`;
+}
+function showFundDetails(fundName) {
+    const bonds = db.bonds.filter(b => b.fund === fundName && b.affectsFund);
+    const pending = bonds.filter(b => b.status!== 'مورد');
+    const done = bonds.filter(b => b.status === 'مورد');
+    
+    Swal.fire({
+        title: `تفاصيل صندوق: ${fundName}`,
+        width: '800px',
+        html: `
+            <div class="text-right">
+                <h3 class="font-bold mb-2">سندات غير موردة: ${pending.length}</h3>
+                <div class="max-h-60 overflow-y-auto mb-4">${pending.map(b => `
+                    <div class="border p-2 mb-2 rounded flex justify-between items-center">
+                        <div class="text-sm">
+                            <b>#${b.number}</b> - ${b.type} - ${b.amount} ريال - ${b.clientName}
+                        </div>
+                        <button onclick="markAsSupplied(${b.id});Swal.close()" class="bg-green-500 text-white px-3 py-1 rounded text-sm">توريد</button>
+                    </div>
+                `).join('') || '<p class="text-gray-500">لا يوجد</p>'}</div>
+                
+                <h3 class="font-bold mb-2">سندات موردة: ${done.length}</h3>
+                <div class="max-h-60 overflow-y-auto text-sm text-gray-600">${done.map(b => `
+                    <div class="border p-2 mb-1 rounded">#${b.number} - ${b.amount} ريال - ${b.clientName}</div>
+                `).join('') || '<p class="text-gray-500">لا يوجد</p>'}</div>
+            </div>
+        `,
+        confirmButtonText: 'إغلاق'
+    });
+}
+
+function markAsSupplied(bondId) {
+    const bond = db.bonds.find(b => b.id === bondId);
+    bond.status = 'مورد';
+    bond.suppliedDate = new Date().toLocaleString('ar-SA');
+    bond.suppliedBy = currentUser.name;
+    saveDB();
+    showTab('funds');
+    Swal.fire('تم', 'تم توريد السند للصندوق', 'success');
+}
+
+function renderCompany() {
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">إعدادات الشركة</h2>
+        <div class="space-y-4">
+            <div><label class="block text-sm font-bold mb-1">اسم الشركة</label>
+            <input id="comp-name" value="${db.company.name}" class="w-full border-2 p-3 rounded-lg"></div>
+            <div><label class="block text-sm font-bold mb-1">العنوان</label>
+            <input id="comp-address" value="${db.company.address}" class="w-full border-2 p-3 rounded-lg"></div>
+            <div><label class="block text-sm font-bold mb-1">رقم السجل التجاري</label>
+            <input id="comp-cr" value="${db.company.cr}" class="w-full border-2 p-3 rounded-lg"></div>
+            <div><label class="block text-sm font-bold mb-1">رابط شعار الشركة (Logo)</label>
+            <input id="comp-logo" value="${db.company.logo}" class="w-full border-2 p-3 rounded-lg" placeholder="https://example.com/logo.png">
+            ${db.company.logo? `<img src="${db.company.logo}" class="company-logo mt-2 border p-2 rounded">` : ''}</div>
+            <button onclick="saveCompany()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">حفظ الإعدادات</button>
+        </div></div>`;
+}
+
+function saveCompany() {
+    db.company = {
+        name: document.getElementById('comp-name').value,
+        address: document.getElementById('comp-address').value,
+        cr: document.getElementById('comp-cr').value,
+        logo: document.getElementById('comp-logo').value
+    };
+    saveDB();
+    Swal.fire('تم', 'تم حفظ إعدادات الشركة', 'success');
+}
+
+function renderPrintSettings() {
+    if(currentUser.role!== 'superadmin') return '<p class="text-red-500">غير مصرح</p>';
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">إعدادات الطباعة</h2>
+        <div class="space-y-4">
+            <div><label class="block text-sm font-bold mb-1">نص إضافي يظهر في السند</label>
+            <textarea id="print-text" class="w-full border-2 p-3 rounded-lg" rows="3">${db.printSettings.extraText}</textarea></div>
+            <div><label class="block text-sm font-bold mb-1">موقع النص</label>
+            <select id="print-pos" class="w-full border-2 p-3 rounded-lg">
+                <option value="bottom" ${db.printSettings.extraTextPos==='bottom'?'selected':''}>أسفل السند</option>
+                <option value="top" ${db.printSettings.extraTextPos==='top'?'selected':''}>أعلى السند</option>
+            </select></div>
+            <div><label class="block text-sm font-bold mb-1">عدد مرات طباعة المندوب</label>
+            <input id="print-delegate" type="number" value="${db.printSettings.allowDelegatePrint}" class="w-full border-2 p-3 rounded-lg"></div>
+            <div><label class="block text-sm font-bold mb-1">عدد مرات طباعة المدير</label>
+            <input id="print-manager" type="number" value="${db.printSettings.allowManagerPrint}" class="w-full border-2 p-3 rounded-lg"></div>
+            <button onclick="savePrintSettings()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">حفظ إعدادات الطباعة</button>
+        </div></div>`;
+}
+
+function savePrintSettings() {
+    db.printSettings = {
+        extraText: document.getElementById('print-text').value,
+        extraTextPos: document.getElementById('print-pos').value,
+        allowDelegatePrint: parseInt(document.getElementById('print-delegate').value),
+        allowManagerPrint: parseInt(document.getElementById('print-manager').value)
+    };
+    saveDB();
+    Swal.fire('تم', 'تم حفظ إعدادات الطباعة', 'success');
+}
+
+function renderCreateBond() {
+    const today = new Date().toLocaleDateString('ar-SA');
+    if (currentUser.bondsTodayDate!== today) {
+        currentUser.bondsToday = 0;
+        currentUser.bondsTodayDate = today;
+    }
+    
+    if (currentUser.dailyLimit > 0 && currentUser.bondsToday >= currentUser.dailyLimit) {
+        return `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">وصلت للسقف اليومي: ${currentUser.dailyLimit} سند</div>`;
+    }
+    
+    const allowedPayments = currentUser.allowedPayments?.length? db.payments.filter(p => currentUser.allowedPayments.includes(p.name)) : db.payments;
+    
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">إنشاء سند جديد</h2>
+        ${currentUser.dailyLimit? `<div class="bg-blue-50 p-3 rounded mb-4 text-sm">المتبقي اليوم: ${currentUser.dailyLimit - currentUser.bondsToday} من ${currentUser.dailyLimit} سند | الحد الأقصى للمبلغ: ${currentUser.maxAmount || 'غير محدد'} ريال</div>` : ''}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select id="bond-type" class="border-2 p-3 rounded-lg"><option value="">نوع السند</option>${db.bondTypes.map(t=>`<option value="${t.id}">${t.name} ${t.affectsFund?'💰':''}</option>`).join('')}</select>
+            <input id="bond-amount" type="number" placeholder="المبلغ" class="border-2 p-3 rounded-lg">
+            <input id="bond-client" placeholder="اسم العميل" class="border-2 p-3 rounded-lg">
+            <input id="bond-client-phone" placeholder="رقم العميل للواتساب" class="border-2 p-3 rounded-lg">
+            <input id="bond-client-account" placeholder="حساب العميل" class="border-2 p-3 rounded-lg">
+            <select id="bond-payment" class="border-2 p-3 rounded-lg"><option value="">طريقة الدفع</option>${allowedPayments.map(p=>`<option>${p.name}</option>`).join('')}</select>
+            <select id="bond-accountant" class="border-2 p-3 rounded-lg"><option value="">المحاسب</option>${db.accountants.map(a=>`<option>${a.name}</option>`).join('')}</select>
+            <select id="bond-fund" class="border-2 p-3 rounded-lg"><option value="">نوع الصندوق</option>${db.funds.map(f=>`<option>${f.name}</option>`).join('')}</select>
+            <textarea id="bond-desc" placeholder="البيان" class="border-2 p-3 rounded-lg md:col-span-2" rows="3"></textarea>
+            <button onclick="saveBond()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg md:col-span-2">إنشاء السند</button>
+        </div></div>`;
+}
+
+function saveBond() {
+    const typeId = document.getElementById('bond-type').value;
+    const amount = parseFloat(document.getElementById('bond-amount').value);
+    const bondType = db.bondTypes.find(t => t.id == typeId);
+    
+    if (!bondType) return Swal.fire('خطأ', 'اختر نوع السند', 'error');
+    if (!amount || amount <= 0) return Swal.fire('خطأ', 'اكتب المبلغ', 'error');
+    if (currentUser.maxAmount > 0 && amount > currentUser.maxAmount) return Swal.fire('خطأ', `المبلغ يتجاوز الحد المسموح: ${currentUser.maxAmount} ريال`, 'error');
+    if (bondType.current > bondType.end) return Swal.fire('خطأ', 'انتهى تسلسل هذا النوع', 'error');
+    if (currentUser.dailyLimit > 0 && currentUser.bondsToday >= currentUser.dailyLimit) return Swal.fire('خطأ', 'وصلت للسقف اليومي', 'error');
+    
+    const bond = {
+        id: Date.now(), number: bondType.current, type: bondType.name,
+        amount: amount, affectsFund: bondType.affectsFund,
+        clientName: document.getElementById('bond-client').value,
+        clientPhone: document.getElementById('bond-client-phone').value,
+        clientAccount: document.getElementById('bond-client-account').value,
+        payment: document.getElementById('bond-payment').value,
+        accountant: document.getElementById('bond-accountant').value,
+        fund: document.getElementById('bond-fund').value,
+        description: document.getElementById('bond-desc').value,
+        userId: currentUser.id, userName: currentUser.name,
+        date: new Date().toLocaleString('ar-SA'),
+        status: 'غير مورد',
+        printCount: {}, qrData: ''
+    };
+    
+    if (!bond.clientName) return Swal.fire('خطأ', 'اكتب اسم العميل', 'error');
+    
+    db.bonds.push(bond);
+    bondType.current++;
+    currentUser.bondsToday = (currentUser.bondsToday || 0) + 1;
+    currentUser.bondsTodayDate = new Date().toLocaleDateString('ar-SA');
+    
+    const idx = db.users.findIndex(u => u.id === currentUser.id);
+    db.users[idx] = currentUser;
+    
+    saveDB();
+    Swal.fire('تم', `تم إنشاء السند رقم ${bond.number}`, 'success').then(() => showTab('myBonds'));
+}
+
+function renderBonds() { return renderBondsList(db.bonds, 'كل السندات'); }
+function renderMyBonds() { return renderBondsList(db.bonds.filter(b => b.userId === currentUser.id), 'سنداتي'); }
+
+function renderBondsList(bonds, title) {
+    return `<div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">${title}</h2>
+        <div class="space-y-3">${bonds.slice().reverse().map(b => `
+            <div class="border-2 p-4 rounded-lg relative">
+                <div class="print-only bond-number">رقم السند: ${b.number}</div>
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">سند ${b.type} #${b.number}</span>
+                        <span class="ml-2 px-2 py-1 rounded text-xs ${b.status==='مورد'?'bg-green-100 text-green-800':'bg-orange-100 text-orange-800'}">${b.status}</span>
+                        <div class="text-2xl font-bold mt-2">${b.amount} ريال</div>
+                    </div>
+                    <div class="text-left text-sm text-gray-600">
+                        <div>${b.date}</div>
+                        <div>بواسطة: ${b.userName}</div>
+                        <div>طباعة: ${b.printCount[currentUser.id] || 0} مرة</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div><b>العميل:</b> ${b.clientName}</div>
+                    <div><b>جوال العميل:</b> ${b.clientPhone}</div>
+                    <div><b>الحساب:</b> ${b.clientAccount || '-'}</div>
+                    <div><b>الدفع:</b> ${b.payment || '-'}</div>
+                    <div><b>المحاسب:</b> ${b.accountant || '-'}</div>
+                    <div><b>الصندوق:</b> ${b.fund || '-'}</div>
+                </div>
+                <div class="text-sm mb-3"><b>البيان:</b> ${b.description || '-'}</div>
+                <div class="flex gap-2 no-print">
+                    <button onclick="printBond(${b.id})" class="bg-gray-600 text-white px-4 py-2 rounded">🖨️ طباعة</button>
+                    <button onclick="sendWhatsApp('${b.clientPhone}', ${b.id})" class="bg-green-600 text-white px-4 py-2 rounded">📱 واتساب</button>
+                    ${b.affectsFund && b.status!=='مورد' && currentUser.role!=='delegate'? `<button onclick="markAsSupplied(${b.id})" class="bg-blue-600 text-white px-4 py-2 rounded">💰 توريد</button>` : ''}
+                </div>
+            </div>`).join('') || '<p class="text-gray-500 text-center py-8">لا توجد سندات</p>'}
+        </div></div>`;
+}
+
+function printBond(id) {
+    const b = db.bonds.find(bond => bond.id === id);
+    const uid = currentUser.id;
+    
+    // التحقق من صلاحية الطباعة
+    if(currentUser.role === 'delegate') {
+        const max = db.printSettings.allowDelegatePrint;
+        if((b.printCount[uid] || 0) >= max) return Swal.fire('تنبيه', `لا يمكنك طباعة السند أكثر من ${max} مرة`, 'warning');
+    } else if(currentUser.role === 'manager') {
+        const max = db.printSettings.allowManagerPrint;
+        if((b.printCount[uid] || 0) >= max) return Swal.fire('تنبيه', `لا يمكنك طباعة السند أكثر من ${max} مرة`, 'warning');
+    }
+    
+    b.printCount[uid] = (b.printCount[uid] || 0) + 1;
+    saveDB();
+    
+    // إنشاء رابط QR يحتوي على بيانات السند
+    const qrText = `سند رقم: ${b.number}\nالمبلغ: ${b.amount}\nالعميل: ${b.clientName}\nالحالة: ${b.status}\nالتاريخ: ${b.date}`;
+    
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write(`<html dir="rtl"><head><title>سند ${b.number}</title>`);
+    printWindow.document.write(`
+        <style>
+            body{font-family:'Cairo',Arial;padding:20px;position:relative} 
+            table{width:100%;border-collapse:collapse;margin-top:20px} 
+            td{padding:10px;border:1px solid #ddd}
+           .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:10px}
+           .logo{max-height:60px}
+           .bond-number{position:absolute;top:10px;left:10px;color:red;font-weight:bold;font-size:24px;border:2px solid red;padding:5px 15px;border-radius:8px}
+           .company-info{font-size:12px;color:#666}
+           .qr-box{position:absolute;bottom:20px;left:20px;text-align:center}
+           .no-signature{text-align:center;font-weight:bold;margin-top:50px;border-top:2px dashed #333;padding-top:15px}
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    </head><body>`);
+    
+    printWindow.document.write(`<div class="bond-number">رقم السند: ${b.number}</div>`);
+    printWindow.document.write(`<div class="header">
+        <div>
+            <h1 style="margin:0">${db.company.name}</h1>
+            <div class="company-info">
+                ${db.company.address? `<div>${db.company.address}</div>` : ''}
+                ${db.company.cr? `<div>س.ت: ${db.company.cr}</div>` : ''}
+            </div>
+        </div>
+        ${db.company.logo? `<img src="${db.company.logo}" class="logo">` : ''}
+    </div>`);
+    
+    if(db.printSettings.extraText && db.printSettings.extraTextPos === 'top') {
+        printWindow.document.write(`<div style="text-align:center;margin:10px 0;font-weight:bold">${db.printSettings.extraText}</div>`);
+    }
+    
+    printWindow.document.write(`<h2 style="text-align:center;margin:20px 0">سند ${b.type}</h2>`);
+    printWindow.document.write(`<table>
+        <tr><td width="30%"><b>رقم السند:</b></td><td>${b.number}</td></tr>
+        <tr><td><b>المبلغ:</b></td><td style="font-size:18px;font-weight:bold">${b.amount} ريال</td></tr>
+        <tr><td><b>اسم العميل:</b></td><td>${b.clientName}</td></tr>
+        <tr><td><b>رقم العميل:</b></td><td>${b.clientPhone}</td></tr>
+        <tr><td><b>حساب العميل:</b></td><td>${b.clientAccount || '-'}</td></tr>
+        <tr><td><b>طريقة الدفع:</b></td><td>${b.payment || '-'}</td></tr>
+        <tr><td><b>البيان:</b></td><td>${b.description || '-'}</td></tr>
+        <tr><td><b>المحاسب:</b></td><td>${b.accountant || '-'}</td></tr>
+        <tr><td><b>الصندوق:</b></td><td>${b.fund || '-'}</td></tr>
+        <tr><td><b>الحالة:</b></td><td style="font-weight:bold;color:${b.status==='مورد'?'green':'orange'}">${b.status}</td></tr>
+        <tr><td><b>التاريخ:</b></td><td>${b.date}</td></tr>
+        <tr><td><b>المندوب:</b></td><td>${b.userName}</td></tr>
+    </table>`);
+    
+    if(db.printSettings.extraText && db.printSettings.extraTextPos === 'bottom') {
+        printWindow.document.write(`<div style="text-align:center;margin:20px 0;font-weight:bold">${db.printSettings.extraText}</div>`);
+    }
+    
+    printWindow.document.write(`<div class="no-signature">هذه الوثيقة لا تحتاج الى توقيع يدوي</div>`);
+    printWindow.document.write(`<div class="qr-box"><div id="qrcode"></div><div style="font-size:10px">امسح للتحقق</div></div>`);
+    printWindow.document.write(`
+        <script>
+            new QRCode(document.getElementById("qrcode"), {
+                text: ${JSON.stringify(qrText)},
+                width: 80,
+                height: 80
+            });
+            window.onload = function(){ window.print(); }
+        </script>
+    `);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+}
+
+function sendWhatsApp(phone, id) {
+    const b = db.bonds.find(bond => bond.id === id);
+    if (!phone) return Swal.fire('تنبيه', 'رقم العميل غير موجود', 'warning');
+    const msg = `*${db.company.name}*%0A%0A*سند ${b.type} رقم ${b.number}*%0A━━━━━━━━━━━━━━━%0A💰 المبلغ: *${b.amount} ريال*%0A👤 العميل: ${b.clientName}%0A📅 التاريخ: ${b.date}%0A📝 البيان: ${b.description || '-'}%0A💳 طريقة الدفع: ${b.payment || '-'}%0A📌 الحالة: *${b.status}*%0A%0Aشكراً لتعاملكم معنا`;
+    window.open(`https://wa.me/966${phone.replace(/^0/, '')}?text=${msg}`, '_blank');
+}
+</script>
+</body>
+</html>
