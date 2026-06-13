@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سندات برو V4</title>
+    <title>سندات برو V4.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
         body { font-family: 'Cairo', sans-serif; }
@@ -18,18 +19,18 @@
         [lang="zh"] body { font-family: 'Noto Sans SC', sans-serif; }
         [dir="ltr"] { direction: ltr; }
         @media print {
-      .no-print { display: none!important; }
-      .print-only { display: block!important; }
-      .qr-print { position: absolute; bottom: 20px; left: 20px; }
-      .bond-number-once { position: absolute; top: 15px; left: 15px; color: red; font-weight: bold; font-size: 20px; border: 2px solid red; padding: 5px 15px; border-radius: 8px; }
-      .no-signature { text-align: center; margin-top: 40px; font-size: 14px; color: #555; }
-      .print-logo-center { text-align: center; margin-bottom: 20px; }
-      .print-logo-center img { max-height: 80px; margin: 0 auto; }
+     .no-print { display: none!important; }
+     .print-only { display: block!important; }
+     .qr-print { position: absolute; bottom: 20px; left: 20px; }
+     .bond-number-once { position: absolute; top: 15px; left: 15px; color: red; font-weight: bold; font-size: 20px; border: 2px solid red; padding: 5px 15px; border-radius: 8px; }
+     .no-signature { text-align: center; margin-top: 40px; font-size: 14px; color: #555; }
+     .print-logo-center { text-align: center; margin-bottom: 20px; }
+     .print-logo-center img { max-height: 80px; margin: 0 auto; }
         }
-    .company-logo { max-height: 80px; max-width: 200px; object-fit: contain; }
-    .lang-flag { width: 24px; height: 16px; object-fit: cover; border-radius: 2px; }
-    .upload-btn { position: relative; overflow: hidden; }
-    .upload-btn input[type=file] { position: absolute; top: 0; right: 0; min-width: 100%; min-height: 100%; font-size: 100px; text-align: right; filter: alpha(opacity=0); opacity: 0; outline: none; cursor: pointer; display: block; }
+   .company-logo { max-height: 80px; max-width: 200px; object-fit: contain; }
+   .lang-flag { width: 24px; height: 16px; object-fit: cover; border-radius: 2px; }
+   .upload-btn { position: relative; overflow: hidden; }
+   .upload-btn input[type=file] { position: absolute; top: 0; right: 0; min-width: 100%; min-height: 100%; font-size: 100px; text-align: right; filter: alpha(opacity=0); opacity: 0; outline: none; cursor: pointer; display: block; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -120,14 +121,14 @@
 
 <script>
 const translations = {
-    ar: {app_name:"سندات برو",phone:"رقم الجوال",password:"الرقم السري",login:"دخول",change_lang:"تغيير اللغة",welcome:"مرحباً",change_pass:"تغيير كلمة المرور",logout:"خروج",home:"الرئيسية",managers:"المدراء",delegates:"المناديب",bond_types:"أنواع السندات",payments:"طرق الدفع",accountants:"المحاسبين",funds:"الصناديق",cashbox:"صندوق الحركة",company_settings:"إعدادات الشركة",print_settings:"إعدادات الطباعة",bonds:"السندات",create_bond:"إنشاء سند",my_bonds:"سنداتي",export_excel:"تصدير إكسل",create_folder:"إنشاء مجلد",supplied:"مورد",not_supplied:"غير مورد",print_once:"طباعة",print_qr_only:"طباعة QR فقط",no_signature_needed:"هذا المستند لا يحتاج إلى توقيع يدوي",view_bond:"عرض السند",download_pdf:"تحميل PDF",upload_logo:"رفع الشعار",daily_total_limit:"الحد الأقصى لإجمالي المبالغ اليومية",remaining_total:"المتبقي من الإجمالي"},
-    en: {app_name:"Sanadat Pro",phone:"Phone Number",password:"Password",login:"Login",change_lang:"Change Language",welcome:"Welcome",change_pass:"Change Password",logout:"Logout",home:"Dashboard",managers:"Managers",delegates:"Delegates",bond_types:"Bond Types",payments:"Payments",accountants:"Accountants",funds:"Funds",cashbox:"Cashbox",company_settings:"Company Settings",print_settings:"Print Settings",bonds:"Bonds",create_bond:"Create Bond",my_bonds:"My Bonds",export_excel:"Export Excel",create_folder:"Create Folder",supplied:"Supplied",not_supplied:"Not Supplied",print_once:"Print",print_qr_only:"Print QR Only",no_signature_needed:"This document does not require manual signature",view_bond:"View Bond",download_pdf:"Download PDF",upload_logo:"Upload Logo",daily_total_limit:"Daily Total Amount Limit",remaining_total:"Remaining Total"},
-    fr: {app_name:"Sanadat Pro",phone:"Numéro de téléphone",password:"Mot de passe",login:"Connexion",change_lang:"Changer de langue",welcome:"Bienvenue",change_pass:"Changer le mot de passe",logout:"Déconnexion",home:"Tableau de bord",managers:"Managers",delegates:"Délégués",bond_types:"Types de bons",payments:"Paiements",accountants:"Comptables",funds:"Fonds",cashbox:"Caisse",company_settings:"Paramètres",print_settings:"Paramètres d'impression",bonds:"Bons",create_bond:"Créer un bon",my_bonds:"Mes bons",export_excel:"Exporter Excel",create_folder:"Créer un dossier",supplied:"Fourni",not_supplied:"Non fourni",print_once:"Imprimer",print_qr_only:"Imprimer QR seulement",no_signature_needed:"Ce document ne nécessite pas de signature manuelle",view_bond:"Voir le bon",download_pdf:"Télécharger PDF",upload_logo:"Télécharger le logo",daily_total_limit:"Limite totale quotidienne",remaining_total:"Total restant"},
-    de: {app_name:"Sanadat Pro",phone:"Telefonnummer",password:"Passwort",login:"Anmelden",change_lang:"Sprache ändern",welcome:"Willkommen",change_pass:"Passwort ändern",logout:"Abmelden",home:"Dashboard",managers:"Manager",delegates:"Delegierte",bond_types:"Belegarten",payments:"Zahlungen",accountants:"Buchhalter",funds:"Fonds",cashbox:"Kasse",company_settings:"Firmeneinstellungen",print_settings:"Druckeinstellungen",bonds:"Belege",create_bond:"Beleg erstellen",my_bonds:"Meine Belege",export_excel:"Excel exportieren",create_folder:"Ordner erstellen",supplied:"Geliefert",not_supplied:"Nicht geliefert",print_once:"Drucken",print_qr_only:"Nur QR drucken",no_signature_needed:"Dieses Dokument benötigt keine manuelle Unterschrift",view_bond:"Beleg ansehen",download_pdf:"PDF herunterladen",upload_logo:"Logo hochladen",daily_total_limit:"Tägliches Gesamtlimit",remaining_total:"Verbleibende Summe"},
-    tr: {app_name:"Sanadat Pro",phone:"Telefon Numarası",password:"Şifre",login:"Giriş",change_lang:"Dili Değiştir",welcome:"Hoş geldiniz",change_pass:"Şifre Değiştir",logout:"Çıkış",home:"Panel",managers:"Yöneticiler",delegates:"Temsilciler",bond_types:"Senet Türleri",payments:"Ödemeler",accountants:"Muhasebeciler",funds:"Fonlar",cashbox:"Kasa",company_settings:"Şirket Ayarları",print_settings:"Yazdırma Ayarları",bonds:"Senetler",create_bond:"Senet Oluştur",my_bonds:"Senetlerim",export_excel:"Excel'e Aktar",create_folder:"Klasör Oluştur",supplied:"Tedarik Edildi",not_supplied:"Tedarik Edilmedi",print_once:"Yazdır",print_qr_only:"Sadece QR Yazdır",no_signature_needed:"Bu belge manuel imza gerektirmez",view_bond:"Senedi Görüntüle",download_pdf:"PDF İndir",upload_logo:"Logo Yükle",daily_total_limit:"Günlük Toplam Tutar Limiti",remaining_total:"Kalan Toplam"},
-    ur: {app_name:"سندات پرو",phone:"فون نمبر",password:"پاس ورڈ",login:"لاگ ان",change_lang:"زبان تبدیل کریں",welcome:"خوش آمدید",change_pass:"پاس ورڈ تبدیل کریں",logout:"لاگ آؤٹ",home:"ڈیش بورڈ",managers:"مینیجرز",delegates:"نمائندے",bond_types:"بانڈ کی اقسام",payments:"ادائیگی",accountants:"اکاؤنٹنٹس",funds:"فنڈز",cashbox:"کیش باکس",company_settings:"کمپنی کی ترتیبات",print_settings:"پرنٹ کی ترتیبات",bonds:"بانڈز",create_bond:"بانڈ بنائیں",my_bonds:"میرے بانڈز",export_excel:"ایکسل برآمد کریں",create_folder:"فولڈر بنائیں",supplied:"فراہم شدہ",not_supplied:"فراہم نہیں",print_once:"پرنٹ",print_qr_only:"صرف QR پرنٹ کریں",no_signature_needed:"اس دستاویز کو دستی دستخط کی ضرورت نہیں ہے",view_bond:"بانڈ دیکھیں",download_pdf:"PDF ڈاؤن لوڈ",upload_logo:"لوگو اپ لوڈ کریں",daily_total_limit:"روزانہ کل رقم کی حد",remaining_total:"باقی کل"},
-    fa: {app_name:"سندات پرو",phone:"شماره تلفن",password:"رمز عبور",login:"ورود",change_lang:"تغییر زبان",welcome:"خوش آمدید",change_pass:"تغییر رمز عبور",logout:"خروج",home:"داشبورد",managers:"مدیران",delegates:"نمایندگان",bond_types:"انواع سند",payments:"پرداختها",accountants:"حسابداران",funds:"صندوقها",cashbox:"صندوق",company_settings:"تنظیمات شرکت",print_settings:"تنظیمات چاپ",bonds:"اسناد",create_bond:"ایجاد سند",my_bonds:"اسناد من",export_excel:"خروجی اکسل",create_folder:"ایجاد پوشه",supplied:"تأمین شده",not_supplied:"تأمین نشده",print_once:"چاپ",print_qr_only:"فقط QR چاپ",no_signature_needed:"این سند نیازی به امضای دستی ندارد",view_bond:"مشاهده سند",download_pdf:"دانلود PDF",upload_logo:"آپلود لوگو",daily_total_limit:"حد کل مبلغ روزانه",remaining_total:"مجموع باقیمانده"},
-    zh: {app_name:"Sanadat Pro",phone:"电话号码",password:"密码",login:"登录",change_lang:"更改语言",welcome:"欢迎",change_pass:"更改密码",logout:"登出",home:"仪表板",managers:"经理",delegates:"代表",bond_types:"债券类型",payments:"付款",accountants:"会计",funds:"资金",cashbox:"现金箱",company_settings:"公司设置",print_settings:"打印设置",bonds:"债券",create_bond:"创建债券",my_bonds:"我的债券",export_excel:"导出Excel",create_folder:"创建文件夹",supplied:"已供应",not_supplied:"未供应",print_once:"打印",print_qr_only:"仅打印QR",no_signature_needed:"此文件不需要手动签名",view_bond:"查看债券",download_pdf:"下载PDF",upload_logo:"上传标志",daily_total_limit:"每日总金额限制",remaining_total:"剩余总额"}
+    ar: {app_name:"سندات برو",phone:"رقم الجوال",password:"الرقم السري",login:"دخول",change_lang:"تغيير اللغة",welcome:"مرحباً",change_pass:"تغيير كلمة المرور",logout:"خروج",home:"الرئيسية",managers:"المدراء",delegates:"المناديب",bond_types:"أنواع السندات",payments:"طرق الدفع",accountants:"المحاسبين",funds:"الصناديق",cashbox:"صندوق الحركة",company_settings:"إعدادات الشركة",print_settings:"إعدادات الطباعة",bonds:"السندات",create_bond:"إنشاء سند",my_bonds:"سنداتي",export_excel:"تصدير إكسل",create_folder:"إنشاء مجلد",supplied:"مورد",not_supplied:"غير مورد",verified:"موثق",not_verified:"غير موثق",print_once:"طباعة",print_qr_only:"طباعة QR فقط",no_signature_needed:"هذا المستند لا يحتاج إلى توقيع يدوي",view_bond:"عرض السند",download_pdf:"تحميل PDF",upload_logo:"رفع الشعار",daily_total_limit:"الحد الأقصى لإجمالي المبالغ اليومية",remaining_total:"المتبقي من الإجمالي"},
+    en: {app_name:"Sanadat Pro",phone:"Phone Number",password:"Password",login:"Login",change_lang:"Change Language",welcome:"Welcome",change_pass:"Change Password",logout:"Logout",home:"Dashboard",managers:"Managers",delegates:"Delegates",bond_types:"Bond Types",payments:"Payments",accountants:"Accountants",funds:"Funds",cashbox:"Cashbox",company_settings:"Company Settings",print_settings:"Print Settings",bonds:"Bonds",create_bond:"Create Bond",my_bonds:"My Bonds",export_excel:"Export Excel",create_folder:"Create Folder",supplied:"Supplied",not_supplied:"Not Supplied",verified:"Verified",not_verified:"Not Verified",print_once:"Print",print_qr_only:"Print QR Only",no_signature_needed:"This document does not require manual signature",view_bond:"View Bond",download_pdf:"Download PDF",upload_logo:"Upload Logo",daily_total_limit:"Daily Total Amount Limit",remaining_total:"Remaining Total"},
+    fr: {app_name:"Sanadat Pro",phone:"Numéro de téléphone",password:"Mot de passe",login:"Connexion",change_lang:"Changer de langue",welcome:"Bienvenue",change_pass:"Changer le mot de passe",logout:"Déconnexion",home:"Tableau de bord",managers:"Managers",delegates:"Délégués",bond_types:"Types de bons",payments:"Paiements",accountants:"Comptables",funds:"Fonds",cashbox:"Caisse",company_settings:"Paramètres",print_settings:"Paramètres d'impression",bonds:"Bons",create_bond:"Créer un bon",my_bonds:"Mes bons",export_excel:"Exporter Excel",create_folder:"Créer un dossier",supplied:"Fourni",not_supplied:"Non fourni",verified:"Vérifié",not_verified:"Non vérifié",print_once:"Imprimer",print_qr_only:"Imprimer QR seulement",no_signature_needed:"Ce document ne nécessite pas de signature manuelle",view_bond:"Voir le bon",download_pdf:"Télécharger PDF",upload_logo:"Télécharger le logo",daily_total_limit:"Limite totale quotidienne",remaining_total:"Total restant"},
+    de: {app_name:"Sanadat Pro",phone:"Telefonnummer",password:"Passwort",login:"Anmelden",change_lang:"Sprache ändern",welcome:"Willkommen",change_pass:"Passwort ändern",logout:"Abmelden",home:"Dashboard",managers:"Manager",delegates:"Delegierte",bond_types:"Belegarten",payments:"Zahlungen",accountants:"Buchhalter",funds:"Fonds",cashbox:"Kasse",company_settings:"Firmeneinstellungen",print_settings:"Druckeinstellungen",bonds:"Belege",create_bond:"Beleg erstellen",my_bonds:"Meine Belege",export_excel:"Excel exportieren",create_folder:"Ordner erstellen",supplied:"Geliefert",not_supplied:"Nicht geliefert",verified:"Verifiziert",not_verified:"Nicht verifiziert",print_once:"Drucken",print_qr_only:"Nur QR drucken",no_signature_needed:"Dieses Dokument benötigt keine manuelle Unterschrift",view_bond:"Beleg ansehen",download_pdf:"PDF herunterladen",upload_logo:"Logo hochladen",daily_total_limit:"Tägliches Gesamtlimit",remaining_total:"Verbleibende Summe"},
+    tr: {app_name:"Sanadat Pro",phone:"Telefon Numarası",password:"Şifre",login:"Giriş",change_lang:"Dili Değiştir",welcome:"Hoş geldiniz",change_pass:"Şifre Değiştir",logout:"Çıkış",home:"Panel",managers:"Yöneticiler",delegates:"Temsilciler",bond_types:"Senet Türleri",payments:"Ödemeler",accountants:"Muhasebeciler",funds:"Fonlar",cashbox:"Kasa",company_settings:"Şirket Ayarları",print_settings:"Yazdırma Ayarları",bonds:"Senetler",create_bond:"Senet Oluştur",my_bonds:"Senetlerim",export_excel:"Excel'e Aktar",create_folder:"Klasör Oluştur",supplied:"Tedarik Edildi",not_supplied:"Tedarik Edilmedi",verified:"Doğrulandı",not_verified:"Doğrulanmadı",print_once:"Yazdır",print_qr_only:"Sadece QR Yazdır",no_signature_needed:"Bu belge manuel imza gerektirmez",view_bond:"Senedi Görüntüle",download_pdf:"PDF İndir",upload_logo:"Logo Yükle",daily_total_limit:"Günlük Toplam Tutar Limiti",remaining_total:"Kalan Toplam"},
+    ur: {app_name:"سندات پرو",phone:"فون نمبر",password:"پاس ورڈ",login:"لاگ ان",change_lang:"زبان تبدیل کریں",welcome:"خوش آمدید",change_pass:"پاس ورڈ تبدیل کریں",logout:"لاگ آؤٹ",home:"ڈیش بورڈ",managers:"مینیجرز",delegates:"نمائندے",bond_types:"بانڈ کی اقسام",payments:"ادائیگی",accountants:"اکاؤنٹنٹس",funds:"فنڈز",cashbox:"کیش باکس",company_settings:"کمپنی کی ترتیبات",print_settings:"پرنٹ کی ترتیبات",bonds:"بانڈز",create_bond:"بانڈ بنائیں",my_bonds:"میرے بانڈز",export_excel:"ایکسل برآمد کریں",create_folder:"فولڈر بنائیں",supplied:"فراہم شدہ",not_supplied:"فراہم نہیں",verified:"تصدیق شدہ",not_verified:"تصدیق نہیں",print_once:"پرنٹ",print_qr_only:"صرف QR پرنٹ کریں",no_signature_needed:"اس دستاویز کو دستی دستخط کی ضرورت نہیں ہے",view_bond:"بانڈ دیکھیں",download_pdf:"PDF ڈاؤن لوڈ",upload_logo:"لوگو اپ لوڈ کریں",daily_total_limit:"روزانہ کل رقم کی حد",remaining_total:"باقی کل"},
+    fa: {app_name:"سندات پرو",phone:"شماره تلفن",password:"رمز عبور",login:"ورود",change_lang:"تغییر زبان",welcome:"خوش آمدید",change_pass:"تغییر رمز عبور",logout:"خروج",home:"داشبورد",managers:"مدیران",delegates:"نمایندگان",bond_types:"انواع سند",payments:"پرداختها",accountants:"حسابداران",funds:"صندوقها",cashbox:"صندوق",company_settings:"تنظیمات شرکت",print_settings:"تنظیمات چاپ",bonds:"اسناد",create_bond:"ایجاد سند",my_bonds:"اسناد من",export_excel:"خروجی اکسل",create_folder:"ایجاد پوشه",supplied:"تأمین شده",not_supplied:"تأمین نشده",verified:"تأیید شده",not_verified:"تأیید نشده",print_once:"چاپ",print_qr_only:"فقط QR چاپ",no_signature_needed:"این سند نیازی به امضای دستی ندارد",view_bond:"مشاهده سند",download_pdf:"دانلود PDF",upload_logo:"آپلود لوگو",daily_total_limit:"حد کل مبلغ روزانه",remaining_total:"مجموع باقیمانده"},
+    zh: {app_name:"Sanadat Pro",phone:"电话号码",password:"密码",login:"登录",change_lang:"更改语言",welcome:"欢迎",change_pass:"更改密码",logout:"登出",home:"仪表板",managers:"经理",delegates:"代表",bond_types:"债券类型",payments:"付款",accountants:"会计",funds:"资金",cashbox:"现金箱",company_settings:"公司设置",print_settings:"打印设置",bonds:"债券",create_bond:"创建债券",my_bonds:"我的债券",export_excel:"导出Excel",create_folder:"创建文件夹",supplied:"已供应",not_supplied:"未供应",verified:"已验证",not_verified:"未验证",print_once:"打印",print_qr_only:"仅打印QR",no_signature_needed:"此文件不需要手动签名",view_bond:"查看债券",download_pdf:"下载PDF",upload_logo:"上传标志",daily_total_limit:"每日总金额限制",remaining_total:"剩余总额"}
 };
 
 let currentLang = localStorage.getItem('v4_lang') || 'ar';
@@ -169,7 +170,6 @@ let db = {
     printSettings: JSON.parse(localStorage.getItem('v4_printSettings') || '{"allowMultiplePrint":false,"maxPrints":1,"hideSignatures":true,"customHeaders":{"title":"","subtitle":""},"showQR":true,"qrPosition":"bottom-left","autoGenerateQR":true}')
 };
 let currentUser = null;
-
 if (db.users.length === 0) {
     db.users.push({
         id: 1, phone: '0597087767', password: '500600', name: 'المدير العام',
@@ -230,7 +230,10 @@ function login() {
 }
 
 function logout() { location.reload(); }
-function renderCreateBond() {
+
+function checkDelegateLimits() {
+    if (currentUser.role!== 'delegate') return { allowed: true };
+
     const today = new Date().toLocaleDateString('ar-SA');
     if (currentUser.bondsTodayDate!== today) {
         currentUser.bondsToday = 0;
@@ -238,22 +241,27 @@ function renderCreateBond() {
         currentUser.bondsTodayDate = today;
     }
 
-    const remainingCount = currentUser.dailyLimit > 0? currentUser.dailyLimit - currentUser.bondsToday : null;
-    const remainingAmount = currentUser.dailyAmountLimit > 0? currentUser.dailyAmountLimit - (currentUser.bondsTodayAmount || 0) : null;
-
+    // قيد عدد السندات
     if (currentUser.dailyLimit > 0 && currentUser.bondsToday >= currentUser.dailyLimit) {
-        const suppliedCount = db.bonds.filter(b => b.userId === currentUser.id && b.date.startsWith(today) && b.supplied).length;
-        if (suppliedCount === 0) {
-            return `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">وصلت للسقف اليومي: ${currentUser.dailyLimit} سند. قم بتوريد سنداتك ليتم فتح العدد المتبقي</div>`;
-        }
+        return { allowed: false, reason: `وصلت للسقف اليومي: ${currentUser.dailyLimit} سند` };
     }
 
+    // قيد المبلغ الكلي
     if (currentUser.dailyAmountLimit > 0 && (currentUser.bondsTodayAmount || 0) >= currentUser.dailyAmountLimit) {
-        const suppliedAmount = db.bonds.filter(b => b.userId === currentUser.id && b.date.startsWith(today) && b.supplied).reduce((sum, b) => sum + b.amount, 0);
-        if (suppliedAmount === 0) {
-            return `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">وصلت للحد الأقصى لإجمالي المبالغ اليوم: ${currentUser.dailyAmountLimit} ريال. قم بتوريد سنداتك ليتم فتح المبلغ المتبقي</div>`;
-        }
+        return { allowed: false, reason: `وصلت للحد الأقصى لإجمالي المبالغ اليوم: ${currentUser.dailyAmountLimit} ريال` };
     }
+
+    return { allowed: true };
+}
+
+function renderCreateBond() {
+    const limitCheck = checkDelegateLimits();
+    if (!limitCheck.allowed) {
+        return `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">${limitCheck.reason}</div>`;
+    }
+
+    const remainingCount = currentUser.dailyLimit > 0? currentUser.dailyLimit - (currentUser.bondsToday || 0) : null;
+    const remainingAmount = currentUser.dailyAmountLimit > 0? currentUser.dailyAmountLimit - (currentUser.bondsTodayAmount || 0) : null;
 
     const allowedPayments = currentUser.allowedPayments?.length? db.payments.filter(p => currentUser.allowedPayments.includes(p.name)) : db.payments;
     const allowedBondTypes = currentUser.allowedBondTypes?.length? db.bondTypes.filter(t => currentUser.allowedBondTypes.includes(t.id)) : db.bondTypes;
@@ -266,7 +274,7 @@ function renderCreateBond() {
             ${currentUser.dailyAmountLimit? `المبلغ المتبقي اليوم: ${remainingAmount} من ${currentUser.dailyAmountLimit} ريال` : ''}
         </div>` : ''}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select id="bond-type" class="border-2 p-3 rounded-lg"><option value="">نوع السند</option>${allowedBondTypes.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select>
+            <select id="bond-type" class="border-2 p-3 rounded-lg"><option value="">نوع السند</option>${allowedBondTypes.map(t=>`<option value="${t.id}" data-name="${t.name}">${t.name}</option>`).join('')}</select>
             <input id="bond-amount" type="number" placeholder="المبلغ" class="border-2 p-3 rounded-lg">
             <input id="bond-client" placeholder="اسم العميل" class="border-2 p-3 rounded-lg">
             <input id="bond-client-phone" placeholder="رقم العميل للواتساب" class="border-2 p-3 rounded-lg">
@@ -274,10 +282,6 @@ function renderCreateBond() {
             <select id="bond-payment" class="border-2 p-3 rounded-lg"><option value="">طريقة الدفع</option>${allowedPayments.map(p=>`<option>${p.name}</option>`).join('')}</select>
             <select id="bond-accountant" class="border-2 p-3 rounded-lg"><option value="">المحاسب</option>${db.accountants.map(a=>`<option>${a.name}</option>`).join('')}</select>
             <select id="bond-fund" class="border-2 p-3 rounded-lg"><option value="">نوع الصندوق</option>${db.funds.map(f=>`<option>${f.name}</option>`).join('')}</select>
-            <select id="bond-supplied" class="border-2 p-3 rounded-lg">
-                <option value="false">${translations[currentLang].not_supplied}</option>
-                <option value="true">${translations[currentLang].supplied}</option>
-            </select>
             <textarea id="bond-desc" placeholder="البيان" class="border-2 p-3 rounded-lg md:col-span-2" rows="3"></textarea>
             <button onclick="saveBond()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg md:col-span-2">${translations[currentLang].create_bond}</button>
         </div></div>`;
@@ -286,36 +290,39 @@ function renderCreateBond() {
 function saveBond() {
     const typeId = document.getElementById('bond-type').value;
     const amount = parseFloat(document.getElementById('bond-amount').value);
+    const bondTypeEl = document.getElementById('bond-type');
+    const bondTypeName = bondTypeEl.options[bondTypeEl.selectedIndex].dataset.name;
     const bondType = db.bondTypes.find(t => t.id == typeId);
 
     if (!bondType) return Swal.fire('خطأ', 'اختر نوع السند', 'error');
     if (!amount || amount <= 0) return Swal.fire('خطأ', 'اكتب المبلغ', 'error');
-    if (currentUser.maxAmount > 0 && amount > currentUser.maxAmount) return Swal.fire('خطأ', `المبلغ يتجاوز الحد المسموح للسند: ${currentUser.maxAmount} ريال`, 'error');
 
-    const today = new Date().toLocaleDateString('ar-SA');
+    // قيود المندوب
+    const limitCheck = checkDelegateLimits();
+    if (!limitCheck.allowed) return Swal.fire('موقوف', limitCheck.reason, 'error');
+
+    // قيد أكبر مبلغ للسند الواحد
+    if (currentUser.maxAmount > 0 && amount > currentUser.maxAmount) {
+        return Swal.fire('خطأ', `المبلغ يتجاوز الحد المسموح للسند: ${currentUser.maxAmount} ريال`, 'error');
+    }
+
+    // قيد المبلغ الكلي اليومي
     const todayAmount = (currentUser.bondsTodayAmount || 0);
     if (currentUser.dailyAmountLimit > 0 && (todayAmount + amount) > currentUser.dailyAmountLimit) {
-        const suppliedAmount = db.bonds.filter(b => b.userId === currentUser.id && b.date.startsWith(today) && b.supplied).reduce((sum, b) => sum + b.amount, 0);
-        if ((todayAmount + amount - suppliedAmount) > currentUser.dailyAmountLimit) {
-            return Swal.fire('خطأ', `إجمالي المبالغ اليوم سيتجاوز الحد: ${currentUser.dailyAmountLimit} ريال`, 'error');
-        }
+        return Swal.fire('خطأ', `إجمالي المبالغ اليوم سيتجاوز الحد: ${currentUser.dailyAmountLimit} ريال`, 'error');
     }
 
     if (bondType.current > bondType.end) return Swal.fire('خطأ', 'انتهى تسلسل هذا النوع', 'error');
 
-    const todayCount = currentUser.bondsToday || 0;
-    if (currentUser.dailyLimit > 0 && todayCount >= currentUser.dailyLimit) {
-        const suppliedCount = db.bonds.filter(b => b.userId === currentUser.id && b.date.startsWith(today) && b.supplied).length;
-        if (todayCount - suppliedCount >= currentUser.dailyLimit) {
-            return Swal.fire('خطأ', 'وصلت للسقف اليومي. قم بتوريد سنداتك أولاً', 'error');
-        }
-    }
-
     const bondId = Date.now();
+    const isQabdh = bondTypeName.includes('قبض') || bondTypeName.includes('قيد');
+    const isSarf = bondTypeName.includes('صرف');
+
     const bond = {
         id: bondId,
         number: bondType.current,
         type: bondType.name,
+        typeName: bondTypeName,
         amount: amount,
         clientName: document.getElementById('bond-client').value,
         clientPhone: document.getElementById('bond-client-phone').value,
@@ -324,11 +331,15 @@ function saveBond() {
         accountant: document.getElementById('bond-accountant').value,
         fund: document.getElementById('bond-fund').value,
         description: document.getElementById('bond-desc').value,
-        supplied: document.getElementById('bond-supplied').value === 'true',
+        // المندوب دايماً غير مورد/غير موثق
+        supplied: false,
+        verified: false,
+        isQabdh: isQabdh,
+        isSarf: isSarf,
         userId: currentUser.id,
         userName: currentUser.name,
         date: new Date().toLocaleString('ar-SA'),
-        qrData: `bond:${bondId}`,
+        qrData: `${window.location.origin}${window.location.pathname}?bond=${bondId}`,
         printCount: {}
     };
 
@@ -338,7 +349,7 @@ function saveBond() {
     bondType.current++;
     currentUser.bondsToday = (currentUser.bondsToday || 0) + 1;
     currentUser.bondsTodayAmount = (currentUser.bondsTodayAmount || 0) + amount;
-    currentUser.bondsTodayDate = today;
+    currentUser.bondsTodayDate = new Date().toLocaleDateString('ar-SA');
 
     const idx = db.users.findIndex(u => u.id === currentUser.id);
     db.users[idx] = currentUser;
@@ -360,13 +371,19 @@ function renderBondsList(bonds, title) {
                 <button onclick="exportBondsPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg no-print">تصدير PDF</button>
             </div>
         </div>
-        <div class="space-y-3">${bonds.slice().reverse().map(b => `
+        <div class="space-y-3">${bonds.slice().reverse().map(b => {
+            const statusText = b.isQabdh?
+                (b.supplied? translations[currentLang].supplied : translations[currentLang].not_supplied) :
+                (b.verified? translations[currentLang].verified : translations[currentLang].not_verified);
+            const statusColor = (b.supplied || b.verified)? 'text-green-600' : 'text-orange-600';
+
+            return `
             <div class="border-2 p-4 rounded-lg relative">
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">سند ${b.type} #${b.number}</span>
                         <div class="text-2xl font-bold mt-2">${b.amount} ريال</div>
-                        <div class="text-xs mt-1 ${b.supplied? 'text-green-600' : 'text-orange-600'}">${b.supplied? translations[currentLang].supplied : translations[currentLang].not_supplied}</div>
+                        <div class="text-xs mt-1 ${statusColor}">${statusText}</div>
                     </div>
                     <div class="text-left text-sm text-gray-600">
                         <div>${b.date}</div>
@@ -387,17 +404,28 @@ function renderBondsList(bonds, title) {
                     <button onclick="printBondPDF(${b.id})" class="bg-red-600 text-white px-4 py-2 rounded">PDF</button>
                     <button onclick="printQR(${b.id})" class="bg-purple-600 text-white px-4 py-2 rounded">${translations[currentLang].print_qr_only}</button>
                     <button onclick="sendWhatsApp('${b.clientPhone}', ${b.id})" class="bg-green-600 text-white px-4 py-2 rounded">📱 واتساب</button>
-                    ${currentUser.role!== 'delegate'? `<button onclick="toggleSupplied(${b.id})" class="bg-blue-600 text-white px-4 py-2 rounded text-xs">${b.supplied? 'إلغاء التوريد' : 'تأكيد التوريد'}</button>` : ''}
+                    ${currentUser.role!== 'delegate'? `
+                        <button onclick="verifyBond(${b.id})" class="bg-blue-600 text-white px-4 py-2 rounded text-xs">
+                            ${b.isQabdh? 'تأكيد التوريد' : 'توثيق السند'}
+                        </button>
+                    ` : ''}
                 </div>
-            </div>`).join('') || '<p class="text-gray-500 text-center py-8">لا توجد سندات</p>'}
+            </div>`}).join('') || '<p class="text-gray-500 text-center py-8">لا توجد سندات</p>'}
         </div></div>`;
 }
 
-function toggleSupplied(id) {
+function verifyBond(id) {
     const bond = db.bonds.find(b => b.id === id);
-    bond.supplied =!bond.supplied;
+    if (currentUser.role === 'delegate') return;
+
+    if (bond.isQabdh) {
+        bond.supplied = true;
+    } else {
+        bond.verified = true;
+    }
     saveDB();
     showTab(currentUser.role === 'delegate'? 'myBonds' : 'bonds');
+    Swal.fire('تم', 'تم التحديث بنجاح', 'success');
 }
 
 function canPrint(bondId) {
@@ -413,6 +441,10 @@ function generateBondHTML(b, forPDF = false) {
         qrCanvas = '<canvas id="qrcanvas"></canvas>';
     }
 
+    const statusText = b.isQabdh?
+        (b.supplied? translations[currentLang].supplied : translations[currentLang].not_supplied) :
+        (b.verified? translations[currentLang].verified : translations[currentLang].not_verified);
+
     return `
     <html dir="rtl">
     <head>
@@ -422,20 +454,18 @@ function generateBondHTML(b, forPDF = false) {
             body{font-family:'Cairo',Arial;padding:20px;position:relative}
             table{width:100%;border-collapse:collapse;margin-top:20px}
             td{padding:10px;border:1px solid #ddd}
-           .header{text-align:center;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:15px}
-           .logo{max-height:80px;max-width:200px;margin:0 auto 10px;display:block}
-           .bond-number-once{position:absolute;top:10px;left:10px;color:red;font-weight:bold;font-size:24px;border:2px solid red;padding:5px 15px;border-radius:8px}
-           .company-info{font-size:12px;color:#666;margin-top:5px}
-           .qr-print{position:absolute;bottom:20px;left:20px}
-           .no-signature{text-align:center;margin-top:40px;font-size:14px;color:#555}
+          .header{text-align:center;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:15px}
+          .logo{max-height:80px;max-width:200px;margin:0 auto 10px;display:block}
+          .bond-number-once{position:absolute;top:10px;left:10px;color:red;font-weight:bold;font-size:24px;border:2px solid red;padding:5px 15px;border-radius:8px}
+          .company-info{font-size:12px;color:#666;margin-top:5px}
+          .qr-print{position:absolute;bottom:20px;left:20px}
+          .no-signature{text-align:center;margin-top:40px;font-size:14px;color:#555}
             @media print {.no-print { display: none } }
         </style>
         ${forPDF? '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>' : ''}
         ${db.printSettings.showQR &&!forPDF? '<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>' : ''}
     </head>
-    <body id="bond-content">
-        <div class="bond-number-once">رقم السند: ${b.number}</div>
-        <div class="header">
+<div class="header">
             ${db.company.logo? `<img src="${db.company.logo}" class="logo">` : ''}
             <h1 style="margin:0">${db.printSettings.customHeaders.title || db.company.name}</h1>
             <div class="company-info">
@@ -453,7 +483,7 @@ function generateBondHTML(b, forPDF = false) {
             <tr><td><b>البيان:</b></td><td>${b.description || '-'}</td></tr>
             <tr><td><b>المحاسب:</b></td><td>${b.accountant || '-'}</td></tr>
             <tr><td><b>الصندوق:</b></td><td>${b.fund || '-'}</td></tr>
-            <tr><td><b>حالة التوريد:</b></td><td>${b.supplied? translations[currentLang].supplied : translations[currentLang].not_supplied}</td></tr>
+            <tr><td><b>الحالة:</b></td><td>${statusText}</td></tr>
             <tr><td><b>التاريخ:</b></td><td>${b.date}</td></tr>
             <tr><td><b>المندوب:</b></td><td>${b.userName}</td></tr>
         </table>
@@ -481,63 +511,99 @@ function printBond(id) {
 
     if (db.printSettings.showQR) {
         setTimeout(() => {
-            QRCode.toCanvas(printWindow.document.getElementById('qrcanvas'), window.location.origin + window.location.pathname + '?bond=' + b.id, {width: 100}, function (error) {
+            QRCode.toCanvas(printWindow.document.getElementById('qrcanvas'), b.qrData, {width: 100, errorCorrectionLevel: 'H'}, function (error) {
                 if (error) console.error(error);
                 printWindow.print();
             });
         }, 500);
     } else {
-        printWindow.print();
+        setTimeout(() => printWindow.print(), 300);
     }
 }
 
 function printBondPDF(id) {
     const b = db.bonds.find(bond => bond.id === id);
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write(generateBondHTML(b, true));
-    printWindow.document.close();
 
-    setTimeout(() => {
-        const element = printWindow.document.getElementById('bond-content');
-        const opt = {
-            margin: 10,
-            filename: `سند-${b.type}-${b.number}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save();
-    }, 1000);
+    // نستخدم html2pdf بدل jspdf عشان يدعم العربية
+    const element = document.createElement('div');
+    element.innerHTML = generateBondHTML(b, true);
+
+    const opt = {
+        margin: 10,
+        filename: `سند-${b.type}-${b.number}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        Swal.fire('تم', 'تم تحميل PDF بنجاح', 'success');
+    }).catch(err => {
+        Swal.fire('خطأ', 'فشل تحميل PDF', 'error');
+        console.error(err);
+    });
 }
 
 function printQR(id) {
     const b = db.bonds.find(bond => bond.id === id);
-    const printWindow = window.open('', '', 'height=300,width=300');
-    printWindow.document.write(`<html><body style="text-align:center;padding:20px">
-        <h3>سند ${b.type} #${b.number}</h3>
-        <canvas id="qrcanvas"></canvas>
-        <p>${b.amount} ريال - ${b.clientName}</p>
-        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
-    </body></html>`);
+    const printWindow = window.open('', '', 'height=400,width=400');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>QR - سند ${b.number}</title>
+            <style>
+                body { text-align:center; padding:20px; font-family: 'Cairo', Arial; }
+                h3 { margin: 10px 0; }
+                #qrcanvas { margin: 20px auto; }
+                @media print {.no-print { display: none; } }
+            </style>
+            <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
+        </head>
+        <body>
+            <h3>سند ${b.type} #${b.number}</h3>
+            <canvas id="qrcanvas"></canvas>
+            <p><strong>${b.amount} ريال</strong></p>
+            <p>${b.clientName}</p>
+            <p style="font-size:11px; color:#666; margin-top:15px;">امسح الكود لعرض السند</p>
+            <button class="no-print" onclick="window.print()">طباعة</button>
+        </body>
+        </html>
+    `);
     printWindow.document.close();
     setTimeout(() => {
-        QRCode.toCanvas(printWindow.document.getElementById('qrcanvas'), window.location.origin + window.location.pathname + '?bond=' + b.id, {width: 200}, function (error) {
+        QRCode.toCanvas(printWindow.document.getElementById('qrcanvas'), b.qrData, {
+            width: 250,
+            errorCorrectionLevel: 'H',
+            margin: 1
+        }, function (error) {
             if (error) console.error(error);
-            printWindow.print();
         });
-    }, 500);
+    }, 300);
 }
 
 function sendWhatsApp(phone, id) {
     const b = db.bonds.find(bond => bond.id === id);
     if (!phone) return Swal.fire('تنبيه', 'رقم العميل غير موجود', 'warning');
-    const bondUrl = window.location.origin + window.location.pathname + '?bond=' + b.id;
-    const msg = `*${db.company.name}*%0A%0A*سند ${b.type} رقم ${b.number}*%0A━━━━━━━━━━━━━━━%0A💰 المبلغ: *${b.amount} ريال*%0A👤 العميل: ${b.clientName}%0A📅 التاريخ: ${b.date}%0A📝 البيان: ${b.description || '-'}%0A💳 طريقة الدفع: ${b.payment || '-'}%0A📦 الحالة: ${b.supplied? translations[currentLang].supplied : translations[currentLang].not_supplied}%0A%0A🔗 رابط السند: ${bondUrl}%0A%0Aشكراً لتعاملكم معنا`;
-    window.open(`https://wa.me/966${phone.replace(/^0/, '')}?text=${msg}`, '_blank');
+
+    const bondUrl = b.qrData; // الرابط المباشر للسند
+    const statusText = b.isQabdh?
+        (b.supplied? translations[currentLang].supplied : translations[currentLang].not_supplied) :
+        (b.verified? translations[currentLang].verified : translations[currentLang].not_verified);
+
+    const msg = `*${db.company.name}*%0A%0A*سند ${b.type} رقم ${b.number}*%0A━━━━━━━━━━━━━━━%0A💰 المبلغ: *${b.amount} ريال*%0A👤 العميل: ${b.clientName}%0A📅 التاريخ: ${b.date}%0A📝 البيان: ${b.description || '-'}%0A💳 طريقة الدفع: ${b.payment || '-'}%0A📦 الحالة: ${statusText}%0A%0A🔗 رابط السند: ${encodeURIComponent(bondUrl)}%0A%0Aشكراً لتعاملكم معنا`;
+
+    const cleanPhone = phone.replace(/^0/, '').replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/966${cleanPhone}?text=${msg}`, '_blank');
 }
+
 function updateCashbox(bond) {
-    const affectsCashbox = ['قبض', 'صرف', 'فاتورة'].includes(bond.type);
+    const affectsCashbox = bond.isQabdh || bond.isSarf;
     if (!affectsCashbox) return;
+
+    const existingEntry = db.cashbox.find(c => c.bondId === bond.id);
+    if (existingEntry) return; // ما نضيف مرتين
+
     db.cashbox.push({
         id: Date.now(),
         bondId: bond.id,
@@ -546,13 +612,14 @@ function updateCashbox(bond) {
         amount: bond.amount,
         description: bond.description,
         date: bond.date,
-        userName: bond.userName
+        userName: bond.userName,
+        isQabdh: bond.isQabdh
     });
     saveDB();
 }
 
 function renderCashbox() {
-    const total = db.cashbox.reduce((sum, t) => sum + (t.type === 'قبض' || t.type === 'فاتورة'? t.amount : -t.amount), 0);
+    const total = db.cashbox.reduce((sum, t) => sum + (t.isQabdh? t.amount : -t.amount), 0);
     return `<div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between mb-4">
             <h2 class="text-xl font-bold">${translations[currentLang].cashbox}</h2>
@@ -561,15 +628,14 @@ function renderCashbox() {
                 <button onclick="exportCashboxExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg no-print">${translations[currentLang].export_excel}</button>
                 <button onclick="exportCashboxPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg no-print">تصدير PDF</button>
             </div>
-        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm" id="cashbox-table">
                 <thead class="bg-gray-100"><tr><th class="p-2">رقم السند</th><th class="p-2">النوع</th><th class="p-2">المبلغ</th><th class="p-2">البيان</th><th class="p-2">التاريخ</th><th class="p-2">المندوب</th></tr></thead>
                 <tbody>${db.cashbox.slice().reverse().map(t => `
-                    <tr class="border-b ${t.type === 'قبض' || t.type === 'فاتورة'? 'bg-green-50' : 'bg-red-50'}">
+                    <tr class="border-b ${t.isQabdh? 'bg-green-50' : 'bg-red-50'}">
                         <td class="p-2 font-bold">${t.bondNumber}</td>
                         <td class="p-2">${t.type}</td>
-                        <td class="p-2 font-bold ${t.type === 'قبض' || t.type === 'فاتورة'? 'text-green-600' : 'text-red-600'}">${t.type === 'صرف'? '-' : '+'}${t.amount}</td>
+                        <td class="p-2 font-bold ${t.isQabdh? 'text-green-600' : 'text-red-600'}">${t.isQabdh? '+' : '-'}${t.amount}</td>
                         <td class="p-2">${t.description || '-'}</td>
                         <td class="p-2">${t.date}</td>
                         <td class="p-2">${t.userName}</td>
@@ -606,7 +672,7 @@ function renderPrintSettings() {
             </div>
             <label class="flex items-center gap-2">
                 <input type="checkbox" id="showQR" ${db.printSettings.showQR? 'checked' : ''}>
-                <span>إظهار QR Code في الطباعة - الكود يولّد رابط داخلي للسند تلقائياً</span>
+                <span>إظهار QR Code في الطباعة - الكود يفتح السند مباشرة</span>
             </label>
             <button onclick="savePrintSettings()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">حفظ الإعدادات</button>
         </div></div>`;
@@ -626,21 +692,21 @@ function savePrintSettings() {
         autoGenerateQR: true
     };
     saveDB();
-    Swal.fire('تم', 'تم حفظ إعدادات الطباعة. الآن كل سند له QR خاص يفتح صفحة المعاينة', 'success');
+    Swal.fire('تم', 'تم حفظ إعدادات الطباعة', 'success');
 }
 
 function renderCompany() {
     return `<div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">${translations[currentLang].company_settings}</h2>
         <div class="space-y-4">
-            <div><label class="block text-sm font-bold mb-1">اسم الشركة - يتغير في كل الصفحات تلقائياً</label>
+            <div><label class="block text-sm font-bold mb-1">اسم الشركة</label>
             <input id="comp-name" value="${db.company.name}" class="w-full border-2 p-3 rounded-lg" oninput="previewCompanyName(this.value)"></div>
             <div><label class="block text-sm font-bold mb-1">العنوان</label>
             <input id="comp-address" value="${db.company.address}" class="w-full border-2 p-3 rounded-lg"></div>
             <div><label class="block text-sm font-bold mb-1">رقم السجل التجاري</label>
             <input id="comp-cr" value="${db.company.cr}" class="w-full border-2 p-3 rounded-lg"></div>
             <div>
-                <label class="block text-sm font-bold mb-1">شعار الشركة - يظهر في منتصف السند عند الطباعة</label>
+                <label class="block text-sm font-bold mb-1">شعار الشركة</label>
                 <div class="flex gap-2 items-center">
                     <div class="upload-btn bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer">
                         <span>${translations[currentLang].upload_logo}</span>
@@ -681,14 +747,13 @@ function saveCompany() {
     };
     saveDB();
     updateCompanyDisplay();
-    Swal.fire('تم', 'تم حفظ إعدادات الشركة. الاسم والشعار يظهران الآن في كل الصفحات والسندات', 'success');
+    Swal.fire('تم', 'تم حفظ إعدادات الشركة', 'success');
 }
-
 function exportCashboxExcel() {
     const ws = XLSX.utils.json_to_sheet(db.cashbox.map(t => ({
         'رقم السند': t.bondNumber,
         'النوع': t.type,
-        'المبلغ': t.type === 'صرف'? -t.amount : t.amount,
+        'المبلغ': t.isQabdh? t.amount : -t.amount,
         'البيان': t.description,
         'التاريخ': t.date,
         'المندوب': t.userName
@@ -710,7 +775,7 @@ function exportBondsExcel() {
         'المحاسب': b.accountant,
         'الصندوق': b.fund,
         'البيان': b.description,
-        'التوريد': b.supplied? 'مورد' : 'غير مورد',
+        'الحالة': b.isQabdh? (b.supplied? 'مورد' : 'غير مورد') : (b.verified? 'موثق' : 'غير موثق'),
         'التاريخ': b.date,
         'المندوب': b.userName
     })));
@@ -725,7 +790,7 @@ function exportCashboxPDF() {
         margin: 10,
         filename: 'صندوق-الحركة.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
@@ -737,7 +802,7 @@ function exportBondsPDF() {
         margin: 10,
         filename: 'كل-السندات.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(content).save();
@@ -751,19 +816,21 @@ function downloadBondPDF() {
         margin: 10,
         filename: `سند-${b.type}-${b.number}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
 }
 
 function renderDashboard() {
-    const totalCashbox = db.cashbox.reduce((sum, t) => sum + (t.type === 'قبض' || t.type === 'فاتورة'? t.amount : -t.amount), 0);
+    const totalCashbox = db.cashbox.reduce((sum, t) => sum + (t.isQabdh? t.amount : -t.amount), 0);
+    const unverifiedBonds = db.bonds.filter(b =>!b.supplied &&!b.verified).length;
+
     return `<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-blue-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${db.bonds.length}</div><div>إجمالي السندات</div></div>
         <div class="bg-green-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${totalCashbox.toFixed(2)}</div><div>رصيد الصندوق</div></div>
         <div class="bg-purple-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${db.users.filter(u=>u.role==='delegate' && u.active).length}</div><div>المناديب النشطين</div></div>
-        <div class="bg-orange-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${db.bonds.filter(b=>!b.supplied).length}</div><div>سندات غير موردة</div></div>
+        <div class="bg-orange-500 text-white p-6 rounded-lg"><div class="text-3xl font-bold">${unverifiedBonds}</div><div>سندات غير موثقة/موردة</div></div>
     </div>
     <div class="mt-4 flex gap-2 no-print">
         <button onclick="exportAllExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg">${translations[currentLang].export_excel}</button>
@@ -808,6 +875,7 @@ function renderDelegates() {
                     <div>السقف اليومي للعدد: ${d.dailyLimit || 'غير محدد'} سند</div>
                     <div>أكبر مبلغ للسند: ${d.maxAmount || 'غير محدد'} ريال</div>
                     <div>الحد الإجمالي اليومي: ${d.dailyAmountLimit || 'غير محدد'} ريال</div>
+                    <div>اليوم: ${d.bondsToday || 0} سند / ${(d.bondsTodayAmount || 0).toFixed(2)} ريال</div>
                     <div class="col-span-2">أنواع السندات: ${d.allowedBondTypes?.length? db.bondTypes.filter(t => d.allowedBondTypes.includes(t.id)).map(t => t.name).join(', ') : 'الكل'}</div>
                     <div class="col-span-2">طرق الدفع: ${d.allowedPayments?.join(', ') || 'الكل'}</div>
                 </div>
@@ -1029,7 +1097,7 @@ function exportAllPDF() {
         margin: 10,
         filename: 'تقرير-شامل.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(document.body).save();
@@ -1077,13 +1145,16 @@ function closeBondView() {
     document.getElementById('mainApp').classList.remove('hidden');
 }
 
+// معاينة السند من الرابط المباشر
 function viewBondByUrl() {
     const params = new URLSearchParams(window.location.search);
     const bondId = params.get('bond');
     if (bondId) {
         const b = db.bonds.find(x => x.id == bondId);
         if (b) {
-            document.getElementById('bondViewContent').innerHTML = generateBondHTML(b, false).replace('<html dir="rtl">', '').replace('</html>', '').replace(/<head>[\s\S]*?<\/head>/, '');
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = generateBondHTML(b, false);
+            document.getElementById('bondViewContent').innerHTML = tempDiv.querySelector('body').innerHTML;
             document.getElementById('bondViewContent').dataset.bondId = b.id;
             document.getElementById('mainApp').classList.add('hidden');
             document.getElementById('languageScreen').classList.add('hidden');
@@ -1093,14 +1164,17 @@ function viewBondByUrl() {
                 setTimeout(() => {
                     const canvas = document.querySelector('#bondViewContent #qrcanvas');
                     if (canvas) {
-                        QRCode.toCanvas(canvas, window.location.href, {width: 100});
+                        QRCode.toCanvas(canvas, b.qrData, {width: 100, errorCorrectionLevel: 'H'});
                     }
                 }, 300);
             }
+        } else {
+            Swal.fire('خطأ', 'السند غير موجود', 'error');
         }
     }
 }
 
+// تشغيل عند تحميل الصفحة
 if (localStorage.getItem('v4_lang')) {
     setLang(currentLang);
 } else {
