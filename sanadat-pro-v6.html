@@ -12,13 +12,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-     .hidden { display: none!important; }
-     .tab-btn { transition: all 0.3s; border-bottom: 3px solid transparent; }
-     .tab-btn.active { border-bottom-color: #2563eb; font-weight: bold; }
-     .tab-btn:hover { background-color: #f3f4f6; }
-     .upload-btn { position: relative; overflow: hidden; display: inline-block; }
-     .upload-btn input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-     .company-logo { max-height: 60px; max-width: 200px; object-fit: contain; }
+    .hidden { display: none!important; }
+    .tab-btn { transition: all 0.3s; border-bottom: 3px solid transparent; }
+    .tab-btn.active { border-bottom-color: #2563eb; font-weight: bold; }
+    .tab-btn:hover { background-color: #f3f4f6; }
+    .upload-btn { position: relative; overflow: hidden; display: inline-block; }
+    .upload-btn input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .company-logo { max-height: 60px; max-width: 200px; object-fit: contain; }
         @media print {.no-print { display: none!important; } }
     </style>
 </head>
@@ -245,7 +245,7 @@ function login() {
     document.getElementById('mainApp').classList.remove('hidden');
     document.getElementById('userName').textContent = user.name;
     document.getElementById('userRole').textContent = user.role === 'superadmin'? 'مدير عام' : user.role === 'manager'? 'مدير' : 'مندوب';
-    
+
     if (user.role === 'delegate') {
         document.getElementById('delegateTabs').classList.remove('hidden');
         showTab('createBond');
@@ -253,19 +253,19 @@ function login() {
         document.getElementById('adminTabs').classList.remove('hidden');
         showTab('dashboard');
     }
-    
+
     if (user.role === 'superadmin') {
         document.getElementById('superAdminOnly').classList.remove('hidden');
     }
-    
+
     applyTranslations();
     updateCompanyDisplay();
     updateProjectInfo();
 }
 
-function logout() { 
+function logout() {
     localStorage.removeItem('v6_currentUser');
-    location.reload(); 
+    location.reload();
 }
 
 function showCreateProject() {
@@ -396,27 +396,7 @@ function renderCreateBond() {
             <select id="bond-payment" class="border-2 p-3 rounded-lg"><option value="">طريقة الدفع</option>${allowedPayments.map(p=>`<option>${p.name}</option>`).join('')}</select>
             <select id="bond-accountant" class="border-2 p-3 rounded-lg"><option value="">المحاسب</option>${db.accountants.map(a=>`<option>${a.name}</option>`).join('')}</select>
             <select id="bond-fund" class="border-2 p-3 rounded-lg"><option value="">نوع الصندوق</option>${db.funds.map(f=>`<option>${f.name}</option>`).join('')}</select>
-            <textarea id="bond-desc" placeholder="البيان" class="border-2 p-3 rounded-lg md:col-span-2" rows="3"></textarea>
-            <button onclick="saveBond()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg md:col-span-2">${translations[currentLang].create_bond}</button>
-        </div></div>`;
-}
-
-function saveBond() {
-    const typeId = document.getElementById('bond-type').value;
-    const amount = parseFloat(document.getElementById('bond-amount').value);
-    const bondTypeEl = document.getElementById('bond-type');
-    const bondTypeName = bondTypeEl.options[bondTypeEl.selectedIndex].dataset.name;
-    const bondType = db.bondTypes.find(t => t.id == typeId);
-
-    if (!bondType) return Swal.fire('خطأ', 'اختر نوع السند', 'error');
-    if (!amount || amount <= 0) return Swal.fire('خطأ', 'اكتب المبلغ', 'error');
-
-    const limitCheck = checkDelegateLimits();
-    if (!limitCheck.allowed) return Swal.fire('موقوف', limitCheck.reason, 'error');
-
-    if (currentUser.maxAmount > 0 && amount > currentUser.maxAmount) {
-        return Swal.fire('
-            <textarea id="bond-desc" placeholder="البيان" class="border-2 p-3 rounded-lg md:col-span-2" rows="3"></textarea>
+<textarea id="bond-desc" placeholder="البيان" class="border-2 p-3 rounded-lg md:col-span-2" rows="3"></textarea>
             <button onclick="saveBond()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg md:col-span-2">${translations[currentLang].create_bond}</button>
         </div></div>`;
 }
@@ -521,7 +501,6 @@ function renderBondsList(bonds, title) {
                 <button onclick="exportBondsExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg no-print">${translations[currentLang].export_excel}</button>
                 <button onclick="exportBondsPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg no-print">تصدير PDF</button>
             </div>
-        </div>
         <div class="space-y-3">${bonds.slice().reverse().map(b => {
             const statusText = b.isQabdh? (b.supplied? translations[currentLang].supplied : translations[currentLang].not_supplied) : (b.verified? translations[currentLang].verified : translations[currentLang].not_verified);
             const statusColor = (b.supplied || b.verified)? 'text-green-600' : 'text-orange-600';
@@ -537,7 +516,6 @@ function renderBondsList(bonds, title) {
                         <div>${b.date}</div>
                         <div>بواسطة: ${b.userName}</div>
                     </div>
-                </div>
                 <div class="grid grid-cols-2 gap-2 text-sm mb-3">
                     <div><b>العميل:</b> ${b.clientName}</div>
                     <div><b>جوال العميل:</b> ${b.clientPhone}</div>
@@ -604,7 +582,7 @@ function renderDashboard() {
     const todayQabdh = cashbox.filter(t => t.isQabdh && t.date.includes(today)).reduce((s,t)=>s+t.amount,0);
     const todaySarf = cashbox.filter(t => t.isSarf && t.date.includes(today)).reduce((s,t)=>s+t.amount,0);
     const totalBalance = cashbox.reduce((s,t)=>s+(t.isQabdh?t.amount:-t.amount),0);
-    
+
     return `<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-6"><div class="text-gray-600 text-sm">سندات اليوم</div><div class="text-3xl font-bold mt-2">${todayBonds.length}</div></div>
         <div class="bg-white rounded-lg shadow p-6"><div class="text-gray-600 text-sm">مقبوضات اليوم</div><div class="text-3xl font-bold text-green-600 mt-2">${todayQabdh}</div></div>
@@ -1015,7 +993,7 @@ function exportBondsExcel() {
 function exportCashboxPDF() {
     const element = document.getElementById('cashbox-table');
     const opt = {
-              margin: 10,
+        margin: 10,
         filename: `صندوق-الحركة-${projectCode}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
@@ -1073,7 +1051,7 @@ function showBackupOptions() {
     a.download = `backup-${projectCode}-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    Swal.fire('تم', 'تم تحميل النسخة الاحتياطية', 'success');
+Swal.fire('تم', 'تم تحميل النسخة الاحتياطية', 'success');
 }
 
 function viewBondByUrl() {
@@ -1224,17 +1202,17 @@ function generateBondHTML(bond, forPrint = false) {
     <meta charset="UTF-8">
     <style>
         body { font-family: 'Cairo', Arial; padding: 20px; }
-    .bond { max-width: 800px; margin: 0 auto; border: 3px solid #000; padding: 20px; }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-    .logo { max-height: 60px; }
-    .company-info { text-align: right; }
-    .bond-number { color: red; font-size: 24px; font-weight: bold; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-    .info-item { padding: 5px; }
-    .label { font-weight: bold; }
-    .footer { margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
-    .qr { text-align: center; margin-top: 15px; }
-    .no-sig { text-align: center; color: #666; font-size: 12px; margin-top: 10px; }
+   .bond { max-width: 800px; margin: 0 auto; border: 3px solid #000; padding: 20px; }
+   .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+   .logo { max-height: 60px; }
+   .company-info { text-align: right; }
+   .bond-number { color: red; font-size: 24px; font-weight: bold; }
+   .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+   .info-item { padding: 5px; }
+   .label { font-weight: bold; }
+   .footer { margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
+   .qr { text-align: center; margin-top: 15px; }
+   .no-sig { text-align: center; color: #666; font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -1353,7 +1331,7 @@ function printQR(id) {
             <title>QR Code - سند ${bond.number}</title>
             <style>
                 body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Cairo, Arial; }
-            .qr-container { text-align: center; }
+           .qr-container { text-align: center; }
                 h3 { margin-bottom: 20px; }
             </style>
         </head>
@@ -1448,4 +1426,4 @@ window.onload = () => {
 };
 </script>
 </body>
-</html> 
+</html>
