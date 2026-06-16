@@ -90,6 +90,7 @@
             </div>
         </main>
     </div>
+
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -208,7 +209,8 @@
             loginScreen.classList.remove('hidden');
             projectCodeInput.value = '';
         }
-// Load Bonds
+
+        // Load Bonds
         function loadBonds() {
             if (unsubscribe) unsubscribe();
             
@@ -233,8 +235,9 @@
                     });
                     
                     bonds.forEach(bond => {
-                        if (bond.type === 'قبض') totalSales += parseFloat(bond.amount);
-                        else totalPurchases += parseFloat(bond.amount);
+                        const amount = parseFloat(bond.amount) || 0;
+                        if (bond.type === 'sale') totalSales += amount;
+                        else totalPurchases += amount;
                         
                         const bondDate = bond.date?.toDate ? bond.date.toDate() : new Date(bond.date);
                         const dateStr = bondDate.toLocaleDateString('ar-SA');
@@ -243,9 +246,9 @@
                         row.className = 'border-b hover:bg-gray-50';
                         row.innerHTML = `
                             <td class="p-3">${dateStr}</td>
-                            <td class="p-3"><span class="px-2 py-1 rounded text-xs ${bond.type === 'قبض' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${bond.type}</span></td>
-                            <td class="p-3">${bond.description}</td>
-                            <td class="p-3 font-bold ${bond.type === 'قبض' ? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toLocaleString()} ريال</td>
+                            <td class="p-3"><span class="px-2 py-1 rounded text-xs ${bond.type === 'sale' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${bond.type === 'sale' ? 'قبض' : 'صرف'}</span></td>
+                            <td class="p-3">${bond.description || ''}</td>
+                            <td class="p-3 font-bold ${bond.type === 'sale' ? 'text-green-600' : 'text-red-600'}">${amount.toLocaleString()} ريال</td>
                             <td class="p-3">
                                 <button onclick="window.deleteBond('${bond.id}')" class="text-red-600 hover:text-red-800 text-sm">حذف</button>
                             </td>
@@ -263,10 +266,10 @@
             });
         }
 
-        // Add Bond
+        // Add Bond - نسخة واحدة فقط
         async function addBond(type) {
             const { value: formValues } = await Swal.fire({
-                title: type === 'قبض' ? 'سند قبض جديد' : 'سند صرف جديد',
+                title: type === 'sale' ? 'سند قبض جديد' : 'سند صرف جديد',
                 html: `
                     <input id="swal-date" type="date" class="swal2-input" value="${new Date().toISOString().split('T')[0]}">
                     <input id="swal-desc" class="swal2-input" placeholder="البيان">
@@ -305,69 +308,7 @@
             }
         }
 
-        // Delete Bond
-        window.deleteBond = async function(id) {
-            const result = await Swal.fire({
-                title: 'متأكد؟',
-                text: 'ما تقدر تتراجع بعد الحذف',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'نعم احذف',
-                cancelButtonText: 'إلغاء'
-            });
-            
-            if (result.isConfirmed) {
-                try {
-                    await deleteDoc(doc(db, 'المشاريع', currentProjectCode, 'bonds', id));
-                    Swal.fire('تم الحذف', '', 'success');
-                } catch (error) {
-                    console.error(error);
-                    Swal.fire('خطأ', 'فشل الحذف', 'error');
-                }
-            }
-        }
-
-        // Add Bond
-        async function addBond(type) {
-            const { value: formValues } = await Swal.fire({
-                title: type === 'sale' ? 'سند قبض جديد' : 'سند صرف جديد',
-                html: `
-                    <input id="swal-desc" class="swal2-input" placeholder="البيان / الوصف">
-                    <input id="swal-amount" type="number" step="0.01" class="swal2-input" placeholder="المبلغ">
-                `,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'إضافة',
-                cancelButtonText: 'إلغاء',
-                preConfirm: () => {
-                    const desc = document.getElementById('swal-desc').value;
-                    const amount = document.getElementById('swal-amount').value;
-                    if (!desc || !amount) {
-                        Swal.showValidationMessage('الرجاء ملء جميع الحقول');
-                        return false;
-                    }
-                    return { description: desc, amount: parseFloat(amount) }
-                }
-            });
-
-            if (formValues) {
-                try {
-                    await addDoc(collection(db, 'المشاريع', currentProjectCode, 'bonds'), {
-                        type: type,
-                        description: formValues.description,
-                        amount: formValues.amount,
-                        date: serverTimestamp(),
-                        createdAt: serverTimestamp()
-                    });
-                    Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
-                } catch (error) {
-                    console.error(error);
-                    Swal.fire('خطأ', 'فشل إضافة السند', 'error');
-                }
-            }
-        }
-
-        // Delete Bond
+        // Delete Bond - نسخة واحدة فقط
         window.deleteBond = async function(id) {
             const result = await Swal.fire({
                 title: 'متأكد؟',
@@ -389,7 +330,8 @@
                 }
             }
         }
-// Share Project
+
+        // Share Project
         function shareProject() {
             const url = `${window.location.origin}${window.location.pathname}?code=${currentProjectCode}`;
             navigator.clipboard.writeText(url).then(() => {
@@ -408,9 +350,10 @@
                 
                 snapshot.forEach(doc => {
                     const d = doc.data();
-                    const date = d.date?.seconds ? new Date(d.date.seconds * 1000).toLocaleDateString('ar-SA') : 'غير محدد';
+                    const date = d.date?.toDate ? d.date.toDate() : new Date(d.date);
+                    const dateStr = date.toLocaleDateString('ar-SA');
                     data.push({
-                        'التاريخ': date,
+                        'التاريخ': dateStr,
                         'النوع': d.type === 'sale' ? 'قبض' : 'صرف',
                         'البيان': d.description,
                         'المبلغ': d.amount
