@@ -17,19 +17,19 @@
         [lang="zh"] body { font-family: 'Noto Sans SC', sans-serif; }
         [dir="ltr"] { direction: ltr; }
         @media print {
-          .no-print { display: none!important; }
-          .print-only { display: block!important; }
-          .qr-print { position: absolute; bottom: 20px; left: 20px; }
-          .qr-print canvas { display: block!important; border: 1px solid #000; }
-          .bond-number-once { position: absolute; top: 15px; left: 15px; color: red; font-weight: bold; font-size: 20px; border: 2px solid red; padding: 5px 15px; border-radius: 8px; }
-          .no-signature { text-align: center; margin-top: 40px; font-size: 14px; color: #555; }
-          .print-logo-center { text-align: center; margin-bottom: 20px; }
-          .print-logo-center img { max-height: 80px; margin: 0 auto; }
+         .no-print { display: none!important; }
+         .print-only { display: block!important; }
+         .qr-print { position: absolute; bottom: 20px; left: 20px; }
+         .qr-print canvas { display: block!important; border: 1px solid #000; }
+         .bond-number-once { position: absolute; top: 15px; left: 15px; color: red; font-weight: bold; font-size: 20px; border: 2px solid red; padding: 5px 15px; border-radius: 8px; }
+         .no-signature { text-align: center; margin-top: 40px; font-size: 14px; color: #555; }
+         .print-logo-center { text-align: center; margin-bottom: 20px; }
+         .print-logo-center img { max-height: 80px; margin: 0 auto; }
         }
-      .company-logo { max-height: 80px; max-width: 200px; object-fit: contain; }
-      .upload-btn { position: relative; overflow: hidden; }
-      .upload-btn input[type=file] { position: absolute; top: 0; right: 0; min-width: 100%; min-height: 100%; font-size: 100px; text-align: right; filter: alpha(opacity=0); opacity: 0; outline: none; cursor: pointer; display: block; }
-      .qr-container canvas { display: block!important; margin: 0 auto; }
+     .company-logo { max-height: 80px; max-width: 200px; object-fit: contain; }
+     .upload-btn { position: relative; overflow: hidden; }
+     .upload-btn input[type=file] { position: absolute; top: 0; right: 0; min-width: 100%; min-height: 100%; font-size: 100px; text-align: right; filter: alpha(opacity=0); opacity: 0; outline: none; cursor: pointer; display: block; }
+     .qr-container canvas { display: block!important; margin: 0 auto; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -394,8 +394,7 @@ function renderCreateBond() {
             <select id="bond-payment" class="border-2 p-3 rounded-lg"><option value="">طريقة الدفع</option>${allowedPayments.map(p=>`<option>${p.name}</option>`).join('')}</select>
             <select id="bond-accountant" class="border-2 p-3 rounded-lg"><option value="">المحاسب</option>${projectData.accountants.map(a=>`<option>${a.name}</option>`).join('')}</select>
             <select id="bond-fund" class="border-2 p-3 rounded-lg"><option value="">نوع الصندوق</option>${projectData.funds.map(f=>`<option>${f.name}</option>`).join('')}</select>
-            <textarea id="bond-desc" placeholder="البيان" class="
-            <textarea id="bond-desc" placeholder="البيان" class="border-2 p-3 rounded-lg md:col-span-2" rows="3"></textarea>
+<textarea id="bond-desc" placeholder="البيان" class="border-2 p-3 rounded-lg md:col-span-2" rows="3"></textarea>
             <button onclick="saveBond()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg md:col-span-2">${translations[currentLang].create_bond}</button>
         </div></div>`;
 }
@@ -595,18 +594,18 @@ function generateBondHTML(b, forPDF = false) {
             body{font-family:'Cairo',Arial;padding:20px;position:relative;background:#fff}
             table{width:100%;border-collapse:collapse;margin-top:20px}
             td{padding:10px;border:1px solid #ddd}
-          .header{text-align:center;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:15px}
-          .logo{max-height:80px;max-width:200px;margin:0 auto 10px;display:block}
-          .bond-number-once{position:absolute;top:10px;left:10px;color:red;font-weight:bold;font-size:24px;border:2px solid red;padding:5px 15px;border-radius:8px}
-          .company-info{font-size:12px;color:#666;margin-top:5px}
-          .qr-print{position:absolute;bottom:20px;left:20px;text-align:center}
-          .qr-print canvas{display:block!important;border:2px solid #000;padding:5px;background:#fff}
-          .no-signature{text-align:center;margin-top:40px;font-size:14px;color:#555}
-          .status-badge{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold;margin-top:10px}
-          .status-supplied{background:#10b981;color:#fff}
-          .status-not-supplied{background:#f59e0b;color:#fff}
-          .status-verified{background:#3b82f6;color:#fff}
-          .status-not-verified{background:#ef4444;color:#fff}
+         .header{text-align:center;margin-bottom:20px;border-bottom:2px solid #333;padding-bottom:15px}
+         .logo{max-height:80px;max-width:200px;margin:0 auto 10px;display:block}
+         .bond-number-once{position:absolute;top:10px;left:10px;color:red;font-weight:bold;font-size:24px;border:2px solid red;padding:5px 15px;border-radius:8px}
+         .company-info{font-size:12px;color:#666;margin-top:5px}
+         .qr-print{position:absolute;bottom:20px;left:20px;text-align:center}
+         .qr-print canvas{display:block!important;border:2px solid #000;padding:5px;background:#fff}
+         .no-signature{text-align:center;margin-top:40px;font-size:14px;color:#555}
+         .status-badge{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold;margin-top:10px}
+         .status-supplied{background:#10b981;color:#fff}
+         .status-not-supplied{background:#f59e0b;color:#fff}
+         .status-verified{background:#3b82f6;color:#fff}
+         .status-not-verified{background:#ef4444;color:#fff}
             @media print {.no-print { display: none!important; } body { margin: 0; }}
         </style>
         ${forPDF? '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>' : ''}
@@ -689,7 +688,6 @@ async function printBond(id) {
         setTimeout(() => printWindow.print(), 300);
     }
 }
-
 function printBondPDF(id) {
     const b = projectData.bonds.find(bond => bond.id === id);
     const element = document.createElement('div');
@@ -747,7 +745,7 @@ function printQR(id) {
                 body { text-align:center; padding:30px; font-family: 'Cairo', Arial; }
                 h3 { margin: 10px 0; font-size: 20px; }
                 #qrcanvas { margin: 20px auto; display: block; border: 3px solid #000; padding: 10px; background: #fff; }
-              .info { margin-top: 15px; font-size: 16px; }
+             .info { margin-top: 15px; font-size: 16px; }
                 @media print {.no-print { display: none; } body { margin: 0; }}
             </style>
             <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"><\/script>
@@ -1010,8 +1008,7 @@ function renderBondTypes() {
             <h2 class="text-xl font-bold">${translations[currentLang].bond_types}</h2>
             <button onclick="addBondType()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">+ إضافة نوع</button>
         </div>
-        <div class="space-y-2">${projectData.bond
-<div class="space-y-2">${projectData.bondTypes.map(bt => `
+        <div class="space-y-2">${projectData.bondTypes.map(bt => `
             <div class="border p-4 rounded-lg hover:bg-gray-50">
                 <div class="flex justify-between items-start">
                     <div>
@@ -1135,7 +1132,7 @@ function renderDelegates() {
                         <button onclick="deleteUser(${d.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">حذف</button>
                     </div>
                 </div>
-                <div class="text-xs text-gray-500 grid-cols-2 gap-2 bg-gray-50 p-3 rounded">
+                <div class="text-xs text-gray-500 grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded">
                     <div><b>السقف اليومي للعدد:</b> ${d.dailyLimit || 'غير محدد'} سند</div>
                     <div><b>أكبر مبلغ للسند:</b> ${d.maxAmount || 'غير محدد'} ريال</div>
                     <div><b>الحد الإجمالي اليومي:</b> ${d.dailyAmountLimit || 'غير محدد'} ريال</div>
