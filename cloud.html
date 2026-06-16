@@ -89,7 +89,8 @@
                 </table>
             </div>
         </main>
-    </div><script type="module">
+    </div>
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -206,7 +207,8 @@
             mainScreen.classList.add('hidden');
             loginScreen.classList.remove('hidden');
             projectCodeInput.value = '';
-        }// Load Bonds
+        }
+// Load Bonds
         function loadBonds() {
             if (unsubscribe) unsubscribe();
             
@@ -323,7 +325,8 @@
                     Swal.fire('خطأ', 'فشل الحذف', 'error');
                 }
             }
-        }// Load Bonds
+        }
+// Load Bonds
         function loadBonds() {
             if (unsubscribe) unsubscribe();
             
@@ -439,7 +442,8 @@
                     Swal.fire('خطأ', 'فشل حذف السند', 'error');
                 }
             }
-        }// Share Project
+        }
+// Share Project
         function shareProject() {
             const url = `${window.location.origin}${window.location.pathname}?code=${currentProjectCode}`;
             navigator.clipboard.writeText(url).then(() => {
