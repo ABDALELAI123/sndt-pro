@@ -327,51 +327,7 @@
             }
         }
 // Load Bonds
-        function loadBonds() {
-            if (unsubscribe) unsubscribe();
-            
-            const bondsRef = collection(db, 'المشاريع', currentProjectCode, 'bonds');
-            unsubscribe = onSnapshot(bondsRef, (snapshot) => {
-                let totalSales = 0;
-                let totalPurchases = 0;
-                bondsTableBody.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    bondsTableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-500">لا توجد سندات بعد. ابدأ بإضافة سند جديد</td></tr>';
-                } else {
-                    const bonds = [];
-                    snapshot.forEach(doc => {
-                        bonds.push({ id: doc.id, ...doc.data() });
-                    });
-                    
-                    bonds.sort((a, b) => {
-                        const dateA = a.date?.seconds ? a.date.seconds : 0;
-                        const dateB = b.date?.seconds ? b.date.seconds : 0;
-                        return dateB - dateA;
-                    });
-                    
-                    bonds.forEach(bond => {
-                        const amount = parseFloat(bond.amount) || 0;
-                        if (bond.type === 'sale') totalSales += amount;
-                        else totalPurchases += amount;
-                        
-                        const bondDate = bond.date?.seconds ? new Date(bond.date.seconds * 1000).toLocaleDateString('ar-SA') : 'غير محدد';
-                        
-                        const row = document.createElement('tr');
-                        row.className = 'border-b hover:bg-gray-50';
-                        row.innerHTML = `
-                            <td class="p-3">${bondDate}</td>
-                            <td class="p-3"><span class="px-2 py-1 rounded text-xs ${bond.type === 'sale' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${bond.type === 'sale' ? 'قبض' : 'صرف'}</span></td>
-                            <td class="p-3">${bond.description || ''}</td>
-                            <td class="p-3 font-bold ${bond.type === 'sale' ? 'text-green-600' : 'text-red-600'}">${amount.toLocaleString()} ريال</td>
-                            <td class="p-3">
-                                <button onclick="deleteBond('${bond.id}')" class="text-red-600 hover:text-red-800 text-sm">حذف</button>
-                            </td>
-                        `;
-                        bondsTableBody.appendChild(row);
-                    });
-                }
-                
+                 
                 document.getElementById('totalSales').textContent = totalSales.toLocaleString() + ' ريال';
                 document.getElementById('totalPurchases').textContent = totalPurchases.toLocaleString() + ' ريال';
                 document.getElementById('netProfit').textContent = (totalSales - totalPurchases).toLocaleString() + ' ريال';
