@@ -326,16 +326,6 @@
                 }
             }
         }
-// Load Bonds
-                 
-                document.getElementById('totalSales').textContent = totalSales.toLocaleString() + ' ريال';
-                document.getElementById('totalPurchases').textContent = totalPurchases.toLocaleString() + ' ريال';
-                document.getElementById('netProfit').textContent = (totalSales - totalPurchases).toLocaleString() + ' ريال';
-            }, (error) => {
-                console.error('Error loading bonds:', error);
-                Swal.fire('خطأ', 'فشل تحميل السندات', 'error');
-            });
-        }
 
         // Add Bond
         async function addBond(type) {
