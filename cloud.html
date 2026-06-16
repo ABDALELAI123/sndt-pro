@@ -146,7 +146,7 @@
             loginBtn.textContent = 'جاري التحقق...';
 
             try {
-                const projectsRef = collection(db, 'projects');
+                const projectsRef = collection(db, 'المشاريع');
                 const q = query(projectsRef, where('code', '==', code));
                 const snapshot = await getDocs(q);
 
@@ -177,7 +177,7 @@
 
             try {
                 const newCode = generateProjectCode();
-                await addDoc(collection(db, 'projects'), {
+                await addDoc(collection(db, 'المشاريع'), {
                     code: newCode,
                     createdAt: serverTimestamp()
                 });
@@ -212,7 +212,7 @@
         function loadBonds() {
             if (unsubscribe) unsubscribe();
             
-            const bondsRef = collection(db, 'projects', currentProjectCode, 'bonds');
+            const bondsRef = collection(db, 'المشاريع', currentProjectCode, 'bonds');
             unsubscribe = onSnapshot(bondsRef, (snapshot) => {
                 let totalSales = 0;
                 let totalPurchases = 0;
@@ -290,7 +290,7 @@
 
             if (formValues) {
                 try {
-                    await addDoc(collection(db, 'projects', currentProjectCode, 'bonds'), {
+                    await addDoc(collection(db, 'المشاريع', currentProjectCode, 'bonds'), {
                         type: type,
                         date: new Date(formValues.date),
                         description: formValues.description,
@@ -318,7 +318,7 @@
             
             if (result.isConfirmed) {
                 try {
-                    await deleteDoc(doc(db, 'projects', currentProjectCode, 'bonds', id));
+                    await deleteDoc(doc(db, 'المشاريع', currentProjectCode, 'bonds', id));
                     Swal.fire('تم الحذف', '', 'success');
                 } catch (error) {
                     console.error(error);
@@ -330,7 +330,7 @@
         function loadBonds() {
             if (unsubscribe) unsubscribe();
             
-            const bondsRef = collection(db, 'projects', currentProjectCode, 'bonds');
+            const bondsRef = collection(db, 'المشاريع', currentProjectCode, 'bonds');
             unsubscribe = onSnapshot(bondsRef, (snapshot) => {
                 let totalSales = 0;
                 let totalPurchases = 0;
@@ -406,7 +406,7 @@
 
             if (formValues) {
                 try {
-                    await addDoc(collection(db, 'projects', currentProjectCode, 'bonds'), {
+                    await addDoc(collection(db, 'المشاريع', currentProjectCode, 'bonds'), {
                         type: type,
                         description: formValues.description,
                         amount: formValues.amount,
@@ -435,7 +435,7 @@
             
             if (result.isConfirmed) {
                 try {
-                    await deleteDoc(doc(db, 'projects', currentProjectCode, 'bonds', id));
+                    await deleteDoc(doc(db, 'المشاريع', currentProjectCode, 'bonds', id));
                     Swal.fire('تم الحذف', '', 'success');
                 } catch (error) {
                     console.error(error);
@@ -456,7 +456,7 @@
         // Export Excel
         async function exportToExcel() {
             try {
-                const bondsRef = collection(db, 'projects', currentProjectCode, 'bonds');
+                const bondsRef = collection(db, 'المشاريع', currentProjectCode, 'bonds');
                 const snapshot = await getDocs(bondsRef);
                 const data = [];
                 
