@@ -22,57 +22,57 @@
 </head>
 <body class="bg-gray-100">
 
-    <!-- شاشة الدخول -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
             <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">نظام سندات سحابي 100%</h1>
             <p class="text-center text-gray-500 mb-8">ادخل كود المشروع أو أنشئ مشروع جديد</p>
             <div class="space-y-4">
-                <input id="project-code-input" type="text" placeholder="أدخل كود المشروع" class="w-full p-3 border-2 border-gray-200 rounded-lg text-center tracking-widest text-lg focus:border-blue-500 focus:ring-blue-500">
-                <button id="login-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">دخول للمشروع</button>
+                <input id="projectCodeInput" type="text" placeholder="أدخل كود المشروع" class="w-full p-3 border-2 border-gray-200 rounded-lg text-center tracking-widest text-lg focus:border-blue-500 focus:ring-blue-500 uppercase">
+                <button id="loginBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">دخول للمشروع</button>
                 <div class="text-center text-gray-400">أو</div>
-                <button id="create-project-btn" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition">إنشاء مشروع جديد</button>
+                <button id="createProjectBtn" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition">إنشاء مشروع جديد</button>
             </div>
         </div>
     </div>
 
-    <!-- الشاشة الرئيسية -->
-    <div id="main-screen" class="hidden">
-        <header class="bg-white shadow-md p-4 flex justify-between items-center">
+    <!-- Main Screen -->
+    <div id="mainScreen" class="hidden">
+        <header class="bg-white shadow-md p-4 flex justify-between items-center flex-wrap gap-4">
             <div>
                 <h1 class="text-xl font-bold text-gray-800">لوحة التحكم</h1>
-                <p class="text-sm text-gray-500">كود المشروع: <span id="project-code-display" class="font-mono bg-gray-200 px-2 py-1 rounded"></span></p>
+                <p class="text-sm text-gray-500">كود المشروع: <span id="projectCodeDisplay" class="font-mono bg-gray-200 px-2 py-1 rounded cursor-pointer" title="اضغط للنسخ"></span></p>
             </div>
-            <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">خروج</button>
+            <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">خروج</button>
         </header>
 
         <main class="p-4 md:p-6">
-            <!-- إحصائيات -->
+            <!-- Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-white p-4 rounded-xl shadow">
                     <h3 class="text-gray-500">إجمالي المبيعات</h3>
-                    <p id="total-sales" class="text-2xl font-bold text-green-600">0 ريال</p>
+                    <p id="totalSales" class="text-2xl font-bold text-green-600">0 ريال</p>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow">
                     <h3 class="text-gray-500">إجمالي المشتريات</h3>
-                    <p id="total-purchases" class="text-2xl font-bold text-red-600">0 ريال</p>
+                    <p id="totalPurchases" class="text-2xl font-bold text-red-600">0 ريال</p>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow">
                     <h3 class="text-gray-500">صافي الربح</h3>
-                    <p id="net-profit" class="text-2xl font-bold text-blue-600">0 ريال</p>
+                    <p id="netProfit" class="text-2xl font-bold text-blue-600">0 ريال</p>
                 </div>
             </div>
 
-            <!-- أزرار الإجراءات -->
+            <!-- Actions -->
             <div class="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap gap-3">
-                <button id="add-sale-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">+ سند قبض</button>
-                <button id="add-purchase-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">+ سند صرف</button>
-                <button id="share-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">مشاركة المشروع</button>
-                <button id="export-excel-btn" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">تصدير Excel</button>
+                <button id="addSaleBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">+ سند قبض</button>
+                <button id="addPurchaseBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">+ سند صرف</button>
+                <button id="shareBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">مشاركة المشروع</button>
+                <button id="exportExcelBtn" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">تصدير Excel</button>
             </div>
 
-            <!-- جدول السندات -->
-            <div class="bg-white rounded-xl shadow overflow-hidden">
+            <!-- Bonds Table -->
+            <div class="bg-white rounded-xl shadow overflow-x-auto">
                 <table class="w-full text-sm text-right">
                     <thead class="bg-gray-50">
                         <tr>
@@ -83,19 +83,17 @@
                             <th class="p-3">إجراءات</th>
                         </tr>
                     </thead>
-                    <tbody id="bonds-table-body">
+                    <tbody id="bondsTableBody">
                         <tr><td colspan="5" class="text-center p-8 text-gray-500">لا توجد سندات بعد. ابدأ بإضافة سند جديد</td></tr>
                     </tbody>
                 </table>
             </div>
         </main>
-    </div>
-
-    <script type="module">
+    </div><script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // إعدادات Firebase حقتك
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBJoDikIxW2yYn5dCXyoDg3iY1ynSgWPEA",
             authDomain: "sanadat-pro.firebaseapp.com",
@@ -108,22 +106,24 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // عناصر الواجهة
-        const loginScreen = document.getElementById('login-screen');
-        const mainScreen = document.getElementById('main-screen');
-        const projectCodeInput = document.getElementById('project-code-input');
-        const loginBtn = document.getElementById('login-btn');
-        const createProjectBtn = document.getElementById('create-project-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const projectCodeDisplay = document.getElementById('project-code-display');
-        const bondsTableBody = document.getElementById('bonds-table-body');
-        const addSaleBtn = document.getElementById('add-sale-btn');
-        const addPurchaseBtn = document.getElementById('add-purchase-btn');
-        const shareBtn = document.getElementById('share-btn');
-        const exportExcelBtn = document.getElementById('export-excel-btn');
+        // Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const mainScreen = document.getElementById('mainScreen');
+        const projectCodeInput = document.getElementById('projectCodeInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const createProjectBtn = document.getElementById('createProjectBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const projectCodeDisplay = document.getElementById('projectCodeDisplay');
+        const bondsTableBody = document.getElementById('bondsTableBody');
+        const addSaleBtn = document.getElementById('addSaleBtn');
+        const addPurchaseBtn = document.getElementById('addPurchaseBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
 
         let currentProjectCode = null;
-        let unsubscribe = null;// توليد كود مشروع عشوائي
+        let unsubscribe = null;
+
+        // Generate Project Code
         function generateProjectCode() {
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             let code = '';
@@ -133,48 +133,80 @@
             return code;
         }
 
-        // دخول مشروع
+        // Login To Project
         async function loginToProject(code) {
             if (!code || code.length !== 6) {
                 Swal.fire('خطأ', 'كود المشروع لازم يكون 6 أحرف', 'error');
                 return;
             }
 
-            const projectsRef = collection(db, 'projects');
-            const q = query(projectsRef, where('code', '==', code.toUpperCase()));
-            const snapshot = await getDocs(q);
+            code = code.toUpperCase();
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'جاري التحقق...';
 
-            if (snapshot.empty) {
-                Swal.fire('خطأ', 'كود المشروع غير صحيح', 'error');
-                return;
+            try {
+                const projectsRef = collection(db, 'projects');
+                const q = query(projectsRef, where('code', '==', code));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    Swal.fire('خطأ', 'كود المشروع غير صحيح', 'error');
+                    return;
+                }
+
+                currentProjectCode = code;
+                localStorage.setItem('projectCode', currentProjectCode);
+                projectCodeDisplay.textContent = currentProjectCode;
+                loginScreen.classList.add('hidden');
+                mainScreen.classList.remove('hidden');
+                loadBonds();
+            } catch (error) {
+                console.error(error);
+                Swal.fire('خطأ', 'فشل الاتصال بقاعدة البيانات', 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'دخول للمشروع';
             }
-
-            currentProjectCode = code.toUpperCase();
-            projectCodeDisplay.textContent = currentProjectCode;
-            loginScreen.classList.add('hidden');
-            mainScreen.classList.remove('hidden');
-            loadBonds();
         }
 
-        // إنشاء مشروع جديد
+        // Create New Project
         async function createNewProject() {
-            const newCode = generateProjectCode();
-            await addDoc(collection(db, 'projects'), {
-                code: newCode,
-                createdAt: new Date()
-            });
-            
-            Swal.fire({
-                title: 'تم إنشاء المشروع',
-                html: `كود مشروعك هو: <b class="text-2xl font-mono">${newCode}</b><br><br>احفظ الكود في مكان آمن`,
-                icon: 'success',
-                confirmButtonText: 'دخول للمشروع'
-            }).then(() => {
+            createProjectBtn.disabled = true;
+            createProjectBtn.textContent = 'جاري الإنشاء...';
+
+            try {
+                const newCode = generateProjectCode();
+                await addDoc(collection(db, 'projects'), {
+                    code: newCode,
+                    createdAt: serverTimestamp()
+                });
+                
+                await Swal.fire({
+                    title: 'تم إنشاء المشروع',
+                    html: `كود مشروعك هو: <b class="text-2xl font-mono">${newCode}</b><br><br>احفظ الكود في مكان آمن`,
+                    icon: 'success',
+                    confirmButtonText: 'دخول للمشروع'
+                });
+                
                 loginToProject(newCode);
-            });
+            } catch (error) {
+                console.error(error);
+                Swal.fire('خطأ', 'فشل إنشاء المشروع', 'error');
+            } finally {
+                createProjectBtn.disabled = false;
+                createProjectBtn.textContent = 'إنشاء مشروع جديد';
+            }
         }
 
-        // تحميل السندات
+        // Logout
+        function logout() {
+            if (unsubscribe) unsubscribe();
+            localStorage.removeItem('projectCode');
+            currentProjectCode = null;
+            mainScreen.classList.add('hidden');
+            loginScreen.classList.remove('hidden');
+            projectCodeInput.value = '';
+        }// Load Bonds
         function loadBonds() {
             if (unsubscribe) unsubscribe();
             
@@ -192,35 +224,44 @@
                         bonds.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // ترتيب حسب التاريخ
-                    bonds.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    bonds.sort((a, b) => {
+                        const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+                        const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+                        return dateB - dateA;
+                    });
                     
                     bonds.forEach(bond => {
                         if (bond.type === 'قبض') totalSales += parseFloat(bond.amount);
                         else totalPurchases += parseFloat(bond.amount);
                         
+                        const bondDate = bond.date?.toDate ? bond.date.toDate() : new Date(bond.date);
+                        const dateStr = bondDate.toLocaleDateString('ar-SA');
+                        
                         const row = document.createElement('tr');
                         row.className = 'border-b hover:bg-gray-50';
                         row.innerHTML = `
-                            <td class="p-3">${bond.date}</td>
+                            <td class="p-3">${dateStr}</td>
                             <td class="p-3"><span class="px-2 py-1 rounded text-xs ${bond.type === 'قبض' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${bond.type}</span></td>
                             <td class="p-3">${bond.description}</td>
-                            <td class="p-3 font-bold ${bond.type === 'قبض' ? 'text-green-600' : 'text-red-600'}">${bond.amount} ريال</td>
+                            <td class="p-3 font-bold ${bond.type === 'قبض' ? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toLocaleString()} ريال</td>
                             <td class="p-3">
-                                <button onclick="deleteBond('${bond.id}')" class="text-red-600 hover:text-red-800 text-sm">حذف</button>
+                                <button onclick="window.deleteBond('${bond.id}')" class="text-red-600 hover:text-red-800 text-sm">حذف</button>
                             </td>
                         `;
                         bondsTableBody.appendChild(row);
                     });
                 }
                 
-                document.getElementById('total-sales').textContent = totalSales.toFixed(2) + ' ريال';
-                document.getElementById('total-purchases').textContent = totalPurchases.toFixed(2) + ' ريال';
-                document.getElementById('net-profit').textContent = (totalSales - totalPurchases).toFixed(2) + ' ريال';
+                document.getElementById('totalSales').textContent = totalSales.toLocaleString() + ' ريال';
+                document.getElementById('totalPurchases').textContent = totalPurchases.toLocaleString() + ' ريال';
+                document.getElementById('netProfit').textContent = (totalSales - totalPurchases).toLocaleString() + ' ريال';
+            }, (error) => {
+                console.error(error);
+                Swal.fire('خطأ', 'فشل تحميل السندات', 'error');
             });
         }
 
-        // إضافة سند
+        // Add Bond
         async function addBond(type) {
             const { value: formValues } = await Swal.fire({
                 title: type === 'قبض' ? 'سند قبض جديد' : 'سند صرف جديد',
@@ -230,28 +271,39 @@
                     <input id="swal-amount" type="number" class="swal2-input" placeholder="المبلغ">
                 `,
                 focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'إضافة',
+                cancelButtonText: 'إلغاء',
                 preConfirm: () => {
-                    return {
-                        date: document.getElementById('swal-date').value,
-                        description: document.getElementById('swal-desc').value,
-                        amount: document.getElementById('swal-amount').value
+                    const date = document.getElementById('swal-date').value;
+                    const description = document.getElementById('swal-desc').value;
+                    const amount = document.getElementById('swal-amount').value;
+                    if (!date || !description || !amount || amount <= 0) {
+                        Swal.showValidationMessage('كل الحقول مطلوبة والمبلغ أكبر من صفر');
+                        return false;
                     }
+                    return { date, description, amount };
                 }
             });
 
-            if (formValues && formValues.description && formValues.amount) {
-                await addDoc(collection(db, 'projects', currentProjectCode, 'bonds'), {
-                    type: type,
-                    date: formValues.date,
-                    description: formValues.description,
-                    amount: parseFloat(formValues.amount),
-                    createdAt: new Date()
-                });
-                Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
+            if (formValues) {
+                try {
+                    await addDoc(collection(db, 'projects', currentProjectCode, 'bonds'), {
+                        type: type,
+                        date: new Date(formValues.date),
+                        description: formValues.description,
+                        amount: parseFloat(formValues.amount),
+                        createdAt: serverTimestamp()
+                    });
+                    Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire('خطأ', 'فشل إضافة السند', 'error');
+                }
             }
         }
 
-        // حذف سند
+        // Delete Bond
         window.deleteBond = async function(id) {
             const result = await Swal.fire({
                 title: 'متأكد؟',
@@ -263,207 +315,197 @@
             });
             
             if (result.isConfirmed) {
-                await deleteDoc(doc(db, 'projects', currentProjectCode, 'bonds', id));
-                Swal.fire('تم الحذف', '', 'success');
+                try {
+                    await deleteDoc(doc(db, 'projects', currentProjectCode, 'bonds', id));
+                    Swal.fire('تم الحذف', '', 'success');
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire('خطأ', 'فشل الحذف', 'error');
+                }
             }
-        }// دوال المشروع
-        function generateProjectCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
-        async function createProject() {
-            const code = generateProjectCode();
-            try {
-                await addDoc(collection(db, "projects"), {
-                    code: code,
-                    createdAt: new Date(),
-                    phone: ""
-                });
-                Swal.fire('تم!', `كود مشروعك الجديد: ${code}`, 'success');
-                loginToProject(code);
-            } catch (e) {
-                Swal.fire('خطأ', 'فشل إنشاء المشروع', 'error');
-            }
-        }
-
-        async function loginToProject(code) {
-            if (!code) {
-                Swal.fire('تنبيه', 'الرجاء إدخال كود المشروع', 'warning');
-                return;
-            }
-            const q = query(collection(db, "projects"), where("code", "==", code.toUpperCase()));
-            const querySnapshot = await getDocs(q);
-            
-            if (querySnapshot.empty) {
-                Swal.fire('خطأ', 'كود المشروع غير صحيح', 'error');
-                return;
-            }
-
-            currentProjectCode = code.toUpperCase();
-            localStorage.setItem('projectCode', currentProjectCode);
-            projectCodeDisplay.textContent = currentProjectCode;
-            loginScreen.classList.add('hidden');
-            mainScreen.classList.remove('hidden');
-            listenToBonds();
-        }
-
-        function logout() {
+        }// Load Bonds
+        function loadBonds() {
             if (unsubscribe) unsubscribe();
-            localStorage.removeItem('projectCode');
-            currentProjectCode = null;
-            mainScreen.classList.add('hidden');
-            loginScreen.classList.remove('hidden');
-            projectCodeInput.value = '';
-        }
-
-        // دوال السندات
-        function listenToBonds() {
-            const bondsRef = collection(db, "projects", currentProjectCode, "bonds");
+            
+            const bondsRef = collection(db, 'projects', currentProjectCode, 'bonds');
             unsubscribe = onSnapshot(bondsRef, (snapshot) => {
-                const bonds = [];
-                snapshot.forEach(doc => bonds.push({ id: doc.id, ...doc.data() }));
-                bonds.sort((a, b) => b.date.seconds - a.date.seconds);
-                renderBonds(bonds);
-                updateStats(bonds);
+                let totalSales = 0;
+                let totalPurchases = 0;
+                bondsTableBody.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    bondsTableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-500">لا توجد سندات بعد. ابدأ بإضافة سند جديد</td></tr>';
+                } else {
+                    const bonds = [];
+                    snapshot.forEach(doc => {
+                        bonds.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    bonds.sort((a, b) => {
+                        const dateA = a.date?.seconds ? a.date.seconds : 0;
+                        const dateB = b.date?.seconds ? b.date.seconds : 0;
+                        return dateB - dateA;
+                    });
+                    
+                    bonds.forEach(bond => {
+                        const amount = parseFloat(bond.amount) || 0;
+                        if (bond.type === 'sale') totalSales += amount;
+                        else totalPurchases += amount;
+                        
+                        const bondDate = bond.date?.seconds ? new Date(bond.date.seconds * 1000).toLocaleDateString('ar-SA') : 'غير محدد';
+                        
+                        const row = document.createElement('tr');
+                        row.className = 'border-b hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="p-3">${bondDate}</td>
+                            <td class="p-3"><span class="px-2 py-1 rounded text-xs ${bond.type === 'sale' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${bond.type === 'sale' ? 'قبض' : 'صرف'}</span></td>
+                            <td class="p-3">${bond.description || ''}</td>
+                            <td class="p-3 font-bold ${bond.type === 'sale' ? 'text-green-600' : 'text-red-600'}">${amount.toLocaleString()} ريال</td>
+                            <td class="p-3">
+                                <button onclick="deleteBond('${bond.id}')" class="text-red-600 hover:text-red-800 text-sm">حذف</button>
+                            </td>
+                        `;
+                        bondsTableBody.appendChild(row);
+                    });
+                }
+                
+                document.getElementById('totalSales').textContent = totalSales.toLocaleString() + ' ريال';
+                document.getElementById('totalPurchases').textContent = totalPurchases.toLocaleString() + ' ريال';
+                document.getElementById('netProfit').textContent = (totalSales - totalPurchases).toLocaleString() + ' ريال';
+            }, (error) => {
+                console.error('Error loading bonds:', error);
+                Swal.fire('خطأ', 'فشل تحميل السندات', 'error');
             });
         }
 
-        function renderBonds(bonds) {
-            if (bonds.length === 0) {
-                bondsTableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">لا توجد سندات بعد. ابدأ بإضافة سند جديد</td></tr>`;
-                return;
-            }
-            bondsTableBody.innerHTML = bonds.map(bond => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3">${new Date(bond.date.seconds * 1000).toLocaleDateString('ar-SA')}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-1 rounded-full text-xs ${bond.type === 'sale' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${bond.type === 'sale' ? 'قبض' : 'صرف'}
-                        </span>
-                    </td>
-                    <td class="p-3">${bond.description}</td>
-                    <td class="p-3 font-bold ${bond.type === 'sale' ? 'text-green-600' : 'text-red-600'}">${bond.amount.toLocaleString()} ريال</td>
-                    <td class="p-3">
-                        <button onclick="window.deleteBond('${bond.id}')" class="text-red-500 hover:text-red-700">حذف</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function updateStats(bonds) {
-            const totalSales = bonds.filter(b => b.type === 'sale').reduce((sum, b) => sum + b.amount, 0);
-            const totalPurchases = bonds.filter(b => b.type === 'purchase').reduce((sum, b) => sum + b.amount, 0);
-            document.getElementById('total-sales').textContent = totalSales.toLocaleString() + ' ريال';
-            document.getElementById('total-purchases').textContent = totalPurchases.toLocaleString() + ' ريال';
-            document.getElementById('net-profit').textContent = (totalSales - totalPurchases).toLocaleString() + ' ريال';
-        }
-
+        // Add Bond
         async function addBond(type) {
             const { value: formValues } = await Swal.fire({
-                title: type === 'sale' ? 'إضافة سند قبض' : 'إضافة سند صرف',
+                title: type === 'sale' ? 'سند قبض جديد' : 'سند صرف جديد',
                 html: `
                     <input id="swal-desc" class="swal2-input" placeholder="البيان / الوصف">
-                    <input id="swal-amount" type="number" class="swal2-input" placeholder="المبلغ">
+                    <input id="swal-amount" type="number" step="0.01" class="swal2-input" placeholder="المبلغ">
                 `,
                 focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'إضافة',
+                cancelButtonText: 'إلغاء',
                 preConfirm: () => {
-                    return {
-                        description: document.getElementById('swal-desc').value,
-                        amount: parseFloat(document.getElementById('swal-amount').value)
+                    const desc = document.getElementById('swal-desc').value;
+                    const amount = document.getElementById('swal-amount').value;
+                    if (!desc || !amount) {
+                        Swal.showValidationMessage('الرجاء ملء جميع الحقول');
+                        return false;
                     }
+                    return { description: desc, amount: parseFloat(amount) }
                 }
             });
 
-            if (formValues && formValues.description && formValues.amount > 0) {
+            if (formValues) {
                 try {
-                    await addDoc(collection(db, "projects", currentProjectCode, "bonds"), {
+                    await addDoc(collection(db, 'projects', currentProjectCode, 'bonds'), {
                         type: type,
                         description: formValues.description,
                         amount: formValues.amount,
-                        date: new Date()
+                        date: serverTimestamp(),
+                        createdAt: serverTimestamp()
                     });
                     Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
-                } catch (e) {
+                } catch (error) {
+                    console.error(error);
                     Swal.fire('خطأ', 'فشل إضافة السند', 'error');
                 }
             }
-        }window.deleteBond = async (id) => {
+        }
+
+        // Delete Bond
+        window.deleteBond = async function(id) {
             const result = await Swal.fire({
                 title: 'متأكد؟',
-                text: "ما تقدر تتراجع عن الحذف!",
+                text: 'ما تقدر تتراجع بعد الحذف',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'ايه، احذفه!',
-                cancelButtonText: 'إلغاء'
+                confirmButtonText: 'نعم احذف',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#d33'
             });
-
+            
             if (result.isConfirmed) {
                 try {
-                    await deleteDoc(doc(db, "projects", currentProjectCode, "bonds", id));
-                    Swal.fire('انحذف!', 'السند انحذف بنجاح.', 'success');
-                } catch (e) {
+                    await deleteDoc(doc(db, 'projects', currentProjectCode, 'bonds', id));
+                    Swal.fire('تم الحذف', '', 'success');
+                } catch (error) {
+                    console.error(error);
                     Swal.fire('خطأ', 'فشل حذف السند', 'error');
                 }
             }
-        }
-
+        }// Share Project
         function shareProject() {
             const url = `${window.location.origin}${window.location.pathname}?code=${currentProjectCode}`;
             navigator.clipboard.writeText(url).then(() => {
-                Swal.fire('تم النسخ!', 'رابط المشاركة انسخ للحافظة', 'success');
+                Swal.fire('تم النسخ', 'رابط المشاركة انسخ للحافظة', 'success');
+            }).catch(() => {
+                Swal.fire('الرابط', url, 'info');
             });
         }
 
+        // Export Excel
         async function exportToExcel() {
-            const bondsRef = collection(db, "projects", currentProjectCode, "bonds");
-            const snapshot = await getDocs(bondsRef);
-            const data = [];
-            snapshot.forEach(doc => {
-                const d = doc.data();
-                data.push({
-                    'التاريخ': new Date(d.date.seconds * 1000).toLocaleDateString('ar-SA'),
-                    'النوع': d.type === 'sale' ? 'قبض' : 'صرف',
-                    'البيان': d.description,
-                    'المبلغ': d.amount
+            try {
+                const bondsRef = collection(db, 'projects', currentProjectCode, 'bonds');
+                const snapshot = await getDocs(bondsRef);
+                const data = [];
+                
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    const date = d.date?.seconds ? new Date(d.date.seconds * 1000).toLocaleDateString('ar-SA') : 'غير محدد';
+                    data.push({
+                        'التاريخ': date,
+                        'النوع': d.type === 'sale' ? 'قبض' : 'صرف',
+                        'البيان': d.description,
+                        'المبلغ': d.amount
+                    });
                 });
-            });
 
-            if (data.length === 0) {
-                Swal.fire('تنبيه', 'لا توجد بيانات للتصدير', 'warning');
-                return;
+                if (data.length === 0) {
+                    Swal.fire('تنبيه', 'لا توجد بيانات للتصدير', 'warning');
+                    return;
+                }
+
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'السندات');
+                XLSX.writeFile(wb, `سندات-${currentProjectCode}.xlsx`);
+                Swal.fire('تم', 'تم تصدير الملف بنجاح', 'success');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('خطأ', 'فشل التصدير', 'error');
             }
-
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "السندات");
-            XLSX.writeFile(wb, `سندات-${currentProjectCode}.xlsx`);
         }
 
-        // ربط الأزرار
-        loginBtn.onclick = () => loginToProject(projectCodeInput.value);
-        createProjectBtn.onclick = createProject;
+        // Event Listeners
+        loginBtn.onclick = () => loginToProject(projectCodeInput.value.trim());
+        createProjectBtn.onclick = createNewProject;
         logoutBtn.onclick = logout;
         addSaleBtn.onclick = () => addBond('sale');
         addPurchaseBtn.onclick = () => addBond('purchase');
         shareBtn.onclick = shareProject;
         exportExcelBtn.onclick = exportToExcel;
         
+        projectCodeDisplay.onclick = () => {
+            navigator.clipboard.writeText(currentProjectCode);
+            Swal.fire('تم النسخ', 'تم نسخ كود المشروع', 'success');
+        };
+        
         projectCodeInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') loginToProject(projectCodeInput.value);
+            if (e.key === 'Enter') loginToProject(projectCodeInput.value.trim());
         });
 
-        // تسجيل دخول تلقائي لو فيه كود محفوظ
+        // Auto Login
         const savedCode = localStorage.getItem('projectCode');
         if (savedCode) loginToProject(savedCode);
         
-        // دخول من الرابط مباشرة
+        // Login From URL
         const urlParams = new URLSearchParams(window.location.search);
         const codeFromUrl = urlParams.get('code');
         if (codeFromUrl) {
