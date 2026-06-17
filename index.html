@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية V7.9</title>
+    <title>السندات الذكية V8.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
@@ -14,6 +16,9 @@
         .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
         .logo-preview { max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px dashed #ccc; object-fit: contain; }
+        @media print { .no-print { display: none!important; } .print-area { display: block!important; } body { background: white; } }
+        .print-area { display: none; }
+        .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -23,16 +28,15 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
-            </div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">السندات الذكية</h1>
             <p class="text-gray-500">نظام إدارة السندات السحابي</p>
         </div>
         <div class="space-y-5">
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">كود المشروع</label>
-                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="SUPERADMIN">
+                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="ادخل كود مشروعك">
             </div>
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">رقم الجوال</label>
@@ -48,7 +52,7 @@
 </div>
 
 <div id="mainApp" class="hidden">
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg">
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg no-print">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <img id="headerLogo" class="project-logo hidden" src="" alt="Logo">
@@ -56,7 +60,6 @@
                     <h1 class="text-2xl font-extrabold">السندات الذكية</h1>
                     <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span id="currentRole" class="bg-white/20 px-2 py-1 rounded"></span></p>
                 </div>
-            </div>
             <div class="flex gap-2">
                 <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm">تغيير كلمة السر</button>
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm">خروج</button>
@@ -64,7 +67,7 @@
         </div>
     </div>
 
-    <div id="superadminTabs" class="hidden bg-white shadow-md border-b">
+    <div id="superadminTabs" class="hidden bg-white shadow-md border-b no-print">
         <div class="flex overflow-x-auto">
             <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
             <button onclick="showTab('projects', this)" class="tab-btn px-8 py-4">المشاريع</button>
@@ -72,18 +75,45 @@
         </div>
     </div>
 
-    <div id="managerTabs" class="hidden bg-white shadow-md border-b">
+    <div id="managerTabs" class="hidden bg-white shadow-md border-b no-print">
         <div class="flex overflow-x-auto">
             <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
             <button onclick="showTab('projectSettings', this)" class="tab-btn px-8 py-4">إعدادات المشروع</button>
             <button onclick="showTab('bondSettings', this)" class="tab-btn px-8 py-4">إعدادات السند</button>
             <button onclick="showTab('delegates', this)" class="tab-btn px-8 py-4">المناديب</button>
+            <button onclick="showTab('createBond', this)" class="tab-btn px-8 py-4">إنشاء سند</button>
+            <button onclick="showTab('bondsList', this)" class="tab-btn px-8 py-4">السندات</button>
+        </div>
+    </div>
+
+    <div id="delegateTabs" class="hidden bg-white shadow-md border-b no-print">
+        <div class="flex overflow-x-auto">
+            <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
+            <button onclick="showTab('createBond', this)" class="tab-btn px-8 py-4">إنشاء سند</button>
+            <button onclick="showTab('bondsList', this)" class="tab-btn px-8 py-4">سنداتي</button>
         </div>
     </div>
 
     <div class="p-6">
         <div id="dashboard" class="tab-content">
             <h2 class="text-3xl font-extrabold mb-6 text-gray-800">لوحة التحكم</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-xl shadow-lg text-white">
+                    <p class="text-sm opacity-90">إجمالي القبض</p>
+                    <p id="totalIncome" class="text-4xl font-extrabold mt-2">0.00</p>
+                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
+                </div>
+                <div class="bg-gradient-to-br from-red-500 to-rose-600 p-6 rounded-xl shadow-lg text-white">
+                    <p class="text-sm opacity-90">إجمالي الصرف</p>
+                    <p id="totalExpense" class="text-4xl font-extrabold mt-2">0.00</p>
+                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-xl shadow-lg text-white">
+                    <p class="text-sm opacity-90">الرصيد الحالي</p>
+                    <p id="totalBalance" class="text-4xl font-extrabold mt-2">0.00</p>
+                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-blue-500"><p class="text-gray-500 text-sm">إجمالي المشاريع</p><p id="totalProjects" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-green-500"><p class="text-gray-500 text-sm">إجمالي السندات</p><p id="totalBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
@@ -149,8 +179,8 @@
                     <table class="w-full">
                         <thead class="bg-gray-50"><tr>
                             <th class="p-4 text-right font-bold">اسم النوع</th><th class="p-4 text-right font-bold">البادئة</th>
-                            <th class="p-4 text-right font-bold">بداية التسلسل</th><th class="p-4 text-right font-bold">نهاية التسلسل</th>
-                            <th class="p-4 text-right font-bold">الرقم الحالي</th><th class="p-4 text-right font-bold">تحكم</th>
+                            <th class="p-4 text-right font-bold">النوع</th><th class="p-4 text-right font-bold">بداية التسلسل</th>
+                            <th class="p-4 text-right font-bold">نهاية التسلسل</th><th class="p-4 text-right font-bold">الرقم الحالي</th><th class="p-4 text-right font-bold">تحكم</th>
                         </tr></thead>
                         <tbody id="bondTypesTable"></tbody>
                     </table>
@@ -159,9 +189,85 @@
         </div>
 
         <div id="managers" class="tab-content hidden"><div class="bg-white p-8 rounded-xl shadow-lg"><h2 class="text-3xl font-extrabold mb-6">كل المدراء</h2><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="managersTable"></tbody></table></div></div></div>
-        <div id="delegates" class="tab-content hidden"><div class="bg-white p-8 rounded-xl shadow-lg"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-extrabold">المناديب</h2><button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مندوب جديد</button></div><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="delegatesTable"></tbody></table></div></div></div>
+        
+        <div id="delegates" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-extrabold">المناديب</h2>
+                    <button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مندوب جديد</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="p-4 text-right font-bold">الاسم</th>
+                            <th class="p-4 text-right font-bold">الجوال</th>
+                            <th class="p-4 text-right font-bold">الصلاحيات</th>
+                            <th class="p-4 text-right font-bold">الحالة</th>
+                            <th class="p-4 text-right font-bold">تحكم</th>
+                        </tr></thead>
+                        <tbody id="delegatesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="createBond" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-3xl">
+                <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إنشاء سند جديد</h2>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-700">نوع السند</label>
+                        <select id="bondTypeSelect" class="w-full p-3 border-2 rounded-lg"></select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block mb-2 font-bold text-gray-700">المبلغ</label>
+                            <input id="bondAmount" type="number" step="0.01" class="w-full p-3 border-2 rounded-lg" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block mb-2 font-bold text-gray-700">التاريخ</label>
+                            <input id="bondDate" type="date" class="w-full p-3 border-2 rounded-lg">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-700">اسم العميل</label>
+                        <input id="bondClient" type="text" class="w-full p-3 border-2 rounded-lg" placeholder="اسم العميل">
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-700">البيان</label>
+                        <textarea id="bondDescription" class="w-full p-3 border-2 rounded-lg" rows="3" placeholder="تفاصيل السند"></textarea>
+                    </div>
+                    <button id="saveBondBtn" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition">حفظ السند</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="bondsList" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-extrabold text-gray-800">قائمة السندات</h2>
+                    <button id="exportExcelBtn" class="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">📊 تصدير اكسل</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="p-4 text-right font-bold">رقم السند</th>
+                            <th class="p-4 text-right font-bold">النوع</th>
+                            <th class="p-4 text-right font-bold">العميل</th>
+                            <th class="p-4 text-right font-bold">المبلغ</th>
+                            <th class="p-4 text-right font-bold">التاريخ</th>
+                            <th class="p-4 text-right font-bold">المنشئ</th>
+                            <th class="p-4 text-right font-bold">تحكم</th>
+                        </tr></thead>
+                        <tbody id="bondsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<div id="printArea" class="print-area"></div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -180,7 +286,8 @@
     const db = getDatabase(app);
 
     const SUPERADMIN = { phone: "0597087767", password: "500600", name: "المدير العام" };
-    let currentUser = null, currentProject = null, currentRole = null, projectData = null;
+    let currentUser = null, currentProject = null, currentRole = null, projectData = null, userPermissions = [];
+    let allBondsData = [];
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('loginBtn').addEventListener('click', login);
@@ -190,6 +297,9 @@
         document.getElementById('saveProjectSettingsBtn').addEventListener('click', saveProjectSettings);
         document.getElementById('addBondTypeBtn').addEventListener('click', addBondType);
         document.getElementById('addDelegateBtn').addEventListener('click', addDelegate);
+        document.getElementById('saveBondBtn').addEventListener('click', saveBond);
+        document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+        document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
 
         document.getElementById('set_logo').addEventListener('change', async (e) => {
             if (e.target.files[0]) {
@@ -249,6 +359,7 @@
 
             const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
             projectData = projectSnap.val();
+            userPermissions = user.permissions || [];
 
             currentUser = user; currentProject = projectCode; currentRole = user.role;
             localStorage.setItem('projectCode', projectCode);
@@ -278,12 +389,17 @@
     function loadUserInterface() {
         document.getElementById('superadminTabs').classList.add('hidden');
         document.getElementById('managerTabs').classList.add('hidden');
+        document.getElementById('delegateTabs').classList.add('hidden');
+
         if (currentRole === 'superadmin') {
             document.getElementById('superadminTabs').classList.remove('hidden');
             loadProjects(); loadAllManagers();
         } else if (currentRole === 'manager') {
             document.getElementById('managerTabs').classList.remove('hidden');
-            loadProjectSettings(); loadBondTypes(); loadDelegates();
+            loadProjectSettings(); loadBondTypes(); loadDelegates(); loadBonds();
+        } else if (currentRole === 'delegate') {
+            document.getElementById('delegateTabs').classList.remove('hidden');
+            loadBonds(); loadBondTypeSelect();
         }
     }
 
@@ -314,7 +430,7 @@
                     logo: '', cr: '', tax: '', address: '', contact: f.phone, stamp: ''
                 });
                 await set(ref(db, `projects/${code}/users/${f.phone}`), {
-                    name: f.company, phone: f.phone, password: f.password, role: 'manager', active: true
+                    name: f.company, phone: f.phone, password: f.password, role: 'manager', active: true, permissions: []
                 });
                 Swal.fire('تم', `كود المشروع: ${code}`, 'success');
             } catch (e) {
@@ -342,8 +458,9 @@
                         <td class="p-3">${manager?.phone || '-'}</td>
                         <td class="p-3"><span class="${p.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${p.active? 'نشط' : 'موقوف'}</span></td>
                         <td class="p-3 flex gap-2">
+                            <button onclick="editProject('${p.code}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
                             <button onclick="toggleProject('${p.code}', ${p.active})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600">${p.active? 'إيقاف' : 'تفعيل'}</button>
-                            <button onclick="deleteProject('${p.code}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف نهائي</button>
+                            <button onclick="deleteProject('${p.code}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
                         </td>
                     </tr>`;
                 });
@@ -351,6 +468,29 @@
             document.getElementById('totalProjects').textContent = count;
         });
     }
+
+    window.editProject = async (code) => {
+        const snap = await get(ref(db, `projects/${code}/info`));
+        const p = snap.val();
+        const result = await Swal.fire({
+            title: 'تعديل المشروع',
+            html: `
+                <input id="swal-name" class="swal2-input" placeholder="اسم الشركة" value="${p.name}">
+                <input id="swal-contact" class="swal2-input" placeholder="رقم التواصل" value="${p.contact || ''}">
+            `,
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('swal-name').value,
+                    contact: document.getElementById('swal-contact').value
+                };
+            }
+        });
+        if (result.value) {
+            await update(ref(db, `projects/${code}/info`), result.value);
+            Swal.fire('تم', 'تم التعديل', 'success');
+        }
+    };
 
     window.toggleProject = async (code, active) => {
         await update(ref(db, `projects/${code}/info`), { active:!active });
@@ -381,7 +521,10 @@
                                 <td class="p-4 font-bold">${u.name}</td>
                                 <td class="p-4">${u.phone}</td>
                                 <td class="p-4"><span class="${u.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${u.active? 'نشط' : 'موقوف'}</span></td>
-                                <td class="p-4"><button onclick="deleteUser('${projectCode}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف نهائي</button></td>
+                                <td class="p-4 flex gap-2">
+                                    <button onclick="editManager('${projectCode}','${u.phone}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
+                                    <button onclick="deleteUser('${projectCode}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
+                                </td>
                             </tr>`;
                         }
                     });
@@ -390,6 +533,30 @@
             document.getElementById('totalUsers').textContent = count;
         });
     }
+
+    window.editManager = async (projectCode, phone) => {
+        const snap = await get(ref(db, `projects/${projectCode}/users/${phone}`));
+        const u = snap.val();
+        const result = await Swal.fire({
+            title: 'تعديل المدير',
+            html: `
+                <input id="swal-name" class="swal2-input" placeholder="الاسم" value="${u.name}">
+                <input id="swal-password" type="password" class="swal2-input" placeholder="كلمة السر الجديدة (اتركه فاضي لو ما تبغى تغير)">
+            `,
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('swal-name').value,
+                    password: document.getElementById('swal-password').value
+                };
+            }
+        });
+        if (result.value) {
+            const updates = { name: result.value.name };
+            if (result.value.password) updates.password = result.value.password;
+            await update(ref(db, `projects/${projectCode}/users/${phone}`), updates);
+            Swal.fire('تم', 'تم التعديل', 'success');
+        }
+    };
 
     window.deleteUser = async (projectCode, phone) => {
         const r = await Swal.fire({ title: 'حذف نهائي؟', text: 'مستحيل يرجع', icon: 'warning', showCancelButton: true, confirmButtonText: 'احذف', confirmButtonColor: '#d33' });
@@ -442,6 +609,11 @@
             html: `
                 <input id="swal-name" class="swal2-input" placeholder="اسم النوع مثل: قبض">
                 <input id="swal-prefix" class="swal2-input" placeholder="البادئة مثل: CB-">
+                <select id="swal-kind" class="swal2-input">
+                    <option value="income">قبض - يزيد الرصيد</option>
+                    <option value="expense">صرف - ينقص الرصيد</option>
+                    <option value="other">آخر - لا يؤثر على الرصيد</option>
+                </select>
                 <input id="swal-start" type="number" class="swal2-input" placeholder="بداية التسلسل 1">
                 <input id="swal-end" type="number" class="swal2-input" placeholder="نهاية التسلسل 9999">
             `,
@@ -450,6 +622,7 @@
                 return {
                     name: document.getElementById('swal-name').value,
                     prefix: document.getElementById('swal-prefix').value,
+                    kind: document.getElementById('swal-kind').value,
                     start: document.getElementById('swal-start').value,
                     end: document.getElementById('swal-end').value
                 };
@@ -457,9 +630,9 @@
         });
         const f = result.value;
         if (f && f.name && f.prefix && f.start) {
-            const id = Date.now();
+            const id = Date.now().toString();
             await set(ref(db, `projects/${currentProject}/bondTypes/${id}`), {
-                id: id, name: f.name, prefix: f.prefix,
+                id: id, name: f.name, prefix: f.prefix, kind: f.kind,
                 start: parseInt(f.start), end: parseInt(f.end) || 999999,
                 current: parseInt(f.start)
             });
@@ -474,18 +647,56 @@
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const t = child.val();
+                    const kindText = t.kind === 'income'? 'قبض' : t.kind === 'expense'? 'صرف' : 'آخر';
+                    const kindColor = t.kind === 'income'? 'text-green-600' : t.kind === 'expense'? 'text-red-600' : 'text-gray-600';
                     tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
                         <td class="p-4 font-bold">${t.name}</td>
                         <td class="p-4 font-mono">${t.prefix}</td>
+                        <td class="p-4 font-bold ${kindColor}">${kindText}</td>
                         <td class="p-4">${t.start}</td>
                         <td class="p-4">${t.end}</td>
                         <td class="p-4 font-bold text-blue-600">${t.current}</td>
-                        <td class="p-4"><button onclick="deleteBondType('${t.id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button></td>
+                        <td class="p-4 flex gap-2">
+                            <button onclick="editBondType('${t.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
+                            <button onclick="deleteBondType('${t.id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
+                        </td>
                     </tr>`;
                 });
             }
         });
     }
+
+    window.editBondType = async (id) => {
+        const snap = await get(ref(db, `projects/${currentProject}/bondTypes/${id}`));
+        const t = snap.val();
+        const result = await Swal.fire({
+            title: 'تعديل نوع السند',
+            html: `
+                <input id="swal-name" class="swal2-input" placeholder="اسم النوع" value="${t.name}">
+                <input id="swal-prefix" class="swal2-input" placeholder="البادئة" value="${t.prefix}">
+                <select id="swal-kind" class="swal2-input">
+                    <option value="income" ${t.kind==='income'?'selected':''}>قبض - يزيد الرصيد</option>
+                    <option value="expense" ${t.kind==='expense'?'selected':''}>صرف - ينقص الرصيد</option>
+                    <option value="other" ${t.kind==='other'?'selected':''}>آخر - لا يؤثر على الرصيد</option>
+                </select>
+                <input id="swal-start" type="number" class="swal2-input" placeholder="بداية التسلسل" value="${t.start}">
+                <input id="swal-end" type="number" class="swal2-input" placeholder="نهاية التسلسل" value="${t.end}">
+            `,
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('swal-name').value,
+                    prefix: document.getElementById('swal-prefix').value,
+                    kind: document.getElementById('swal-kind').value,
+                    start: parseInt(document.getElementById('swal-start').value),
+                    end: parseInt(document.getElementById('swal-end').value)
+                };
+            }
+        });
+        if (result.value) {
+            await update(ref(db, `projects/${currentProject}/bondTypes/${id}`), result.value);
+            Swal.fire('تم', 'تم التعديل', 'success');
+        }
+    };
 
     window.deleteBondType = async (id) => {
         const r = await Swal.fire({ title: 'حذف النوع؟', icon: 'warning', showCancelButton: true, confirmButtonText: 'احذف' });
@@ -495,49 +706,345 @@
     };
 
     window.addDelegate = async () => {
+        const bondTypesSnapshot = await get(ref(db, `projects/${currentProject}/bondTypes`));
+        let bondTypesHTML = '';
+        if (bondTypesSnapshot.exists()) {
+            bondTypesSnapshot.forEach((child) => {
+                const t = child.val();
+                bondTypesHTML += `<label class="flex items-center gap-2 mb-2"><input type="checkbox" value="${t.id}" class="bond-perm"> ${t.name} (${t.prefix})</label>`;
+            });
+        }
+
         const result = await Swal.fire({
             title: 'مندوب جديد',
             html: `
                 <input id="swal-name" class="swal2-input" placeholder="الاسم">
                 <input id="swal-phone" class="swal2-input" placeholder="الجوال">
                 <input id="swal-password" type="password" class="swal2-input" placeholder="كلمة السر">
+                <div class="text-right mt-4"><p class="font-bold mb-2">صلاحيات أنواع السندات:</p>${bondTypesHTML || '<p class="text-gray-500">لا توجد أنواع سندات</p>'}</div>
             `,
             focusConfirm: false,
             preConfirm: () => {
+                const perms = [];
+                document.querySelectorAll('.bond-perm:checked').forEach(cb => perms.push(cb.value));
                 return {
                     name: document.getElementById('swal-name').value,
                     phone: document.getElementById('swal-phone').value,
-                    password: document.getElementById('swal-password').value
+                    password: document.getElementById('swal-password').value,
+                    permissions: perms
                 };
             }
         });
         const f = result.value;
         if (f && f.name && f.phone && f.password) {
             await set(ref(db, `projects/${currentProject}/users/${f.phone}`), {
-                name: f.name, phone: f.phone, password: f.password, role: 'delegate', active: true
+                name: f.name, phone: f.phone, password: f.password, role: 'delegate', active: true, permissions: f.permissions
             });
             Swal.fire('تم', 'انضاف المندوب', 'success');
         }
     };
 
     function loadDelegates() {
-        onValue(ref(db, `projects/${currentProject}/users`), (snapshot) => {
+        onValue(ref(db, `projects/${currentProject}/users`), async (snapshot) => {
             const tbody = document.getElementById('delegatesTable');
             tbody.innerHTML = '';
+            const bondTypesSnap = await get(ref(db, `projects/${currentProject}/bondTypes`));
+            const bondTypes = {};
+            if (bondTypesSnap.exists()) {
+                bondTypesSnap.forEach((child) => {
+                    bondTypes[child.val().id] = child.val().name;
+                });
+            }
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const u = child.val();
                     if (u.role === 'delegate') {
+                        const perms = (u.permissions || []).map(p => bondTypes[p] || p).join(', ') || 'لا يوجد';
                         tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
                             <td class="p-4 font-bold">${u.name}</td>
                             <td class="p-4">${u.phone}</td>
+                            <td class="p-4 text-xs">${perms}</td>
                             <td class="p-4"><span class="${u.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${u.active? 'نشط' : 'موقوف'}</span></td>
-                            <td class="p-4"><button onclick="deleteUser('${currentProject}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف نهائي</button></td>
+                            <td class="p-4 flex gap-2">
+                                <button onclick="editDelegatePermissions('${u.phone}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
+                                <button onclick="toggleDelegate('${u.phone}', ${u.active})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600">${u.active? 'إيقاف' : 'تفعيل'}</button>
+                                <button onclick="deleteUser('${currentProject}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
+                            </td>
                         </tr>`;
                     }
                 });
             }
         });
+    }
+
+    window.editDelegatePermissions = async (phone) => {
+        const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
+        const user = userSnap.val();
+        const bondTypesSnapshot = await get(ref(db, `projects/${currentProject}/bondTypes`));
+        let bondTypesHTML = '';
+        if (bondTypesSnapshot.exists()) {
+            bondTypesSnapshot.forEach((child) => {
+                const t = child.val();
+                const checked = (user.permissions || []).includes(t.id)? 'checked' : '';
+                bondTypesHTML += `<label class="flex items-center gap-2 mb-2"><input type="checkbox" value="${t.id}" class="bond-perm" ${checked}> ${t.name} (${t.prefix})</label>`;
+            });
+        }
+
+        const result = await Swal.fire({
+            title: `تعديل صلاحيات ${user.name}`,
+            html: `
+                <input id="swal-name" class="swal2-input" placeholder="الاسم" value="${user.name}">
+                <div class="text-right mt-4">${bondTypesHTML || '<p class="text-gray-500">لا توجد أنواع سندات</p>'}</div>
+            `,
+            focusConfirm: false,
+            preConfirm: () => {
+                const perms = [];
+                document.querySelectorAll('.bond-perm:checked').forEach(cb => perms.push(cb.value));
+                return {
+                    name: document.getElementById('swal-name').value,
+                    permissions: perms
+                };
+            }
+        });
+        if (result.value) {
+            await update(ref(db, `projects/${currentProject}/users/${phone}`), result.value);
+            Swal.fire('تم', 'تم التحديث', 'success');
+        }
+    };
+
+    window.toggleDelegate = async (phone, active) => {
+        await update(ref(db, `projects/${currentProject}/users/${phone}`), { active:!active });
+    };
+
+    function loadBondTypeSelect() {
+        onValue(ref(db, `projects/${currentProject}/bondTypes`), (snapshot) => {
+            const select = document.getElementById('bondTypeSelect');
+            select.innerHTML = '<option value="">اختر نوع السند</option>';
+            if (snapshot.exists()) {
+                snapshot.forEach((child) => {
+                    const t = child.val();
+                    if (currentRole === 'manager' || userPermissions.includes(t.id)) {
+                        select.innerHTML += `<option value="${t.id}">${t.name} (${t.prefix})</option>`;
+                    }
+                });
+            }
+        });
+    }
+
+    window.saveBond = async () => {
+        const typeId = document.getElementById('bondTypeSelect').value;
+        const amount = parseFloat(document.getElementById('bondAmount').value);
+        const date = document.getElementById('bondDate').value;
+        const client = document.getElementById('bondClient').value;
+        const description = document.getElementById('bondDescription').value;
+
+        if (!typeId ||!amount ||!date ||!client) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
+
+        const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
+        const type = typeSnap.val();
+        const bondNumber = `${type.prefix}${type.current}`;
+
+        const bondData = {
+            id: Date.now().toString(),
+            number: bondNumber,
+            typeId: typeId,
+            typeName: type.name,
+            typeKind: type.kind,
+            amount: amount,
+            date: date,
+            client: client,
+            description: description,
+            createdBy: currentUser.name,
+            createdByPhone: currentUser.phone,
+            createdAt: Date.now()
+        };
+
+        await set(ref(db, `projects/${currentProject}/bonds/${bondData.id}`), bondData);
+        await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: type.current + 1 });
+
+        Swal.fire('تم', `تم حفظ السند ${bondNumber}`, 'success');
+        document.getElementById('bondAmount').value = '';
+        document.getElementById('bondClient').value = '';
+        document.getElementById('bondDescription').value = '';
+    };
+
+    function loadBonds() {
+        onValue(ref(db, `projects/${currentProject}/bonds`), (snapshot) => {
+            const tbody = document.getElementById('bondsTable');
+            tbody.innerHTML = '';
+            allBondsData = [];
+            let count = 0, todayCount = 0, totalIncome = 0, totalExpense = 0;
+            const today = new Date().toISOString().split('T')[0];
+            if (snapshot.exists()) {
+                snapshot.forEach((child) => {
+                    const b = child.val();
+                    if (currentRole === 'delegate' && b.createdByPhone!== currentUser.phone) return;
+                    allBondsData.push(b);
+                    count++;
+                    if (b.date === today) todayCount++;
+                    if (b.typeKind === 'income') totalIncome += b.amount;
+                    if (b.typeKind === 'expense') totalExpense += b.amount;
+                    tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 font-mono font-bold text-blue-600">${b.number}</td>
+                        <td class="p-4">${b.typeName}</td>
+                        <td class="p-4">${b.client}</td>
+                        <td class="p-4 font-bold">${b.amount.toFixed(2)}</td>
+                        <td class="p-4">${b.date}</td>
+                        <td class="p-4">${b.createdBy}</td>
+                        <td class="p-4 flex gap-2">
+                            <button onclick="printBond('${b.id}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">طباعة</button>
+                            ${currentRole==='manager'?`<button onclick="editBond('${b.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button><button onclick="deleteBond('${b.id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>`:''}
+                        </td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('totalBonds').textContent = count;
+            document.getElementById('todayBonds').textContent = todayCount;
+            document.getElementById('totalIncome').textContent = totalIncome.toFixed(2);
+            document.getElementById('totalExpense').textContent = totalExpense.toFixed(2);
+            document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toFixed(2);
+        });
+    }
+
+    window.editBond = async (bondId) => {
+        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
+        const b = snap.val();
+        const result = await Swal.fire({
+            title: 'تعديل السند',
+            html: `
+                <input id="swal-client" class="swal2-input" placeholder="اسم العميل" value="${b.client}">
+                <input id="swal-amount" type="number" step="0.01" class="swal2-input" placeholder="المبلغ" value="${b.amount}">
+                <input id="swal-date" type="date" class="swal2-input" value="${b.date}">
+                <textarea id="swal-desc" class="swal2-textarea" placeholder="البيان">${b.description}</textarea>
+            `,
+            preConfirm: () => {
+                return {
+                    client: document.getElementById('swal-client').value,
+                    amount: parseFloat(document.getElementById('swal-amount').value),
+                    date: document.getElementById('swal-date').value,
+                    description: document.getElementById('swal-desc').value
+                };
+            }
+        });
+        if (result.value) {
+            await update(ref(db, `projects/${currentProject}/bonds/${bondId}`), result.value);
+            Swal.fire('تم', 'تم التعديل', 'success');
+        }
+    };
+
+    window.deleteBond = async (bondId) => {
+        const r = await Swal.fire({ title: 'حذف السند؟', text: 'لا يمكن التراجع', icon: 'warning', showCancelButton: true, confirmButtonText: 'احذف', confirmButtonColor: '#d33' });
+        if (r.isConfirmed) {
+            awaitawait remove(ref(db, `projects/${currentProject}/bonds/${bondId}`));
+            Swal.fire('تم', 'انحذف السند', 'success');
+        }
+    };
+
+    window.printBond = async (bondId) => {
+        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
+        const b = snap.val();
+        const qrData = JSON.stringify({
+            number: b.number,
+            type: b.typeName,
+            amount: b.amount,
+            date: b.date,
+            client: b.client,
+            company: projectData.name,
+            cr: projectData.cr || '',
+            tax: projectData.tax || '',
+            createdBy: b.createdBy,
+            createdAt: new Date(b.createdAt).toLocaleString('ar-SA')
+        });
+        const qrCanvas = document.createElement('canvas');
+        await QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1, errorCorrectionLevel: 'H' });
+
+        const printHTML = `
+            <div class="bond-print">
+                <div style="text-align: center; margin-bottom: 20px; border-bottom: 4px double #000; padding-bottom: 15px;">
+                    ${projectData.logo? `<img src="${projectData.logo}" style="max-width: 100px; margin: 0 auto 10px; display: block;">` : ''}
+                    <h1 style="font-size: 26px; font-weight: 800; margin: 8px 0;">${projectData.name}</h1>
+                    <p style="font-size: 12px; color: #333; margin: 3px 0;">${projectData.address || ''}</p>
+                    <p style="font-size: 12px; color: #333;">${projectData.cr? `س.ت: ${projectData.cr}` : ''} ${projectData.tax? `| الرقم الضريبي: ${projectData.tax}` : ''} ${projectData.contact? `| هاتف: ${projectData.contact}` : ''}</p>
+                </div>
+                <div style="border: 3px solid #000; padding: 15px; margin-bottom: 15px;">
+                    <h2 style="text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px;">${b.typeName} رقم ${b.number}</h2>
+                    <table style="width: 100%; font-size: 15px; border-collapse: collapse;">
+                        <tr><td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">التاريخ:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.date}</td></tr>
+                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">العميل:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.client}</td></tr>
+                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ:</td><td style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td></tr>
+                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ كتابة:</td><td style="padding: 6px; border: 1px solid #ddd;">${numberToWords(b.amount)} ريال فقط لا غير</td></tr>
+                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.description || '-'}</td></tr>
+                    </table>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 30px; align-items: flex-end;">
+                    <div style="text-align: center; width: 30%;">
+                        <p style="margin-bottom: 40px; font-size: 14px; font-weight: 700;">توقيع المستلم</p>
+                        <div style="border-top: 1px solid #000; width: 150px; margin: 0 auto;"></div>
+                        <p style="font-size: 11px; margin-top: 5px;">الاسم: _______________</p>
+                    </div>
+                    <div style="text-align: center; width: 30%;">
+                        <p style="margin-bottom: 8px; font-size: 13px; font-weight: 700;">المنشئ: ${b.createdBy}</p>
+                        <img src="${qrCanvas.toDataURL()}" style="width: 110px; height: 110px; margin: 0 auto;">
+                        <p style="font-size: 10px; color: #666; margin-top: 5px;">امسح للتحقق</p>
+                    </div>
+                    <div style="text-align: center; width: 30%;">
+                        <p style="margin-bottom: 10px; font-size: 14px; font-weight: 700;">الختم</p>
+                        ${projectData.stamp? `<img src="${projectData.stamp}" style="max-width: 120px; max-height: 80px; margin: 0 auto;">` : '<div style="border: 2px dashed #ccc; width: 120px; height: 80px; margin: 0 auto;"></div>'}
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 20px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px;">
+                    تم الإنشاء بواسطة نظام السندات الذكية - ${new Date().toLocaleString('ar-SA')}
+                </div>
+            </div>
+        `;
+        document.getElementById('printArea').innerHTML = printHTML;
+        setTimeout(() => window.print(), 500);
+    };
+
+    window.exportToExcel = () => {
+        if (allBondsData.length === 0) return Swal.fire('تنبيه', 'لا توجد سندات للتصدير', 'info');
+
+        const data = allBondsData.map(b => ({
+            'رقم السند': b.number,
+            'النوع': b.typeName,
+            'العميل': b.client,
+            'المبلغ': b.amount,
+            'التاريخ': b.date,
+            'البيان': b.description,
+            'المنشئ': b.createdBy,
+            'تاريخ الإنشاء': new Date(b.createdAt).toLocaleString('ar-SA')
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'السندات');
+        XLSX.writeFile(wb, `سندات_${projectData.name}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        Swal.fire('تم', 'تم تصدير الملف بنجاح', 'success');
+    };
+
+    function numberToWords(num) {
+        const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+        const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+        const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+
+        if (num === 0) return 'صفر';
+        if (num < 10) return ones[num];
+        if (num < 100) {
+            const t = Math.floor(num / 10);
+            const o = num % 10;
+            return o === 0? tens[t] : ones[o] + ' و' + tens[t];
+        }
+        if (num < 1000) {
+            const h = Math.floor(num / 100);
+            const r = num % 100;
+            return r === 0? hundreds[h] : hundreds[h] + ' و' + numberToWords(r);
+        }
+        if (num < 1000000) {
+            const th = Math.floor(num / 1000);
+            const r = num % 1000;
+            return r === 0? numberToWords(th) + ' ألف' : numberToWords(th) + ' ألف و' + numberToWords(r);
+        }
+        return num.toString();
     }
 
     window.showChangePassword = async () => {
@@ -576,6 +1083,8 @@
         document.getElementById(tab).classList.remove('hidden');
         if (btn) btn.classList.add('active');
         else event.target.classList.add('active');
+        if (tab === 'createBond') loadBondTypeSelect();
+        if (tab === 'bondsList') loadBonds();
     };
 
     window.logout = () => { localStorage.clear(); location.reload(); };
