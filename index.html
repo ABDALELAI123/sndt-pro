@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية V8.2</title>
+    <title>السندات الذكية V8.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -30,7 +30,7 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 0 01-2-2V5a2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">السندات الذكية</h1>
             <p class="text-gray-500">نظام إدارة السندات السحابي</p>
@@ -128,19 +128,19 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold text-gray-800">المشاريع</h2>
                     <div class="flex gap-2">
-                        <button id="exportProjectsExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
-                        <button id="exportProjectsPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button onclick="exportTableToExcel('projectsTable','المشاريع')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button onclick="exportTableToPDF('projectsTable','المشاريع')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="createProjectBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ إنشاء مشروع</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="projectsTable">
                         <thead class="bg-gray-50"><tr>
                             <th class="p-4 text-right font-bold">الشعار</th><th class="p-4 text-right font-bold">كود المشروع</th>
                             <th class="p-4 text-right font-bold">اسم الشركة</th><th class="p-4 text-right font-bold">جوال المدير</th>
-                            <th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th>
+                            <th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold no-print">تحكم</th>
                         </tr></thead>
-                        <tbody id="projectsTable"></tbody>
+                        <tbody id="projectsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -169,9 +169,10 @@
                             <img id="preview_stamp" class="logo-preview mt-3 hidden">
                         </div>
                     </div>
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 flex-wrap">
                         <button id="saveProjectSettingsBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition">حفظ الإعدادات</button>
-                        <button id="shareProjectWhatsAppBtn" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold transition">📱 مشاركة واتساب</button>
+                        <button onclick="shareProjectWhatsApp()" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold transition">📱 مشاركة واتساب</button>
+                        <button onclick="exportProjectInfoToPDF()" class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition">📄 تصدير PDF</button>
                     </div>
                 </div>
             </div>
@@ -182,18 +183,19 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold text-gray-800">إعدادات أنواع السندات</h2>
                     <div class="flex gap-2">
-                        <button id="exportBondTypesExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
-                        <button id="exportBondTypesPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button onclick="exportTableToExcel('bondTypesTable','انواع_السندات')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button onclick="exportTableToPDF('bondTypesTable','انواع_السندات')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ نوع جديد</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="bondTypesTable">
                         <thead class="bg-gray-50"><tr>
                             <th class="p-4 text-right font-bold">اسم النوع</th><th class="p-4 text-right font-bold">البادئة</th>
                             <th class="p-4 text-right font-bold">النوع</th><th class="p-4 text-right font-bold">بداية التسلسل</th>
-                            <th class="p-4 text-right font-bold">نهاية التسلسل</th><th class="p-4 text-right font-bold">الرقم الحالي</th><th class="p-4 text-right font-bold">تحكم</th>
+                            <th class="p-4 text-right font-bold">نهاية التسلسل</th><th class="p-4 text-right font-bold">الرقم الحالي</th><th class="p-4 text-right font-bold no-print">تحكم</th>
                         </tr></thead>
-                        <tbody id="bondTypesTable"></tbody>
+                        <tbody id="bondTypesTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -204,11 +206,11 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold">كل المدراء</h2>
                     <div class="flex gap-2">
-                        <button id="exportManagersExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
-                        <button id="exportManagersPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button onclick="exportTableToExcel('managersTable','المدراء')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button onclick="exportTableToPDF('managersTable','المدراء')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                     </div>
                 </div>
-                <div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="managersTable"></tbody></table></div>
+                <div class="overflow-x-auto"><table class="w-full" id="managersTable"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold no-print">تحكم</th></tr></thead><tbody id="managersTableBody"></tbody></table></div>
             </div>
         </div>
         
@@ -217,20 +219,21 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold">المناديب</h2>
                     <div class="flex gap-2">
-                        <button id="exportDelegatesExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
-                        <button id="exportDelegatesPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button onclick="exportTableToExcel('delegatesTable','المناديب')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button onclick="exportTableToPDF('delegatesTable','المناديب')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مندوب جديد</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="delegatesTable">
                         <thead class="bg-gray-50"><tr>
                             <th class="p-4 text-right font-bold">الاسم</th>
                             <th class="p-4 text-right font-bold">الجوال</th>
                             <th class="p-4 text-right font-bold">الصلاحيات</th>
                             <th class="p-4 text-right font-bold">الحالة</th>
-                            <th class="p-4 text-right font-bold">تحكم</th>
+                            <th class="p-4 text-right font-bold no-print">تحكم</th>
                         </tr></thead>
-                        <tbody id="delegatesTable"></tbody>
+                        <tbody id="delegatesTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -272,12 +275,12 @@
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold text-gray-800">قائمة السندات</h2>
                     <div class="flex gap-2">
-                        <button id="exportBondsExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
-                        <button id="exportBondsPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button onclick="exportTableToExcel('bondsTable','السندات')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button onclick="exportTableToPDF('bondsTable','السندات')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="bondsTable">
                         <thead class="bg-gray-50"><tr>
                             <th class="p-4 text-right font-bold">رقم السند</th>
                             <th class="p-4 text-right font-bold">النوع</th>
@@ -285,9 +288,9 @@
                             <th class="p-4 text-right font-bold">المبلغ</th>
                             <th class="p-4 text-right font-bold">التاريخ</th>
                             <th class="p-4 text-right font-bold">المنشئ</th>
-                            <th class="p-4 text-right font-bold">تحكم</th>
+                            <th class="p-4 text-right font-bold no-print">تحكم</th>
                         </tr></thead>
-                        <tbody id="bondsTable"></tbody>
+                        <tbody id="bondsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -296,7 +299,8 @@
 </div>
 
 <div id="printArea" class="print-area"></div>
-<script type="module">
+<!-- END PART 1 -->
+ <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -315,7 +319,7 @@
 
     const SUPERADMIN = { phone: "0597087767", password: "500600", name: "المدير العام" };
     let currentUser = null, currentProject = null, currentRole = null, projectData = null, userPermissions = [];
-    let allBondsData = [];
+    let allBondsData = [], allProjectsData = [], allBondTypesData = [], allDelegatesData = [], allManagersData = [];
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('loginBtn').addEventListener('click', login);
@@ -326,7 +330,6 @@
         document.getElementById('addBondTypeBtn').addEventListener('click', addBondType);
         document.getElementById('addDelegateBtn').addEventListener('click', addDelegate);
         document.getElementById('saveBondBtn').addEventListener('click', saveBond);
-        document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
         document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
 
         document.getElementById('set_logo').addEventListener('change', async (e) => {
@@ -368,15 +371,15 @@
         const password = document.getElementById('password').value;
         if (!phone ||!password) return Swal.fire('خطأ', 'عبي الجوال وكلمة السر', 'error');
 
-        if (projectCode === 'SUPERADMIN' ||!projectCode) {
-            if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
-                currentUser = Object.assign({}, SUPERADMIN, { role: 'superadmin', active: true });
-                currentProject = 'SUPERADMIN'; currentRole = 'superadmin';
-                localStorage.setItem('projectCode', 'SUPERADMIN');
-                localStorage.setItem('phone', phone); localStorage.setItem('password', password);
-                showMainApp(); return;
-            } else return Swal.fire('خطأ', 'بيانات المدير العام غلط', 'error');
+        if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
+            currentUser = Object.assign({}, SUPERADMIN, { role: 'superadmin', active: true });
+            currentProject = 'SUPERADMIN'; currentRole = 'superadmin';
+            localStorage.setItem('projectCode', 'SUPERADMIN');
+            localStorage.setItem('phone', phone); localStorage.setItem('password', password);
+            showMainApp(); return;
         }
+
+        if (!projectCode) return Swal.fire('خطأ', 'ادخل كود المشروع', 'error');
 
         try {
             const snapshot = await get(ref(db, `projects/${projectCode}/users/${phone}`));
@@ -387,6 +390,7 @@
 
             const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
             projectData = projectSnap.val();
+            if (!projectData.active) return Swal.fire('خطأ', 'المشروع موقوف', 'error');
             userPermissions = user.permissions || [];
 
             currentUser = user; currentProject = projectCode; currentRole = user.role;
@@ -395,7 +399,7 @@
             showMainApp();
         } catch (e) {
             console.error(e);
-            Swal.fire('خطأ', 'تأكد من كود المشروع', 'error');
+            Swal.fire('خطأ', 'تأكد من البيانات', 'error');
         }
     }
 
@@ -470,8 +474,9 @@
 
     function loadProjects() {
         onValue(ref(db, 'projects'), (snapshot) => {
-            const tbody = document.getElementById('projectsTable');
+            const tbody = document.getElementById('projectsTableBody');
             tbody.innerHTML = '';
+            allProjectsData = [];
             let count = 0;
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
@@ -479,13 +484,15 @@
                     if (!p) return;
                     count++;
                     const manager = Object.values(child.val().users || {}).find(u => u.role === 'manager');
+                    allProjectsData.push({ logo: p.logo, code: p.code, name: p.name, managerPhone: manager?.phone || '-', status: p.active? 'نشط' : 'موقوف' });
                     tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
                         <td class="p-3">${p.logo? `<img src="${p.logo}" class="w-10 h-10 rounded-lg object-cover">` : '<div class="w-10 h-10 bg-gray-200 rounded-lg"></div>'}</td>
                         <td class="p-3 font-mono font-bold text-blue-600">${p.code}</td>
                         <td class="p-3 font-bold">${p.name}</td>
                         <td class="p-3">${manager?.phone || '-'}</td>
                         <td class="p-3"><span class="${p.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${p.active? 'نشط' : 'موقوف'}</span></td>
-                        <td class="p-3 flex gap-2">
+                        <td class="p-3 flex gap-2 no-print">
+                            <button onclick="shareProjectWhatsApp('${p.code}','${p.name}','${manager?.phone||''}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">📱 واتساب</button>
                             <button onclick="editProject('${p.code}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
                             <button onclick="toggleProject('${p.code}', ${p.active})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600">${p.active? 'إيقاف' : 'تفعيل'}</button>
                             <button onclick="deleteProject('${p.code}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
@@ -496,6 +503,11 @@
             document.getElementById('totalProjects').textContent = count;
         });
     }
+
+    window.shareProjectWhatsApp = (code, name, phone) => {
+        const msg = `مرحبا 👋\n\nتم إنشاء مشروعك على نظام السندات الذكية:\n\n🏢 الشركة: ${name}\n🔑 كود المشروع: ${code}\n📱 جوالك: ${phone}\n\nرابط الدخول: ${window.location.origin}\n\nبالتوفيق 🌟`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    };
 
     window.editProject = async (code) => {
         const snap = await get(ref(db, `projects/${code}/info`));
@@ -534,8 +546,9 @@
 
     function loadAllManagers() {
         onValue(ref(db, 'projects'), (snapshot) => {
-            const tbody = document.getElementById('managersTable');
+            const tbody = document.getElementById('managersTableBody');
             tbody.innerHTML = '';
+            allManagersData = [];
             let count = 0;
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
@@ -544,12 +557,13 @@
                     Object.values(users).forEach(u => {
                         if (u.role === 'manager') {
                             count++;
+                            allManagersData.push({ project: projectCode, name: u.name, phone: u.phone, status: u.active? 'نشط' : 'موقوف' });
                             tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
                                 <td class="p-4 font-mono">${projectCode}</td>
                                 <td class="p-4 font-bold">${u.name}</td>
                                 <td class="p-4">${u.phone}</td>
                                 <td class="p-4"><span class="${u.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${u.active? 'نشط' : 'موقوف'}</span></td>
-                                <td class="p-4 flex gap-2">
+                                <td class="p-4 flex gap-2 no-print">
                                     <button onclick="editManager('${projectCode}','${u.phone}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
                                     <button onclick="deleteUser('${projectCode}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
                                 </td>
@@ -631,6 +645,25 @@
         Swal.fire('تم', 'تم حفظ الإعدادات', 'success');
     };
 
+    window.shareProjectWhatsApp = () => {
+        if (!projectData) return;
+        const msg = `معلومات المشروع:\n\n🏢 ${projectData.name}\n🔑 الكود: ${projectData.code}\n📱 التواصل: ${projectData.contact}\n${projectData.cr? `📋 س.ت: ${projectData.cr}\n` : ''}${projectData.tax? `💼 ضريبي: ${projectData.tax}\n` : ''}\nرابط النظام: ${window.location.origin}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    };
+
+    window.exportProjectInfoToPDF = async () => {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        pdf.setFont('helvetica');
+        pdf.text(`معلومات المشروع: ${projectData.name}`, 105, 20, { align: 'center' });
+        pdf.text(`كود المشروع: ${projectData.code}`, 20, 35);
+        pdf.text(`التواصل: ${projectData.contact}`, 20, 45);
+        if (projectData.cr) pdf.text(`س.ت: ${projectData.cr}`, 20, 55);
+        if (projectData.tax) pdf.text(`الرقم الضريبي: ${projectData.tax}`, 20, 65);
+        if (projectData.address) pdf.text(`العنوان: ${projectData.address}`, 20, 75);
+        pdf.save(`مشروع_${projectData.name}.pdf`);
+    };
+
     window.addBondType = async () => {
         const result = await Swal.fire({
             title: 'نوع سند جديد',
@@ -670,11 +703,20 @@
 
     function loadBondTypes() {
         onValue(ref(db, `projects/${currentProject}/bondTypes`), (snapshot) => {
-            const tbody = document.getElementById('bondTypesTable');
+            const tbody = document.getElementById('bondTypesTableBody');
             tbody.innerHTML = '';
+            allBondTypesData = [];
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const t = child.val();
+                    allBondTypesData.push({
+                        name: t.name,
+                        prefix: t.prefix,
+                        kind: t.kind === 'income'? 'قبض' : t.kind === 'expense'? 'صرف' : 'آخر',
+                        start: t.start,
+                        end: t.end,
+                        current: t.current
+                    });
                     const kindText = t.kind === 'income'? 'قبض' : t.kind === 'expense'? 'صرف' : 'آخر';
                     const kindColor = t.kind === 'income'? 'text-green-600' : t.kind === 'expense'? 'text-red-600' : 'text-gray-600';
                     tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
@@ -684,7 +726,7 @@
                         <td class="p-4">${t.start}</td>
                         <td class="p-4">${t.end}</td>
                         <td class="p-4 font-bold text-blue-600">${t.current}</td>
-                        <td class="p-4 flex gap-2">
+                        <td class="p-4 flex gap-2 no-print">
                             <button onclick="editBondType('${t.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
                             <button onclick="deleteBondType('${t.id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
                         </td>
@@ -774,8 +816,9 @@
 
     function loadDelegates() {
         onValue(ref(db, `projects/${currentProject}/users`), async (snapshot) => {
-            const tbody = document.getElementById('delegatesTable');
+            const tbody = document.getElementById('delegatesTableBody');
             tbody.innerHTML = '';
+            allDelegatesData = [];
             const bondTypesSnap = await get(ref(db, `projects/${currentProject}/bondTypes`));
             const bondTypes = {};
             if (bondTypesSnap.exists()) {
@@ -788,12 +831,13 @@
                     const u = child.val();
                     if (u.role === 'delegate') {
                         const perms = (u.permissions || []).map(p => bondTypes[p] || p).join(', ') || 'لا يوجد';
+                        allDelegatesData.push({ name: u.name, phone: u.phone, permissions: perms, status: u.active? 'نشط' : 'موقوف' });
                         tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
                             <td class="p-4 font-bold">${u.name}</td>
                             <td class="p-4">${u.phone}</td>
                             <td class="p-4 text-xs">${perms}</td>
                             <td class="p-4"><span class="${u.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${u.active? 'نشط' : 'موقوف'}</span></td>
-                            <td class="p-4 flex gap-2">
+                            <td class="p-4 flex gap-2 no-print">
                                 <button onclick="editDelegatePermissions('${u.phone}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
                                 <button onclick="toggleDelegate('${u.phone}', ${u.active})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600">${u.active? 'إيقاف' : 'تفعيل'}</button>
                                 <button onclick="deleteUser('${currentProject}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
@@ -890,7 +934,19 @@
         await set(ref(db, `projects/${currentProject}/bonds/${bondData.id}`), bondData);
         await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: type.current + 1 });
 
-        Swal.fire('تم', `تم حفظ السند ${bondNumber}`, 'success');
+        Swal.fire({
+            title: 'تم الحفظ',
+            text: `تم حفظ السند ${bondNumber}`,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: '📱 مشاركة واتساب',
+            cancelButtonText: 'إغلاق'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                shareBondWhatsApp(bondData);
+            }
+        });
+
         document.getElementById('bondAmount').value = '';
         document.getElementById('bondClient').value = '';
         document.getElementById('bondDescription').value = '';
@@ -898,7 +954,7 @@
 
     function loadBonds() {
         onValue(ref(db, `projects/${currentProject}/bonds`), (snapshot) => {
-            const tbody = document.getElementById('bondsTable');
+            const tbody = document.getElementById('bondsTableBody');
             tbody.innerHTML = '';
             allBondsData = [];
             let count = 0, todayCount = 0, totalIncome = 0, totalExpense = 0;
@@ -909,7 +965,7 @@
                     if (currentRole === 'delegate' && b.createdByPhone!== currentUser.phone) return;
                     allBondsData.push(b);
                     count++;
-                    if (b.date === today) todayCount++;
+                    if (b.date === today) todaytodayCount++;
                     if (b.typeKind === 'income') totalIncome += b.amount;
                     if (b.typeKind === 'expense') totalExpense += b.amount;
                     tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
@@ -919,8 +975,9 @@
                         <td class="p-4 font-bold">${b.amount.toFixed(2)}</td>
                         <td class="p-4">${b.date}</td>
                         <td class="p-4">${b.createdBy}</td>
-                        <td class="p-4 flex gap-2">
-                            <button onclick="printBond('${b.id}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">طباعة</button>
+                        <td class="p-4 flex gap-2 flex-wrap no-print">
+                            <button onclick="printBond('${b.id}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">🖨️ طباعة</button>
+                            <button onclick="shareBondWhatsAppById('${b.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700">📱 واتساب</button>
                             ${currentRole==='manager'?`<button onclick="editBond('${b.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button><button onclick="deleteBond('${b.id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>`:''}
                         </td>
                     </tr>`;
@@ -962,9 +1019,21 @@
 
     window.deleteBond = async (bondId) => {
         const r = await Swal.fire({ title: 'حذف السند؟', text: 'لا يمكن التراجع', icon: 'warning', showCancelButton: true, confirmButtonText: 'احذف', confirmButtonColor: '#d33' });
-        if (r.isConfirmedremove(ref(db, `projects/${currentProject}/bonds/${bondId}`));
+        if (r.isConfirmed) {
+            await remove(ref(db, `projects/${currentProject}/bonds/${bondId}`));
             Swal.fire('تم', 'انحذف السند', 'success');
         }
+    };
+
+    window.shareBondWhatsAppById = async (bondId) => {
+        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
+        const b = snap.val();
+        shareBondWhatsApp(b);
+    };
+
+    window.shareBondWhatsApp = (b) => {
+        const msg = `🧾 *${b.typeName}*\n\n📋 رقم السند: ${b.number}\n🏢 ${projectData.name}\n👤 العميل: ${b.client}\n💰 المبلغ: ${b.amount.toFixed(2)} ريال\n📅 التاريخ: ${b.date}\n📝 البيان: ${b.description}\n\n✍️ المنشئ: ${b.createdBy}\n\n${window.location.origin}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
     window.printBond = async (bondId) => {
@@ -1013,6 +1082,10 @@
                             <td colspan="3" style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td>
                         </tr>
                         <tr>
+                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ كتابة:</td>
+                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${numberToWords(b.amount)} ريال فقط لا غير</td>
+                        </tr>
+                        <tr>
                             <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td>
                             <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.description}</td>
                         </tr>
@@ -1046,28 +1119,50 @@
         window.print();
     };
 
-    window.exportToExcel = () => {
-        if (allBondsData.length === 0) return Swal.fire('تنبيه', 'لا توجد سندات للتصدير', 'info');
-        
-        const data = allBondsData.map(b => ({
-            'رقم السند': b.number,
-            'نوع السند': b.typeName,
-            'نوع الحركة': b.typeKind === 'income'? 'قبض' : b.typeKind === 'expense'? 'صرف' : 'آخر',
-            'العميل': b.client,
-            'المبلغ': b.amount,
-            'التاريخ': b.date,
-            'البيان': b.description,
-            'المنشئ': b.createdBy,
-            'تاريخ الإنشاء': new Date(b.createdAt).toLocaleString('ar-SA')
-        }));
+    function numberToWords(num) {
+        const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+        const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+        const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+        if (num === 0) return 'صفر';
+        if (num < 10) return ones[num];
+        if (num < 100) {
+            const t = Math.floor(num / 10);
+            const o = num % 10;
+            if (o === 0) return tens[t];
+            if (t === 1) return ones[o] + ' عشر';
+            return ones[o] + ' و' + tens[t];
+        }
+        if (num < 1000) {
+            const h = Math.floor(num / 100);
+            const r = num % 100;
+            return r === 0? hundreds[h] : hundreds[h] + ' و' + numberToWords(r);
+        }
+        if (num < 1000000) {
+            const th = Math.floor(num / 1000);
+            const r = num % 1000;
+            return r === 0? numberToWords(th) + ' ألف' : numberToWords(th) + ' ألف و' + numberToWords(r);
+        }
+        return num.toFixed(2);
+    }
 
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'السندات');
-        
-        const fileName = `سندات_${projectData.name}_${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(wb, fileName);
-        Swal.fire('تم', 'تم تصدير الملف بنجاح', 'success');
+    window.exportTableToExcel = (tableId, fileName) => {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, { sheet: fileName });
+        XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        Swal.fire('تم', 'تم تصدير الاكسل', 'success');
+    };
+
+    window.exportTableToPDF = async (tableId, fileName) => {
+        const { jsPDF } = window.jspdf;
+        const table = document.getElementById(tableId);
+        const canvas = await html2canvas(table);
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        const imgWidth = 280;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+        pdf.save(`${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
+        Swal.fire('تم', 'تم تصدير PDF', 'success');
     };
 
     window.showChangePassword = async () => {
@@ -1108,6 +1203,10 @@
         else event.target.classList.add('active');
         if (tab === 'createBond') loadBondTypeSelect();
         if (tab === 'bondsList') loadBonds();
+        if (tab === 'projects') loadProjects();
+        if (tab === 'managers') loadAllManagers();
+        if (tab === 'delegates') loadDelegates();
+        if (tab === 'bondSettings') loadBondTypes();
     };
 
     window.logout = () => { localStorage.clear(); location.reload(); };
@@ -1125,7 +1224,7 @@
             document.getElementById('totalProjects').textContent = totalProjects;
             document.getElementById('totalUsers').textContent = totalUsers;
         });
-        
+
         if (currentRole!== 'superadmin') {
             loadBonds();
         }
@@ -1133,3 +1232,4 @@
 </script>
 </body>
 </html>
+<!-- END PART 3 -->       
