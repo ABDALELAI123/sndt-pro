@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سندات برو V6.0 - سحابي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getDatabase, ref, set, get, child, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+      // TODO: حط بيانات مشروعك من Firebase Console
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      window.db = getDatabase(app);
+      window.firebaseRef = ref;
+      window.firebaseGet = get;
+      window.firebaseSet = set;
+      window.firebaseUpdate = update;
+      window.firebaseRemove = remove;
+      window.firebaseOnValue = onValue;
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; }
+        [lang="en"] body, [lang="fr"] body, [lang="de"] body, [lang="tr"] body { font-family: Arial, sans-serif; }
+        [dir="ltr"] { direction: ltr; }
+        @media print {.no-print { display: none!important; } }
+       .company-logo { max-height: 80px; max-width: 200px; object-fit: contain; }
+       .upload-btn { position: relative; overflow: hidden; }
+       .upload-btn input[type=file] { position: absolute; top: 0; right: 0; opacity: 0; cursor: pointer; width:100%; height:100%; }
+       .qr-box { width: 200px; height: 200px; margin: 20px auto; padding: 10px; background: #fff; border: 2px solid #000; }
+       .qr-box img { width: 100%!important; height: 100%!important; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="projectSelectScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg">
+            <h1 class="text-2xl font-bold text-center mb-2">سندات برو V6.0</h1>
+            <p class="text-center text-gray-600 mb-6">نظام سحابي متعدد المشاريع</p>
+            <div class="space-y-3">
+                <button onclick="joinProjectFlow()" class="w-full border-2 p-4 rounded-lg hover:bg-green-50 text-right">
+                    <div class="font-bold text-lg">🔗 الانضمام لمشروع</div>
+                    <div class="text-sm text-gray-600">أدخل كود المشروع + رقمك المسجل</div>
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-6 text-center">ملاحظة: إنشاء المشروع الجديد يتم فقط من حساب المدير العام</p>
+        </div>
+    </div>
+
+    <!-- باقي شاشات login, mainApp, bondView مثل القديم مع تعديل بسيط -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-6">
+                <img id="loginLogo" src="" class="company-logo mx-auto mb-3 hidden">
+                <h1 id="companyNameLogin" class="text-3xl font-bold text-blue-600" data-i18n="app_name">سندات برو</h1>
+                <div id="projectInfo" class="text-xs text-gray-500 mt-2"></div>
+            </div>
+            <input id="loginPass" type="password" placeholder="الرقم السري" class="w-full border-2 p-3 rounded-lg mb-4 text-center text-lg">
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg">دخول</button>
+            <button onclick="backToProjectSelect()" class="w-full mt-2 text-sm text-gray-600">رجوع</button>
+        </div>
+    </div>
+
+    <!--... هنا باقي HTML للـ mainApp و bondView... -->
+    <!-- نفس الهيكل اللي ارسلته لكن شلت شاشة اختيار المشروع الفردي --><script type="module">
+let currentLang = 'ar';
+let projectCode = null;
+let currentUser = null;
+let currentProjectData = {};
+
+const translations = { ar: {app_name:"سندات برو", logout:"خروج",...} }; // نفس الترجمات القديمة
+
+function generateProjectCode() { return 'PRJ-' + Math.random().toString(36).substring(2, 8).toUpperCase(); }
+
+function getRef(path) { return firebaseRef(window.db, `projects/${projectCode}/${path}`); }
+
+async function joinProjectFlow() {
+    const { value: formValues } = await Swal.fire({
+        title: 'الانضمام لمشروع',
+        html: `<input id="swal-code" class="swal2-input" placeholder="كود المشروع PRJ-XXXX">` +
+              `<input id="swal-phone" class="swal2-input" placeholder="رقم الجوال المسجل 05xxxxxxxx">`,
+        confirmButtonText: 'متابعة',
+        preConfirm: () => {
+            return [document.getElementById('swal-code').value.trim().toUpperCase(),
+                    document.getElementById('swal-phone').value.trim()];
+        }
+    });
+    if (formValues) {
+        projectCode = formValues[0];
+        const phone = formValues[1];
+        const snap = await firebaseGet(getRef(`users/${phone.replace(/\D/g,'')}`));
+        if (!snap.exists()) return Swal.fire('خطأ', 'رقم الجوال غير مسجل في هذا المشروع', 'error');
+        currentUser = snap.val();
+        localStorage.setItem('v5_project_code', projectCode);
+        showLoginScreen();
+    }
+}
+
+async function initProjectDB() {
+    const snap = await firebaseGet(getRef('initialized'));
+    if (!snap.exists()) {
+        const superAdminPhone = '0597087767';
+        await firebaseSet(getRef('users/' + superAdminPhone), {
+            id: 1, phone: superAdminPhone, password: '500600', name: 'المدير العام',
+            role: 'superadmin', active: true, permissions: { all: true }, printCount: {}
+        });
+        await firebaseSet(getRef('company'), {name:"سندات برو", address:"", cr:"", logo:""});
+        await firebaseSet(getRef('printSettings'), {allowMultiplePrint:false, maxPrints:1, hideSignatures:true, showQR:true});
+        await firebaseSet(getRef('initialized'), true);
+    }
+}
+
+function showLoginScreen() {
+    document.getElementById('projectSelectScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('projectInfo').textContent = `المشروع: ${projectCode}`;
+}
+
+// دالة طباعة QR مربعات واضحة
+function printQR(id) {
+    const b = currentProjectData.bonds.find(bond => bond.id === id);
+    const printWindow = window.open('', '', 'height=600,width=400');
+    printWindow.document.write(`
+        <html><head><meta charset="UTF-8"><title>QR سند ${b.number}</title>
+        <style>body{text-align:center;padding:20px;font-family:Cairo}#qrcode{margin:20px auto;width:200px;height:200px}</style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script></head>
+        <body><h3>سند ${b.type} #${b.number}</h3><div id="qrcode"></div>
+        <p style="font-size:18px;font-weight:bold">${b.amount} ريال</p>
+        <p>${b.clientName}</p><button onclick="window.print()">طباعة</button>
+        <script>new QRCode(document.getElementById("qrcode"), {text: "${b.qrData}", width: 200, height: 200, correctLevel: QRCode.CorrectLevel.H});</script>
+        </body></html>
+    `);
+    printWindow.document.close();
+}// دوال Firebase المساعدة
+async function getData(path) {
+    const snap = await firebaseGet(getRef(path));
+    return snap.exists()? snap.val() : null;
+}
+async function setData(path, val) { return await firebaseSet(getRef(path), val); }
+async function updateData(path, val) { return await firebaseUpdate(getRef(path), val); }
+
+// 1. تسجيل الدخول
+async function login() {
+    const pass = document.getElementById('loginPass').value.trim();
+    if (pass!== currentUser.password) return Swal.fire('خطأ', 'كلمة المرور خطأ', 'error');
+
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('userName').textContent = currentUser.name;
+
+    // تحميل بيانات المشروع لحظيا
+    firebaseOnValue(getRef('/'), (snap) => {
+        currentProjectData = snap.val() || {};
+        showTab(currentUser.role === 'delegate'? 'createBond' : 'dashboard');
+    });
+}
+
+function logout() { location.reload(); }
+function backToProjectSelect() { location.reload(); }
+
+// 2. انشاء سند - بدون تكرار
+async function saveBond() {
+    const typeId = document.getElementById('bond-type').value;
+    const amount = parseFloat(document.getElementById('bond-amount').value);
+    const bondType = currentProjectData.bondTypes.find(t => t.id == typeId);
+
+    if (!bondType ||!amount || amount <= 0) return Swal.fire('خطأ', 'تأكد من نوع السند والمبلغ', 'error');
+    if (bondType.current > bondType.end) return Swal.fire('خطأ', 'انتهى تسلسل هذا النوع', 'error');
+
+    const bondId = Date.now();
+    const isQabdh = bondType.name.includes('قبض') || bondType.name.includes('قيد');
+    const isSarf = bondType.name.includes('صرف');
+
+    const bond = {
+        id: bondId, number: bondType.current, type: bondType.name, amount, isQabdh, isSarf,
+        clientName: document.getElementById('bond-client').value,
+        clientPhone: document.getElementById('bond-client-phone').value,
+        payment: document.getElementById('bond-payment').value,
+        description: document.getElementById('bond-desc').value,
+        userId: currentUser.id, userName: currentUser.name,
+        date: new Date().toLocaleString('ar-SA'),
+        qrData: `${window.location.href.split('?')[0]}?project=${projectCode}&bond=${bondId}`,
+        projectCode: projectCode
+    };
+
+    const updates = {};
+    updates[`bonds/${bondId}`] = bond;
+    updates[`bondTypes/${typeId}/current`] = bondType.current + 1;
+
+    await firebaseUpdate(getRef('/'), updates);
+    await updateCashbox(bond); // دالة وحدة فقط
+
+    Swal.fire('تم', `تم إنشاء السند رقم ${bond.number}`, 'success');
+    showTab('myBonds');
+}
+
+// 3. دالة updateCashbox - مرة وحدة فقط بدون تكرار
+async function updateCashbox(bond) {
+    if (!bond.isQabdh &&!bond.isSarf) return;
+    const entry = {...bond, bondId: bond.id, bondNumber: bond.number };
+    await setData(`cashbox/${bond.id}`, entry);
+}
+
+// 4. دالة sendWhatsApp - مرة وحدة فقط بدون تكرار
+function sendWhatsApp(phone, id) {
+    const b = currentProjectData.bonds[id];
+    if (!phone) return Swal.fire('تنبيه', 'رقم العميل غير موجود', 'warning');
+    const msg = `*${currentProjectData.company.name}*%0A*سند ${b.type} رقم ${b.number}*%0A💰 ${b.amount} ريال%0A🔗 ${encodeURIComponent(b.qrData)}`;
+    const cleanPhone = phone.replace(/^0/, '').replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/966${cleanPhone}?text=${msg}`, '_blank');
+}
+
+// 5. طباعة السند
+function printBond(id) {
+    const b = currentProjectData.bonds[id];
+    const printWindow = window.open('', '', 'height=700,width=900');
+    printWindow.document.write(generateBondHTML(b));
+    printWindow.document.close();
+    setTimeout(() => {
+        new QRCode(printWindow.document.getElementById("qrcanvas"), {text: b.qrData, width: 120, height: 120});
+        setTimeout(() => printWindow.print(), 300);
+    }, 500);
+}
+
+function generateBondHTML(b) {
+    return `<html dir="rtl"><head><meta charset="UTF-8"><style>body{font-family:Cairo;padding:20px}.qr-print{position:absolute;bottom:20px;left:20px}</style></head>
+    <body><div class="bond-number-once">رقم ${b.number}</div><h1>${currentProjectData.company.name}</h1>
+    <h2>سند ${b.type}</h2><table><tr><td>المبلغ:</td><td>${b.amount} ريال</td></tr></table>
+    <div class="qr-print"><div id="qrcanvas"></div></div></body></html>`;
+}
+
+// 6. باقي الدوال: renderDashboard, renderManagers, renderDelegates, renderBondTypes, renderCompany...
+// نفس المنطق القديم بس بدل db.bonds استخدم currentProjectData.bonds
+function showTab(tab) {
+    document.getElementById('tabContent').innerHTML = window['render' + tab.charAt(0).toUpperCase() + tab.slice(1)]();
+}
+
+function renderDashboard() {
+    const bonds = currentProjectData.bonds? Object.values(currentProjectData.bonds) : [];
+    const total = bonds.reduce((sum, t) => sum + (t.isQabdh? t.amount : -t.amount), 0);
+    return `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-2xl font-bold">الرصيد: ${total.toFixed(2)} ريال</h2></div>`;
+}
+
+//... وهكذا لباقي الدوال renderBonds, renderCompany, saveCompany, exportExcel
+
+window.onload = async function() {
+    const params = new URLSearchParams(window.location.search);
+    projectCode = params.get('project') || localStorage.getItem('v5_project_code');
+    if (projectCode) {
+        await initProjectDB();
+        if(params.get('bond')) return viewBondByUrl(params.get('bond'));
+        joinProjectFlow();
+    }
+}
+
+async function viewBondByUrl(bondId) {
+    const b = await getData(`bonds/${bondId}`);
+    if (b) { document.getElementById('bondViewContent').innerHTML = generateBondHTML(b); document.getElementById('bondViewScreen').classList.remove('hidden'); }
+}
+</script>
+</body>
+</html>
