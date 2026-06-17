@@ -206,7 +206,7 @@
                 <div class="overflow-x-auto"><table class="w-full" id="managersTable"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold no-print">تحكم</th></tr></thead><tbody id="managersTableBody"></tbody></table></div>
             </div>
         </div>
-        <script type="module">
+       <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     const firebaseConfig = {apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",authDomain: "sanadat-pro.firebaseapp.com",databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",projectId: "sanadat-pro",storageBucket: "sanadat-pro.firebasestorage.app",messagingSenderId: "1039476751095",appId: "1:1039476751095:web:f2a7744d6469385e7771f2"};
@@ -415,8 +415,7 @@
         document.getElementById('set_contact').value = projectData.contact || '';
         document.getElementById('set_address').value = projectData.address || '';
         if (projectData.logo) {document.getElementById('preview_logo').src = projectData.logo;document.getElementById('preview_logo').classList.remove('hidden');}
-        if (projectData.stamp) {document.getElementById('preview_stamp').src = projectData.stamp;document.getElementById('preview_stamp').classList.remove
-         }
+        if (projectData.stamp) {document.getElementById('preview_stamp').src = projectData.stamp;document.getElementById('preview_stamp').classList.remove}
         }
     }
     window.saveProjectSettings = async () => {
@@ -734,4 +733,4 @@
     }
 </script>
 </body>
-</html>                       
+</html> 
