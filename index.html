@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية V7.8</title>
+    <title>السندات الذكية V7.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
         .hidden { display: none!important; }
         .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
         .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
+        .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid #e5e7eb; }
         .logo-preview { max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px dashed #ccc; object-fit: contain; }
     </style>
 </head>
@@ -23,9 +23,8 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
-            </div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">السندات الذكية</h1>
             <p class="text-gray-500">نظام إدارة السندات السحابي</p>
         </div>
@@ -56,7 +55,6 @@
                     <h1 class="text-2xl font-extrabold">السندات الذكية</h1>
                     <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span id="currentRole" class="bg-white/20 px-2 py-1 rounded"></span></p>
                 </div>
-            </div>
             <div class="flex gap-2">
                 <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm">تغيير كلمة السر</button>
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm">خروج</button>
@@ -75,7 +73,7 @@
     <div id="managerTabs" class="hidden bg-white shadow-md border-b">
         <div class="flex overflow-x-auto">
             <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
-            <button onclick="showTab('projectSettings', this)" class="tab-btn px-8 py-4">إعدادات المشروع</button>
+            <button onclick="showTab('projectSettings', this)" class="tab-btn px-8 py-4">إعدادات الشركة</button>
             <button onclick="showTab('bondSettings', this)" class="tab-btn px-8 py-4">إعدادات السند</button>
             <button onclick="showTab('delegates', this)" class="tab-btn px-8 py-4">المناديب</button>
         </div>
@@ -113,7 +111,7 @@
 
         <div id="projectSettings" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-4xl">
-                <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إعدادات المشروع</h2>
+                <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إعدادات الشركة</h2>
                 <div class="space-y-5">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div><label class="block mb-2 font-bold text-gray-700">اسم الشركة</label><input id="set_companyName" type="text" class="w-full p-3 border-2 rounded-lg"></div>
@@ -133,6 +131,7 @@
                             <input id="set_stamp" type="file" accept="image/*" class="w-full p-3 border-2 rounded-lg">
                             <img id="preview_stamp" class="logo-preview mt-3 hidden">
                         </div>
+                    </div>
                     <button id="saveProjectSettingsBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition">حفظ الإعدادات</button>
                 </div>
             </div>
@@ -157,7 +156,7 @@
             </div>
         </div>
 
-        <div id="managers" class="tab-content hidden"><div class="bg-white p-8 rounded-xl shadow-lg"><h2 class="text-3xl font-extrabold mb-6">كل المدراء</h2><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="managersTable"></tbody></table></div></div></div>
+        <div id="managers" class="tab-content hidden"><div class="bg-white p-8 rounded-xl shadow-lg"><h2 class="text-3xl font-extrabold mb-6">كل المدراء</h2><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="managersTable"></tbody></table></div>
         <div id="delegates" class="tab-content hidden"><div class="bg-white p-8 rounded-xl shadow-lg"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-extrabold">المناديب</h2><button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مندوب جديد</button></div><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="delegatesTable"></tbody></table></div></div></div>
     </div>
 </div>
