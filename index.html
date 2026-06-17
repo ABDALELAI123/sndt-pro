@@ -13,16 +13,15 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
       import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-      // 1. حط بياناتك هنا بعد ما تخلص خطوة Firebase
-      const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        databaseURL: "YOUR_DATABASE_URL",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-      };
+    const firebaseConfig = {
+    apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+    authDomain: "sanadat-pro.firebaseapp.com",
+    databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "sanadat-pro",
+    storageBucket: "sanadat-pro.firebasestorage.app",
+    messagingSenderId: "1039476751095",
+    appId: "1:1039476751095:web:c39a52e595f311107771f2"
+  };
 
       const app = initializeApp(firebaseConfig);
       window.db = getDatabase(app);
