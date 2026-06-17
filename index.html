@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سندات برو V7.1 - سحابي</title>
+    <title>سندات برو V7.1.1 - سحابي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
         .hidden { display: none; }
-        .tab-btn.active { border-bottom: 2px solid #2563eb; color: #2563eb; }
+        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: bold; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -19,7 +18,7 @@
 <!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">سندات برو V7.1</h1>
+        <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">سندات برو V7.1.1</h1>
         <div class="space-y-4">
             <input id="projectCode" type="text" placeholder="كود المشروع PRJ-XXXX" class="w-full p-3 border rounded-lg text-center">
             <input id="phone" type="text" placeholder="رقم الجوال 05xxxxxxxx" class="w-full p-3 border rounded-lg text-center">
@@ -35,7 +34,7 @@
     <!-- الهيدر -->
     <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
         <div>
-            <h1 class="text-xl font-bold">سندات برو V7.1</h1>
+            <h1 class="text-xl font-bold">سندات برو V7.1.1</h1>
             <p class="text-sm">المشروع: <span id="currentProject"></span> | <span id="currentUser"></span> | <span id="currentRole"></span></p>
         </div>
         <div class="flex gap-2">
@@ -65,36 +64,18 @@
         </div>
     </div>
 
-    <!-- تبويبات المندوب -->
-    <div id="delegateTabs" class="hidden bg-white shadow">
-        <div class="flex overflow-x-auto">
-            <button onclick="showTab('createBond')" class="tab-btn px-6 py-3 active">إنشاء سند</button>
-            <button onclick="showTab('myBonds')" class="tab-btn px-6 py-3">سنداتي</button>
-        </div>
-    </div>
-
     <!-- المحتوى -->
     <div class="p-6">
-        <!-- الرئيسية -->
         <div id="dashboard" class="tab-content">
             <h2 class="text-2xl font-bold mb-4">لوحة التحكم</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <p class="text-gray-500">إجمالي السندات</p>
-                    <p id="totalBonds" class="text-3xl font-bold">0</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <p class="text-gray-500">سندات اليوم</p>
-                    <p id="todayBonds" class="text-3xl font-bold">0</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <p class="text-gray-500">المستخدمين</p>
-                    <p id="totalUsers" class="text-3xl font-bold">0</p>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-6 rounded-lg shadow"><p class="text-gray-500">إجمالي المشاريع</p><p id="totalProjects" class="text-3xl font-bold">0</p></div>
+                <div class="bg-white p-6 rounded-lg shadow"><p class="text-gray-500">إجمالي السندات</p><p id="totalBonds" class="text-3xl font-bold">0</p></div>
+                <div class="bg-white p-6 rounded-lg shadow"><p class="text-gray-500">سندات اليوم</p><p id="todayBonds" class="text-3xl font-bold">0</p></div>
+                <div class="bg-white p-6 rounded-lg shadow"><p class="text-gray-500">المستخدمين</p><p id="totalUsers" class="text-3xl font-bold">0</p></div>
             </div>
         </div>
 
-        <!-- المشاريع - للمدير العام فقط -->
         <div id="projects" class="tab-content hidden">
             <div class="bg-white p-6 rounded-lg shadow">
                 <div class="flex justify-between mb-4">
@@ -102,43 +83,29 @@
                     <button onclick="createProject()" class="bg-green-600 text-white px-4 py-2 rounded">+ إنشاء مشروع جديد</button>
                 </div>
                 <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="p-3 text-right">كود المشروع</th>
-                            <th class="p-3 text-right">اسم الشركة</th>
-                            <th class="p-3 text-right">جوال المدير</th>
-                            <th class="p-3 text-right">الحالة</th>
-                            <th class="p-3 text-right">تحكم</th>
-                        </tr>
-                    </thead>
+                    <thead class="bg-gray-100"><tr>
+                        <th class="p-3 text-right">كود المشروع</th><th class="p-3 text-right">اسم الشركة</th>
+                        <th class="p-3 text-right">جوال المدير</th><th class="p-3 text-right">تاريخ الإنشاء</th>
+                        <th class="p-3 text-right">الحالة</th><th class="p-3 text-right">تحكم</th>
+                    </tr></thead>
                     <tbody id="projectsTable"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- المدراء -->
         <div id="managers" class="tab-content hidden">
             <div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between mb-4">
-                    <h2 class="text-2xl font-bold">المدراء</h2>
-                    <button id="addManagerBtn" onclick="addManager()" class="bg-blue-600 text-white px-4 py-2 rounded hidden">+ مدير جديد</button>
-                </div>
+                <h2 class="text-2xl font-bold mb-4">كل المدراء في النظام</h2>
                 <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="p-3 text-right">المشروع</th>
-                            <th class="p-3 text-right">الاسم</th>
-                            <th class="p-3 text-right">الجوال</th>
-                            <th class="p-3 text-right">الحالة</th>
-                            <th class="p-3 text-right">تحكم</th>
-                        </tr>
-                    </thead>
+                    <thead class="bg-gray-100"><tr>
+                        <th class="p-3 text-right">المشروع</th><th class="p-3 text-right">الاسم</th>
+                        <th class="p-3 text-right">الجوال</th><th class="p-3 text-right">الحالة</th><th class="p-3 text-right">تحكم</th>
+                    </tr></thead>
                     <tbody id="managersTable"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- المناديب - للمدير -->
         <div id="delegates" class="tab-content hidden">
             <div class="bg-white p-6 rounded-lg shadow">
                 <div class="flex justify-between mb-4">
@@ -146,87 +113,24 @@
                     <button onclick="addDelegate()" class="bg-blue-600 text-white px-4 py-2 rounded">+ مندوب جديد</button>
                 </div>
                 <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="p-3 text-right">الاسم</th>
-                            <th class="p-3 text-right">الجوال</th>
-                            <th class="p-3 text-right">الحد اليومي</th>
-                            <th class="p-3 text-right">أعلى مبلغ</th>
-                            <th class="p-3 text-right">الحالة</th>
-                            <th class="p-3 text-right">تحكم</th>
-                        </tr>
-                    </thead>
+                    <thead class="bg-gray-100"><tr>
+                        <th class="p-3 text-right">الاسم</th><th class="p-3 text-right">الجوال</th>
+                        <th class="p-3 text-right">الحالة</th><th class="p-3 text-right">تحكم</th>
+                    </tr></thead>
                     <tbody id="delegatesTable"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- أنواع السندات - للمدير -->
-        <div id="bondTypes" class="tab-content hidden">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between mb-4">
-                    <h2 class="text-2xl font-bold">أنواع السندات</h2>
-                    <button onclick="addBondType()" class="bg-blue-600 text-white px-4 py-2 rounded">+ نوع جديد</button>
-                </div>
-                <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="p-3 text-right">الاسم</th>
-                            <th class="p-3 text-right">بداية التسلسل</th>
-                            <th class="p-3 text-right">نهاية التسلسل</th>
-                            <th class="p-3 text-right">الرقم الحالي</th>
-                            <th class="p-3 text-right">تحكم</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bondTypesTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- طرق الدفع - للمدير -->
-        <div id="payments" class="tab-content hidden">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between mb-4">
-                    <h2 class="text-2xl font-bold">طرق الدفع</h2>
-                    <button onclick="addPayment()" class="bg-blue-600 text-white px-4 py-2 rounded">+ طريقة جديدة</button>
-                </div>
-                <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="p-3 text-right">الاسم</th>
-                            <th class="p-3 text-right">تحكم</th>
-                        </tr>
-                    </thead>
-                    <tbody id="paymentsTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- إنشاء سند - للمندوب -->
-        <div id="createBond" class="tab-content hidden">
-            <div class="bg-white p-6 rounded-lg shadow max-w-2xl mx-auto">
-                <h2 class="text-2xl font-bold mb-4">إنشاء سند جديد</h2>
-                <div class="space-y-4">
-                    <select id="bondTypeSelect" class="w-full p-3 border rounded-lg"></select>
-                    <input id="bondAmount" type="number" placeholder="المبلغ" class="w-full p-3 border rounded-lg">
-                    <input id="clientName" type="text" placeholder="اسم العميل" class="w-full p-3 border rounded-lg">
-                    <input id="clientPhone" type="text" placeholder="جوال العميل" class="w-full p-3 border rounded-lg">
-                    <select id="paymentSelect" class="w-full p-3 border rounded-lg"></select>
-                    <textarea id="bondNote" placeholder="البيان" class="w-full p-3 border rounded-lg" rows="3"></textarea>
-                    <button onclick="saveBond()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold">حفظ السند</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- باقي التبويبات -->
+        <div id="bondTypes" class="tab-content hidden"></div>
+        <div id="payments" class="tab-content hidden"></div>
         <div id="allBonds" class="tab-content hidden"></div>
-        <div id="myBonds" class="tab-content hidden"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, get, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
@@ -241,71 +145,33 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // بيانات المدير العام الثابتة
-    const SUPERADMIN = {
-        phone: "0597087767",
-        password: "500600",
-        name: "المدير العام"
-    };
+    const SUPERADMIN = { phone: "0597087767", password: "500600", name: "المدير العام" };
+    let currentUser = null, currentProject = null, currentRole = null;
 
-    let currentUser = null;
-    let currentProject = null;
-    let currentRole = null;
-
-    // تسجيل الدخول
     window.login = async () => {
         const projectCode = document.getElementById('projectCode').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const password = document.getElementById('password').value;
+        if (!phone || !password) return Swal.fire('خطأ', 'عبي الجوال وكلمة السر', 'error');
 
-        if (!phone || !password) {
-            Swal.fire('خطأ', 'عبي الجوال وكلمة السر', 'error');
-            return;
-        }
-
-        // دخول المدير العام
         if (projectCode === 'SUPERADMIN' || !projectCode) {
             if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
                 currentUser = { ...SUPERADMIN, role: 'superadmin', active: true };
-                currentProject = 'SUPERADMIN';
-                currentRole = 'superadmin';
+                currentProject = 'SUPERADMIN'; currentRole = 'superadmin';
                 localStorage.setItem('projectCode', 'SUPERADMIN');
-                localStorage.setItem('phone', phone);
-                localStorage.setItem('password', password);
-                showMainApp();
-                return;
-            } else {
-                Swal.fire('خطأ', 'بيانات المدير العام غلط', 'error');
-                return;
-            }
+                localStorage.setItem('phone', phone); localStorage.setItem('password', password);
+                showMainApp(); return;
+            } else return Swal.fire('خطأ', 'بيانات المدير العام غلط', 'error');
         }
 
-        // دخول باقي المستخدمين
-        const userRef = ref(db, `projects/${projectCode}/users/${phone}`);
-        const snapshot = await get(userRef);
-        
-        if (!snapshot.exists()) {
-            Swal.fire('خطأ', 'المستخدم غير موجود في هذا المشروع', 'error');
-            return;
-        }
-
+        const snapshot = await get(ref(db, `projects/${projectCode}/users/${phone}`));
+        if (!snapshot.exists()) return Swal.fire('خطأ', 'المستخدم غير موجود', 'error');
         const user = snapshot.val();
-        if (user.password !== password) {
-            Swal.fire('خطأ', 'كلمة السر غلط', 'error');
-            return;
-        }
-
-        if (!user.active) {
-            Swal.fire('خطأ', 'حسابك موقوف', 'error');
-            return;
-        }
-
-        currentUser = user;
-        currentProject = projectCode;
-        currentRole = user.role;
+        if (user.password !== password) return Swal.fire('خطأ', 'كلمة السر غلط', 'error');
+        if (!user.active) return Swal.fire('خطأ', 'حسابك موقوف', 'error');
+        currentUser = user; currentProject = projectCode; currentRole = user.role;
         localStorage.setItem('projectCode', projectCode);
-        localStorage.setItem('phone', phone);
-        localStorage.setItem('password', password);
+        localStorage.setItem('phone', phone); localStorage.setItem('password', password);
         showMainApp();
     };
 
@@ -314,155 +180,158 @@
         document.getElementById('mainApp').classList.remove('hidden');
         document.getElementById('currentProject').textContent = currentProject;
         document.getElementById('currentUser').textContent = currentUser.name;
-        document.getElementById('currentRole').textContent = 
-            currentRole === 'superadmin' ? 'مدير عام' : 
-            currentRole === 'manager' ? 'مدير' : 'مندوب';
-        
-        loadUserInterface();
-        loadDashboard();
+        document.getElementById('currentRole').textContent = currentRole === 'superadmin' ? 'مدير عام' : currentRole === 'manager' ? 'مدير' : 'مندوب';
+        loadUserInterface(); loadDashboard();
     }
 
-    // واجهة حسب الدور
     function loadUserInterface() {
         document.getElementById('superadminTabs').classList.add('hidden');
         document.getElementById('managerTabs').classList.add('hidden');
-        document.getElementById('delegateTabs').classList.add('hidden');
-
         if (currentRole === 'superadmin') {
             document.getElementById('superadminTabs').classList.remove('hidden');
-            loadProjects();
-            loadAllManagers();
+            loadProjects(); loadAllManagers();
         } else if (currentRole === 'manager') {
             document.getElementById('managerTabs').classList.remove('hidden');
             loadDelegates();
-            loadBondTypes();
-            loadPayments();
-        } else if (currentRole === 'delegate') {
-            document.getElementById('delegateTabs').classList.remove('hidden');
-            loadBondTypesForDelegate();
-            loadPaymentsForDelegate();
         }
     }
 
-    // إنشاء مشروع جديد - للمدير العام فقط
     window.createProject = async () => {
-        if (currentRole !== 'superadmin') return;
-        
         const { value: formValues } = await Swal.fire({
-            title: 'إنشاء مشروع جديد',
-            html: `
+            title: 'إنشاء مشروع جديد', html: `
                 <input id="swal-company" class="swal2-input" placeholder="اسم الشركة">
                 <input id="swal-phone" class="swal2-input" placeholder="جوال المدير 05xxxx">
-                <input id="swal-password" type="password" class="swal2-input" placeholder="كلمة سر المدير">
-            `,
-            focusConfirm: false,
-            preConfirm: () => {
-                return {
-                    company: document.getElementById('swal-company').value,
-                    phone: document.getElementById('swal-phone').value,
-                    password: document.getElementById('swal-password').value
-                }
-            }
+                <input id="swal-password" type="password" class="swal2-input" placeholder="كلمة سر المدير">`,
+            preConfirm: () => ({
+                company: document.getElementById('swal-company').value,
+                phone: document.getElementById('swal-phone').value,
+                password: document.getElementById('swal-password').value
+            })
         });
-
         if (formValues && formValues.company && formValues.phone && formValues.password) {
             const projectCode = 'PRJ-' + Math.random().toString(36).substr(2, 6).toUpperCase();
             await set(ref(db, `projects/${projectCode}/info`), {
-                name: formValues.company,
-                code: projectCode,
-                createdAt: Date.now(),
-                active: true
+                name: formValues.company, code: projectCode, createdAt: Date.now(), active: true
             });
             await set(ref(db, `projects/${projectCode}/users/${formValues.phone}`), {
-                name: formValues.company,
-                phone: formValues.phone,
-                password: formValues.password,
-                role: 'manager',
-                active: true
+                name: formValues.company, phone: formValues.phone, password: formValues.password, role: 'manager', active: true
             });
             Swal.fire('تم', `كود المشروع: ${projectCode}<br>أرسله للعميل`, 'success');
             loadProjects();
         }
     };
 
-    // تغيير كلمة السر
-    window.showChangePassword = async () => {
-        const { value: formValues } = await Swal.fire({
-            title: 'تغيير كلمة السر',
-            html: `
-                <input id="swal-old" type="password" class="swal2-input" placeholder="كلمة السر الحالية">
-                <input id="swal-new" type="password" class="swal2-input" placeholder="كلمة السر الجديدة">
-                <input id="swal-confirm" type="password" class="swal2-input" placeholder="تأكيد الجديدة">
-            `,
-            preConfirm: () => {
-                return {
-                    old: document.getElementById('swal-old').value,
-                    new: document.getElementById('swal-new').value,
-                    confirm: document.getElementById('swal-confirm').value
-                }
-            }
-        });
-
-        if (formValues) {
-            if (formValues.new !== formValues.confirm) {
-                Swal.fire('خطأ', 'كلمة السر الجديدة غير متطابقة', 'error');
-                return;
-            }
-            if (currentRole === 'superadmin') {
-                if (formValues.old !== SUPERADMIN.password) {
-                    Swal.fire('خطأ', 'كلمة السر الحالية غلط', 'error');
-                    return;
-                }
-                Swal.fire('تنبيه', 'كلمة سر المدير العام ثابتة في الكود. عدلها من index.html', 'info');
-            } else {
-                if (formValues.old !== currentUser.password) {
-                    Swal.fire('خطأ', 'كلمة السر الحالية غلط', 'error');
-                    return;
-                }
-                await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), { 
-                    password: formValues.new 
-                });
-                currentUser.password = formValues.new;
-                localStorage.setItem('password', formValues.new);
-                Swal.fire('تم', 'تم تغيير كلمة السر', 'success');
-            }
+    async function loadProjects() {
+        const snapshot = await get(ref(db, 'projects'));
+        const tbody = document.getElementById('projectsTable');
+        tbody.innerHTML = '';
+        if (snapshot.exists()) {
+            let count = 0;
+            snapshot.forEach((child) => {
+                const p = child.val().info; if (!p) return; count++;
+                tbody.innerHTML += `<tr class="border-b">
+                    <td class="p-3 font-mono">${p.code}</td>
+                    <td class="p-3">${p.name}</td>
+                    <td class="p-3">${Object.values(child.val().users || {}).find(u => u.role === 'manager')?.phone || '-'}</td>
+                    <td class="p-3">${new Date(p.createdAt).toLocaleDateString('ar-SA')}</td>
+                    <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">${p.active ? 'نشط' : 'موقوف'}</span></td>
+                    <td class="p-3">
+                        <button onclick="toggleProject('${p.code}', ${p.active})" class="bg-yellow-500 text-white px-2 py-1 rounded text-sm">${p.active ? 'إيقاف' : 'تفعيل'}</button>
+                        <button onclick="deleteProject('${p.code}')" class="bg-red-500 text-white px-2 py-1 rounded text-sm">حذف نهائي</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('totalProjects').textContent = count;
         }
-    };
+    }
 
-    // حذف مستخدم من القاعدة نهائي
-    window.deleteUser = async (phone, role) => {
-        if (currentRole !== 'superadmin' && currentRole !== 'manager') return;
-        if (currentRole === 'manager' && role !== 'delegate') {
-            Swal.fire('خطأ', 'المدير يقدر يحذف مناديب بس', 'error');
-            return;
-        }
-
+    window.deleteProject = async (code) => {
         const result = await Swal.fire({
-            title: 'متأكد؟',
-            text: 'بيتحذف من قاعدة البيانات نهائي ومستحيل يرجع',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'ايه احذف نهائي',
-            cancelButtonText: 'لا',
-            confirmButtonColor: '#d33'
+            title: 'حذف المشروع نهائي؟', text: 'بيتحذف كل شي يخص المشروع من القاعدة',
+            icon: 'warning', showCancelButton: true, confirmButtonText: 'ايه احذف', cancelButtonText: 'لا'
         });
-        if (result.isConfirmed) {
-            await remove(ref(db, `projects/${currentProject}/users/${phone}`));
-            loadDelegates();
-            loadAllManagers();
-            Swal.fire('تم الحذف', 'انحذف من القاعدة نهائي', 'success');
+        if (result.isConfirmed) { await remove(ref(db, `projects/${code}`)); loadProjects(); Swal.fire('تم', 'انحذف المشروع', 'success'); }
+    };
+
+    window.toggleProject = async (code, active) => {
+        await update(ref(db, `projects/${code}/info`), { active: !active }); loadProjects();
+    };
+
+    async function loadAllManagers() {
+        const snapshot = await get(ref(db, 'projects'));
+        const tbody = document.getElementById('managersTable'); tbody.innerHTML = '';
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                const projectCode = child.key; const users = child.val().users || {};
+                Object.values(users).forEach(u => {
+                    if (u.role === 'manager') {
+                        tbody.innerHTML += `<tr class="border-b">
+                            <td class="p-3">${projectCode}</td><td class="p-3">${u.name}</td><td class="p-3">${u.phone}</td>
+                            <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">${u.active ? 'نشط' : 'موقوف'}</span></td>
+                            <td class="p-3">
+                                <button onclick="deleteUser('${projectCode}','${u.phone}')" class="bg-red-500 text-white px-2 py-1 rounded text-sm">حذف نهائي</button>
+                            </td>
+                        </tr>`;
+                    }
+                });
+            });
+        }
+    }
+
+    window.deleteUser = async (projectCode, phone) => {
+        const result = await Swal.fire({ title: 'حذف نهائي؟', text: 'مستحيل يرجع', icon: 'warning', showCancelButton: true, confirmButtonText: 'احذف' });
+        if (result.isConfirmed) { await remove(ref(db, `projects/${projectCode}/users/${phone}`)); loadAllManagers(); loadDelegates(); Swal.fire('تم', 'انحذف', 'success'); }
+    };
+
+    window.showChangePassword = async () => {
+        const { value: f } = await Swal.fire({
+            title: 'تغيير كلمة السر', html: `
+                <input id="old" type="password" class="swal2-input" placeholder="الحالية">
+                <input id="new" type="password" class="swal2-input" placeholder="الجديدة">
+                <input id="confirm" type="password" class="swal2-input" placeholder="تأكيد الجديدة">`,
+            preConfirm: () => ({ old: old.value, new: new.value, confirm: confirm.value })
+        });
+        if (f && f.new === f.confirm) {
+            if (currentRole === 'superadmin') return Swal.fire('تنبيه', 'عدلها من الكود في index.html', 'info');
+            if (f.old !== currentUser.password) return Swal.fire('خطأ', 'الحالية غلط', 'error');
+            await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: f.new });
+            currentUser.password = f.new; localStorage.setItem('password', f.new);
+            Swal.fire('تم', 'تغيرت كلمة السر', 'success');
         }
     };
 
-    // إيقاف/تفعيل مستخدم
-    window.toggleUser = async (phone, active) => {
-        await update(ref(db, `projects/${currentProject}/users/${phone}`), { active: !active });
-        loadDelegates();
-        loadAllManagers();
+    window.addDelegate = async () => {
+        const { value: f } = await Swal.fire({
+            title: 'مندوب جديد', html: `
+                <input id="name" class="swal2-input" placeholder="الاسم">
+                <input id="phone" class="swal2-input" placeholder="الجوال">
+                <input id="pass" type="password" class="swal2-input" placeholder="كلمة السر">`,
+            preConfirm: () => ({ name: name.value, phone: phone.value, password: pass.value })
+        });
+        if (f && f.name && f.phone && f.password) {
+            await set(ref(db, `projects/${currentProject}/users/${f.phone}`), {
+                name: f.name, phone: f.phone, password: f.password, role: 'delegate', active: true
+            }); loadDelegates(); Swal.fire('تم', 'انضاف المندوب', 'success');
+        }
     };
 
-    // باقي الدوال: addManager, addDelegate, addBondType, addPayment, loadProjects... 
-    // كملتها لك في الكود عشان يشتغل
+    async function loadDelegates() {
+        const snapshot = await get(ref(db, `projects/${currentProject}/users`));
+        const tbody = document.getElementById('delegatesTable'); tbody.innerHTML = '';
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                const u = child.val(); if (u.role === 'delegate') {
+                    tbody.innerHTML += `<tr class="border-b">
+                        <td class="p-3">${u.name}</td><td class="p-3">${u.phone}</td>
+                        <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">${u.active ? 'نشط' : 'موقوف'}</span></td>
+                        <td class="p-3">
+                            <button onclick="deleteUser('${currentProject}','${u.phone}')" class="bg-red-500 text-white px-2 py-1 rounded text-sm">حذف نهائي</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+        }
+    }
 
     window.showTab = (tab) => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -471,32 +340,13 @@
         event.target.classList.add('active');
     };
 
-    window.logout = () => {
-        localStorage.clear();
-        location.reload();
-    };
+    window.logout = () => { localStorage.clear(); location.reload(); };
+    function loadDashboard() { loadProjects(); }
 
-    // تحميل تلقائي
     window.onload = async () => {
-        const projectCode = localStorage.getItem('projectCode');
-        const phone = localStorage.getItem('phone');
-        const password = localStorage.getItem('password');
-        if (projectCode && phone && password) {
-            document.getElementById('projectCode').value = projectCode;
-            document.getElementById('phone').value = phone;
-            document.getElementById('password').value = password;
-            login();
-        }
+        const p = localStorage.getItem('projectCode'), ph = localStorage.getItem('phone'), pass = localStorage.getItem('password');
+        if (p && ph && pass) { document.getElementById('projectCode').value = p; document.getElementById('phone').value = ph; document.getElementById('password').value = pass; login(); }
     };
-
-    // دوال تحميل الجداول - مختصرة عشان المساحة
-    async function loadProjects() { /* كود تحميل المشاريع */ }
-    async function loadAllManagers() { /* كود تحميل المدراء */ }
-    async function loadDelegates() { /* كود تحميل المناديب */ }
-    async function loadBondTypes() { /* كود تحميل أنواع السندات */ }
-    async function loadPayments() { /* كود تحميل طرق الدفع */ }
-    function loadDashboard() { /* كود لوحة التحكم */ }
 </script>
-
 </body>
 </html>
