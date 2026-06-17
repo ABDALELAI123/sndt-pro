@@ -62,6 +62,7 @@
                     <h1 class="text-2xl font-extrabold">السندات الذكية</h1>
                     <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span id="currentRole" class="bg-white/20 px-2 py-1 rounded"></span></p>
                 </div>
+            </div>
             <div class="flex gap-2">
                 <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm">تغيير كلمة السر</button>
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm">خروج</button>
@@ -115,6 +116,7 @@
                     <p id="totalBalance" class="text-4xl font-extrabold mt-2">0.00</p>
                     <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
                 </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-blue-500"><p class="text-gray-500 text-sm">إجمالي المشاريع</p><p id="totalProjects" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-green-500"><p class="text-gray-500 text-sm">إجمالي السندات</p><p id="totalBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
@@ -209,7 +211,6 @@
                         <button onclick="exportTableToExcel('managersTable','المدراء')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
                         <button onclick="exportTableToPDF('managersTable','المدراء')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                     </div>
-                </div>
                 <div class="overflow-x-auto"><table class="w-full" id="managersTable"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold no-print">تحكم</th></tr></thead><tbody id="managersTableBody"></tbody></table></div>
             </div>
         </div>
@@ -223,7 +224,6 @@
                         <button onclick="exportTableToPDF('delegatesTable','المناديب')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مندوب جديد</button>
                     </div>
-                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="delegatesTable">
                         <thead class="bg-gray-50"><tr>
@@ -278,7 +278,6 @@
                         <button onclick="exportTableToExcel('bondsTable','السندات')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
                         <button onclick="exportTableToPDF('bondsTable','السندات')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                     </div>
-                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="bondsTable">
                         <thead class="bg-gray-50"><tr>
@@ -299,8 +298,7 @@
 </div>
 
 <div id="printArea" class="print-area"></div>
-<!-- END PART 1 -->
- <script type="module">
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -965,7 +963,8 @@
                     if (currentRole === 'delegate' && b.createdByPhone!== currentUser.phone) return;
                     allBondsData.push(b);
                     count++;
-                    if (b.date === today) todaytodayCount++;
+<!-- === نهاية الجزء 2 === -->
+if (b.date === today) todayCount++;
                     if (b.typeKind === 'income') totalIncome += b.amount;
                     if (b.typeKind === 'expense') totalExpense += b.amount;
                     tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
@@ -1032,7 +1031,7 @@
     };
 
     window.shareBondWhatsApp = (b) => {
-        const msg = `🧾 *${b.typeName}*\n\n📋 رقم السند: ${b.number}\n🏢 ${projectData.name}\n👤 العميل: ${b.client}\n💰 المبلغ: ${b.amount.toFixed(2)} ريال\n📅 التاريخ: ${b.date}\n📝 البيان: ${b.description}\n\n✍️ المنشئ: ${b.createdBy}\n\n${window.location.origin}`;
+        const msg = `*${b.typeName} رقم ${b.number}*\n\n🏢 ${projectData.name}\n👤 العميل: ${b.client}\n💰 المبلغ: ${b.amount.toFixed(2)} ريال\n📅 التاريخ: ${b.date}\n📝 البيان: ${b.description}\n\n✍️ المنشئ: ${b.createdBy}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     };
 
@@ -1082,10 +1081,6 @@
                             <td colspan="3" style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td>
                         </tr>
                         <tr>
-                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ كتابة:</td>
-                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${numberToWords(b.amount)} ريال فقط لا غير</td>
-                        </tr>
-                        <tr>
                             <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td>
                             <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.description}</td>
                         </tr>
@@ -1119,35 +1114,11 @@
         window.print();
     };
 
-    function numberToWords(num) {
-        const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
-        const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
-        const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
-        if (num === 0) return 'صفر';
-        if (num < 10) return ones[num];
-        if (num < 100) {
-            const t = Math.floor(num / 10);
-            const o = num % 10;
-            if (o === 0) return tens[t];
-            if (t === 1) return ones[o] + ' عشر';
-            return ones[o] + ' و' + tens[t];
-        }
-        if (num < 1000) {
-            const h = Math.floor(num / 100);
-            const r = num % 100;
-            return r === 0? hundreds[h] : hundreds[h] + ' و' + numberToWords(r);
-        }
-        if (num < 1000000) {
-            const th = Math.floor(num / 1000);
-            const r = num % 1000;
-            return r === 0? numberToWords(th) + ' ألف' : numberToWords(th) + ' ألف و' + numberToWords(r);
-        }
-        return num.toFixed(2);
-    }
-
     window.exportTableToExcel = (tableId, fileName) => {
         const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, { sheet: fileName });
+        const ws = XLSX.utils.table_to_sheet(table);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, fileName);
         XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
         Swal.fire('تم', 'تم تصدير الاكسل', 'success');
     };
@@ -1155,7 +1126,7 @@
     window.exportTableToPDF = async (tableId, fileName) => {
         const { jsPDF } = window.jspdf;
         const table = document.getElementById(tableId);
-        const canvas = await html2canvas(table);
+        const canvas = await html2canvas(table, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('l', 'mm', 'a4');
         const imgWidth = 280;
@@ -1224,7 +1195,7 @@
             document.getElementById('totalProjects').textContent = totalProjects;
             document.getElementById('totalUsers').textContent = totalUsers;
         });
-
+        
         if (currentRole!== 'superadmin') {
             loadBonds();
         }
@@ -1232,4 +1203,4 @@
 </script>
 </body>
 </html>
-<!-- END PART 3 -->       
+<!-- === نهاية الجزء 3 === -->                    
