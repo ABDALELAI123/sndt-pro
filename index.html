@@ -13,14 +13,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        .hidden { display: none!important; }
-        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-        .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
-        .logo-preview { max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px dashed #ccc; object-fit: contain; }
-        @media print { .no-print { display: none!important; } .print-area { display: block!important; } body { background: white; } }
-        .print-area { display: none; }
-        .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
+     .hidden { display: none!important; }
+     .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
+     .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+     .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
+     .logo-preview { max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px dashed #ccc; object-fit: contain; }
+        @media print {.no-print { display: none!important; }.print-area { display: block!important; } body { background: white; } }
+     .print-area { display: none; }
+     .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -134,6 +134,7 @@
                         <button onclick="exportTableToPDF('projectsTable','المشاريع')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="createProjectBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ إنشاء مشروع</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="projectsTable">
                         <thead class="bg-gray-50"><tr>
@@ -188,6 +189,7 @@
                         <button onclick="exportTableToPDF('bondTypesTable','انواع_السندات')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ نوع جديد</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="bondTypesTable">
                         <thead class="bg-gray-50"><tr>
@@ -213,7 +215,7 @@
                 <div class="overflow-x-auto"><table class="w-full" id="managersTable"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold no-print">تحكم</th></tr></thead><tbody id="managersTableBody"></tbody></table></div>
             </div>
         </div>
-        
+
         <div id="delegates" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -298,6 +300,7 @@
 </div>
 
 <div id="printArea" class="print-area"></div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -511,7 +514,7 @@
                     allProjectsData.push({ logo: p.logo, code: p.code, name: p.name, managerPhone: manager?.phone || '-', status: p.active? 'نشط' : 'موقوف' });
                     tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
                         <td class="p-3">${p.logo? `<img src="${p.logo}" class="w-10 h-10 rounded-lg object-cover">` : '<div class="w-10 h-10 bg-gray-200 rounded-lg"></div>'}</td>
-                        <td class="p-3 font-mono font-bold text-blue-600">${p.code}</td>
+                        <td class="p-3 font-mono">${p.code}</td>
                         <td class="p-3 font-bold">${p.name}</td>
                         <td class="p-3">${manager?.phone || '-'}</td>
                         <td class="p-3"><span class="${p.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${p.active? 'نشط' : 'موقوف'}</span></td>
@@ -567,7 +570,8 @@
             Swal.fire('تم', 'انحذف المشروع', 'success');
         }
     };
-   function loadAllManagers() {
+
+    function loadAllManagers() {
         onValue(ref(db, 'projects'), (snapshot) => {
             const tbody = document.getElementById('managersTableBody');
             tbody.innerHTML = '';
@@ -691,7 +695,8 @@
         if (projectData.address) pdf.text(`العنوان: ${projectData.address}`, 20, 75);
         pdf.save(`مشروع_${projectData.name}.pdf`);
     };
-   window.addBondType = async () => {
+
+    window.addBondType = async () => {
         const result = await Swal.fire({
             title: 'نوع سند جديد',
             html: `
@@ -923,355 +928,6 @@
     window.toggleDelegate = async (phone, active) => {
         await update(ref(db, `projects/${currentProject}/users/${phone}`), { active:!active });
     };
-   function loadBondTypeSelect() {
-        onValue(ref(db, `projects/${currentProject}/bondTypes`), (snapshot) => {
-            const select = document.getElementById('bondTypeSelect');
-            select.innerHTML = '<option value="">اختر نوع السند</option>';
-            if (snapshot.exists()) {
-                snapshot.forEach((child) => {
-                    const t = child.val();
-                    if (currentRole === 'manager' || userPermissions.includes(t.id)) {
-                        select.innerHTML += `<option value="${t.id}">${t.name} (${t.prefix})</option>`;
-                    }
-                });
-            }
-        });
-    }
-
-    window.saveBond = async () => {
-        const typeId = document.getElementById('bondTypeSelect').value;
-        const amount = parseFloat(document.getElementById('bondAmount').value);
-        const date = document.getElementById('bondDate').value;
-        const client = document.getElementById('bondClient').value;
-        const description = document.getElementById('bondDescription').value;
-
-        if (!typeId ||!amount ||!date ||!client) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
-
-        const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
-        const type = typeSnap.val();
-        const bondNumber = `${type.prefix}${type.current}`;
-
-        const bondData = {
-            id: Date.now().toString(),
-            number: bondNumber,
-            typeId: typeId,
-            typeName: type.name,
-            typeKind: type.kind,
-            amount: amount,
-            date: date,
-            client: client,
-            description: description,
-            createdBy: currentUser.name,
-            createdByPhone: currentUser.phone,
-            createdAt: Date.now()
-        };
-
-        await set(ref(db, `projects/${currentProject}/bonds/${bondData.id}`), bondData);
-        await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: type.current + 1 });
-
-        Swal.fire({
-            title: 'تم الحفظ',
-            text: `تم حفظ السند ${bondNumber}`,
-            icon: 'success',
-            showCancelButton: true,
-            confirmButtonText: '📱 مشاركة واتساب',
-            cancelButtonText: 'إغلاق'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                shareBondWhatsApp(bondData);
-            }
-        });
-
-        document.getElementById('bondAmount').value = '';
-        document.getElementById('bondClient').value = '';
-        document.getElementById('bondDescription').value = '';
-    };
-
-    function loadBonds() {
-        onValue(ref(db, `projects/${currentProject}/bonds`), (snapshot) => {
-            const tbody = document.getElementById('bondsTableBody');
-            tbody.innerHTML = '';
-            allBondsData = [];
-            let count = 0, todayCount = 0, totalIncome = 0, totalExpense = 0;
-            const today = new Date().toISOString().split('T')[0];
-            if (snapshot.exists()) {
-                snapshot.forEach((child) => {
-                    const b = child.val();
-                    if (currentRole === 'delegate' && b.createdByPhone!== currentUser.phone) return;
-                    allBondsData.push(b);
-                    count++;
-                    if (b.date === today) todayCount++;
-                    if (b.typeKind === 'income') totalIncome += b.amount;
-                    if (b.typeKind === 'expense') totalExpense += b.amount;
-                    tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
-                        <td class="p-4 font-mono font-bold text-blue-600">${b.number}</td>
-                        <td class="p-4">${b.typeName}</td>
-                        <td class="p-4">${b.client}</td>
-                        <td class="p-4 font-bold">${b.amount.toFixed(2)}</td>
-                        <td class="p-4">${b.date}</td>
-                        <td class="p-4">${b.createdBy}</td>
-                        <td class="p-4 flex gap-2 flex-wrap no-print">
-                            <button onclick="printBond('${b.id}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">🖨️ طباعة</button>
-                            <button onclick="shareBondWhatsAppById('${b.id}')" class="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700">📱 واتساب</button>
-                            ${currentRole==='manager'?`<button onclick="editBond('${b.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button><button onclick="deleteBond('${b.id}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>`:''}
-                        </td>
-                    </tr>`;
-                });
-            }
-            document.getElementById('totalBonds').textContent = count;
-            document.getElementById('todayBonds').textContent = todayCount;
-            document.getElementById('totalIncome').textContent = totalIncome.toFixed(2);
-            document.getElementById('totalExpense').textContent = totalExpense.toFixed(2);
-            document.getElementById('totalBalance').textContent = (totalIncome - totalExpense).toFixed(2);
-        });
-    }
-
-    window.editBond = async (bondId) => {
-        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
-        const b = snap.val();
-        const result = await Swal.fire({
-            title: 'تعديل السند',
-            html: `
-                <input id="swal-client" class="swal2-input" placeholder="اسم العميل" value="${b.client}">
-                <input id="swal-amount" type="number" step="0.01" class="swal2-input" placeholder="المبلغ" value="${b.amount}">
-                <input id="swal-date" type="date" class="swal2-input" value="${b.date}">
-                <textarea id="swal-desc" class="swal2-textarea" placeholder="البيان">${b.description}</textarea>
-            `,
-            preConfirm: () => {
-                return {
-                    client: document.getElementById('swal-client').value,
-                    amount: parseFloat(document.getElementById('swal-amount').value),
-                    date: document.getElementById('swal-date').value,
-                    description: document.getElementById('swal-desc').value
-                };
-            }
-        });
-        if (result.value) {
-            await update(ref(db, `projects/${currentProject}/bonds/${bondId}`), result.value);
-            Swal.fire('تم', 'تم التعديل', 'success');
-        }
-    };
-
-    window.deleteBond = async (bondId) => {
-        const r = await Swal.fire({ title: 'حذف السند؟', text: 'لا يمكن التراجع', icon: 'warning', showCancelButton: true, confirmButtonText: 'احذف', confirmButtonColor: '#d33' });
-        if (r.isConfirmed) {
-            await remove(ref(db, `projects/${currentProject}/bonds/${bondId}`));
-            Swal.fire('تم', 'انحذف السند', 'success');
-        }
-    };
-    window.shareBondWhatsAppById = async (bondId) => {
-        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
-        const b = snap.val();
-        shareBondWhatsApp(b);
-    };
-
-    window.shareBondWhatsApp = (b) => {
-        const msg = `🧾 *${b.typeName}*\n\n📋 رقم السند: ${b.number}\n🏢 ${projectData.name}\n👤 العميل: ${b.client}\n💰 المبلغ: ${b.amount.toFixed(2)} ريال\n📅 التاريخ: ${b.date}\n📝 البيان: ${b.description}\n\n✍️ المنشئ: ${b.createdBy}\n\n${window.location.origin}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    };
-
-    window.printBond = async (bondId) => {
-        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
-        const b = snap.val();
-        const qrData = JSON.stringify({
-            number: b.number,
-            type: b.typeName,
-            amount: b.amount,
-            date: b.date,
-            client: b.client,
-            description: b.description,
-            company: projectData.name,
-            cr: projectData.cr || '',
-            tax: projectData.tax || '',
-            createdBy: b.createdBy,
-            timestamp: new Date(b.createdAt).toLocaleString('ar-SA')
-        });
-        const qrCanvas = document.createElement('canvas');
-        await QRCode.toCanvas(qrCanvas, qrData, { width: 150, margin: 1, errorCorrectionLevel: 'H' });
-
-        const printHTML = `
-            <div class="bond-print">
-                <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #000; padding-bottom: 15px;">
-                    ${projectData.logo? `<img src="${projectData.logo}" style="max-width: 100px; margin: 0 auto 10px;">` : ''}
-                    <h1 style="font-size: 26px; font-weight: 800; margin: 8px 0;">${projectData.name}</h1>
-                    <p style="font-size: 12px; color: #333; margin: 3px 0;">${projectData.cr? `س.ت: ${projectData.cr}` : ''} ${projectData.tax? `| الرقم الضريبي: ${projectData.tax}` : ''}</p>
-                    <p style="font-size: 12px; color: #333;">${projectData.address || ''}</p>
-                    <p style="font-size: 12px; color: #333;">${projectData.contact? `هاتف: ${projectData.contact}` : ''}</p>
-                </div>
-                <div style="border: 2px solid #000; padding: 15px; margin-bottom: 15px;">
-                    <h2 style="text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px;">${b.typeName} رقم ${b.number}</h2>
-                    <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-                        <tr>
-                            <td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">التاريخ:</td>
-                            <td style="padding: 6px; border: 1px solid #ddd;">${b.date}</td>
-                            <td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">الوقت:</td>
-                            <td style="padding: 6px; border: 1px solid #ddd;">${new Date(b.createdAt).toLocaleTimeString('ar-SA')}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">العميل:</td>
-                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.client}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ:</td>
-                            <td colspan="3" style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ كتابة:</td>
-                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${numberToWords(b.amount)} ريال فقط لا غير</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td>
-                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.description}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المنشئ:</td>
-                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.createdBy}</td>
-                        </tr>
-                    </table>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 30px; align-items: flex-end;">
-                    <div style="text-align: center; flex: 1;">
-                        <p style="margin-bottom: 40px; font-weight: 700;">توقيع المستلم</p>
-                        <div style="border-top: 1px solid #000; width: 150px; margin: 0 auto;"></div>
-                        <p style="margin-top: 5px; font-size: 11px;">الاسم: _______________</p>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <img src="${qrCanvas.toDataURL()}" style="width: 120px; height: 120px; margin: 0 auto;">
-                        <p style="font-size: 10px; margin-top: 5px;">امسح للتحقق</p>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <p style="margin-bottom: 10px; font-weight: 700;">الختم</p>
-                        ${projectData.stamp? `<img src="${projectData.stamp}" style="max-width: 120px; max-height: 80px; margin: 0 auto;">` : '<div style="border: 1px dashed #999; width: 120px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">ختم الشركة</div>'}
-                    </div>
-                </div>
-                <div style="margin-top: 20px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;">
-                    <p>تم إنشاء هذا السند بواسطة نظام السندات الذكية - ${new Date().toLocaleString('ar-SA')}</p>
-                </div>
-            </div>
-        `;
-        document.getElementById('printArea').innerHTML = printHTML;
-        window.print();
-    };
-
-    function numberToWords(num) {
-        const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
-        const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
-        const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
-        if (num === 0) return 'صفر';
-        const intPart = Math.floor(num);
-        const decimalPart = Math.round((num - intPart) * 100);
-        let result = '';
-
-        if (intPart < 10) result = ones[intPart];
-        else if (intPart < 100) {
-            const t = Math.floor(intPart / 10);
-            const o = intPart % 10;
-            if (o === 0) result = tens[t];
-            else if (t === 1) result = ones[o] + ' عشر';
-            else result = ones[o] + ' و' + tens[t];
-        }
-        else if (intPart < 1000) {
-            const h = Math.floor(intPart / 100);
-            const r = intPart % 100;
-            result = r === 0? hundreds[h] : hundreds[h] + ' و' + numberToWords(r);
-        }
-        else if (intPart < 1000000) {
-            const th = Math.floor(intPart / 1000);
-            const r = intPart % 1000;
-            result = r === 0? numberToWords(th) + ' ألف' : numberToWords(th) + ' ألف و' + numberToWords(r);
-        }
-        else result = intPart.toString();
-
-        if (decimalPart > 0) {
-            result += ' و ' + numberToWords(decimalPart) + ' هللة';
-        }
-        return result;
-    }
-    window.exportTableToExcel = (tableId, fileName) => {
-        const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, { sheet: fileName });
-        XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
-        Swal.fire('تم', 'تم تصدير الاكسل', 'success');
-    };
-
-    window.exportTableToPDF = async (tableId, fileName) => {
-        const { jsPDF } = window.jspdf;
-        const table = document.getElementById(tableId);
-        const canvas = await html2canvas(table);
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('l', 'mm', 'a4');
-        const imgWidth = 280;
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-        pdf.save(`${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
-        Swal.fire('تم', 'تم تصدير PDF', 'success');
-    };
-
-    window.showChangePassword = async () => {
-        const result = await Swal.fire({
-            title: 'تغيير كلمة السر',
-            html: `
-                <input id="swal-old" type="password" class="swal2-input" placeholder="الحالية">
-                <input id="swal-new" type="password" class="swal2-input" placeholder="الجديدة">
-                <input id="swal-confirm" type="password" class="swal2-input" placeholder="تأكيد الجديدة">
-            `,
-            focusConfirm: false,
-            preConfirm: () => {
-                return {
-                    old: document.getElementById('swal-old').value,
-                    new: document.getElementById('swal-new').value,
-                    confirm: document.getElementById('swal-confirm').value
-                };
-            }
-        });
-        const f = result.value;
-        if (f && f.new === f.confirm) {
-            if (currentRole === 'superadmin') return Swal.fire('تنبيه', 'عدلها من الكود في index.html', 'info');
-            if (f.old!== currentUser.password) return Swal.fire('خطأ', 'الحالية غلط', 'error');
-            await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: f.new });
-            currentUser.password = f.new;
-            localStorage.setItem('password', f.new);
-            Swal.fire('تم', 'تغيرت كلمة السر', 'success');
-        } else if (f) {
-            Swal.fire('خطأ', 'الجديدة غير متطابقة', 'error');
-        }
-    };
-
-    window.showTab = (tab, btn) => {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(tab).classList.remove('hidden');
-        if (btn) btn.classList.add('active');
-        else event.target.classList.add('active');
-        if (tab === 'createBond') loadBondTypeSelect();
-        if (tab === 'bondsList') loadBonds();
-        if (tab === 'projects') loadProjects();
-        if (tab === 'managers') loadAllManagers();
-        if (tab === 'delegates') loadDelegates();
-        if (tab === 'bondSettings') loadBondTypes();
-        if (tab === 'projectSettings') loadProjectSettings();
-    };
-
-    window.logout = () => { localStorage.clear(); location.reload(); };
-
-    function loadDashboard() {
-        onValue(ref(db, 'projects'), (snapshot) => {
-            let totalProjects = 0, totalUsers = 0;
-            if (snapshot.exists()) {
-                snapshot.forEach((child) => {
-                    if (child.val().info) totalProjects++;
-                    const users = child.val().users || {};
-                    totalUsers += Object.keys(users).length;
-                });
-            }
-            document.getElementById('totalProjects').textContent = totalProjects;
-            document.getElementById('totalUsers').textContent = totalUsers;
-        });
-        
-        if (currentRole!== 'superadmin') {
-            loadBonds();
-        }
-    }
 </script>
 </body>
 </html>
