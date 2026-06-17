@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية V8.1</title>
+    <title>السندات الذكية V8.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
@@ -28,7 +30,7 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 0 01-2-2V5a2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">السندات الذكية</h1>
             <p class="text-gray-500">نظام إدارة السندات السحابي</p>
@@ -113,7 +115,6 @@
                     <p id="totalBalance" class="text-4xl font-extrabold mt-2">0.00</p>
                     <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
                 </div>
-            </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-blue-500"><p class="text-gray-500 text-sm">إجمالي المشاريع</p><p id="totalProjects" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-green-500"><p class="text-gray-500 text-sm">إجمالي السندات</p><p id="totalBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
@@ -124,9 +125,13 @@
 
         <div id="projects" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold text-gray-800">المشاريع</h2>
-                    <button id="createProjectBtn" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ إنشاء مشروع جديد</button>
+                    <div class="flex gap-2">
+                        <button id="exportProjectsExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button id="exportProjectsPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button id="createProjectBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ إنشاء مشروع</button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -164,17 +169,23 @@
                             <img id="preview_stamp" class="logo-preview mt-3 hidden">
                         </div>
                     </div>
-                    <button id="saveProjectSettingsBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition">حفظ الإعدادات</button>
+                    <div class="flex gap-3">
+                        <button id="saveProjectSettingsBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition">حفظ الإعدادات</button>
+                        <button id="shareProjectWhatsAppBtn" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold transition">📱 مشاركة واتساب</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="bondSettings" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold text-gray-800">إعدادات أنواع السندات</h2>
-                    <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ نوع جديد</button>
-                </div>
+                    <div class="flex gap-2">
+                        <button id="exportBondTypesExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button id="exportBondTypesPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ نوع جديد</button>
+                    </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50"><tr>
@@ -188,14 +199,28 @@
             </div>
         </div>
 
-        <div id="managers" class="tab-content hidden"><div class="bg-white p-8 rounded-xl shadow-lg"><h2 class="text-3xl font-extrabold mb-6">كل المدراء</h2><div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="managersTable"></tbody></table></div></div></div>
+        <div id="managers" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <h2 class="text-3xl font-extrabold">كل المدراء</h2>
+                    <div class="flex gap-2">
+                        <button id="exportManagersExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button id="exportManagersPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto"><table class="w-full"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold">تحكم</th></tr></thead><tbody id="managersTable"></tbody></table></div>
+            </div>
+        </div>
         
         <div id="delegates" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold">المناديب</h2>
-                    <button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مندوب جديد</button>
-                </div>
+                    <div class="flex gap-2">
+                        <button id="exportDelegatesExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button id="exportDelegatesPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مندوب جديد</button>
+                    </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50"><tr>
@@ -244,9 +269,12 @@
 
         <div id="bondsList" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold text-gray-800">قائمة السندات</h2>
-                    <button id="exportExcelBtn" class="bg-gradient-to-r from-green-600 to-emerald-700 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">📊 تصدير اكسل</button>
+                    <div class="flex gap-2">
+                        <button id="exportBondsExcelBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                        <button id="exportBondsPdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
@@ -934,8 +962,7 @@
 
     window.deleteBond = async (bondId) => {
         const r = await Swal.fire({ title: 'حذف السند؟', text: 'لا يمكن التراجع', icon: 'warning', showCancelButton: true, confirmButtonText: 'احذف', confirmButtonColor: '#d33' });
-        if (r.isConfirmed) {
-            awaitawait remove(ref(db, `projects/${currentProject}/bonds/${bondId}`));
+        if (r.isConfirmedremove(ref(db, `projects/${currentProject}/bonds/${bondId}`));
             Swal.fire('تم', 'انحذف السند', 'success');
         }
     };
@@ -949,64 +976,83 @@
             amount: b.amount,
             date: b.date,
             client: b.client,
+            description: b.description,
             company: projectData.name,
             cr: projectData.cr || '',
             tax: projectData.tax || '',
             createdBy: b.createdBy,
-            createdAt: new Date(b.createdAt).toLocaleString('ar-SA')
+            timestamp: new Date(b.createdAt).toLocaleString('ar-SA')
         });
         const qrCanvas = document.createElement('canvas');
-        await QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1, errorCorrectionLevel: 'H' });
+        await QRCode.toCanvas(qrCanvas, qrData, { width: 150, margin: 1, errorCorrectionLevel: 'H' });
 
         const printHTML = `
             <div class="bond-print">
-                <div style="text-align: center; margin-bottom: 20px; border-bottom: 4px double #000; padding-bottom: 15px;">
-                    ${projectData.logo? `<img src="${projectData.logo}" style="max-width: 100px; margin: 0 auto 10px; display: block;">` : ''}
+                <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #000; padding-bottom: 15px;">
+                    ${projectData.logo? `<img src="${projectData.logo}" style="max-width: 100px; margin: 0 auto 10px;">` : ''}
                     <h1 style="font-size: 26px; font-weight: 800; margin: 8px 0;">${projectData.name}</h1>
-                    <p style="font-size: 12px; color: #333; margin: 3px 0;">${projectData.address || ''}</p>
-                    <p style="font-size: 12px; color: #333;">${projectData.cr? `س.ت: ${projectData.cr}` : ''} ${projectData.tax? `| الرقم الضريبي: ${projectData.tax}` : ''} ${projectData.contact? `| هاتف: ${projectData.contact}` : ''}</p>
+                    <p style="font-size: 12px; color: #333; margin: 3px 0;">${projectData.cr? `س.ت: ${projectData.cr}` : ''} ${projectData.tax? `| الرقم الضريبي: ${projectData.tax}` : ''}</p>
+                    <p style="font-size: 12px; color: #333;">${projectData.address || ''}</p>
+                    <p style="font-size: 12px; color: #333;">${projectData.contact? `هاتف: ${projectData.contact}` : ''}</p>
                 </div>
-                <div style="border: 3px solid #000; padding: 15px; margin-bottom: 15px;">
+                <div style="border: 2px solid #000; padding: 15px; margin-bottom: 15px;">
                     <h2 style="text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px;">${b.typeName} رقم ${b.number}</h2>
-                    <table style="width: 100%; font-size: 15px; border-collapse: collapse;">
-                        <tr><td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">التاريخ:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.date}</td></tr>
-                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">العميل:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.client}</td></tr>
-                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ:</td><td style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td></tr>
-                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ كتابة:</td><td style="padding: 6px; border: 1px solid #ddd;">${numberToWords(b.amount)} ريال فقط لا غير</td></tr>
-                        <tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.description || '-'}</td></tr>
+                    <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">التاريخ:</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${b.date}</td>
+                            <td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">الوقت:</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${new Date(b.createdAt).toLocaleTimeString('ar-SA')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">العميل:</td>
+                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.client}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ:</td>
+                            <td colspan="3" style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td>
+                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.description}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المنشئ:</td>
+                            <td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.createdBy}</td>
+                        </tr>
                     </table>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-top: 30px; align-items: flex-end;">
-                    <div style="text-align: center; width: 30%;">
-                        <p style="margin-bottom: 40px; font-size: 14px; font-weight: 700;">توقيع المستلم</p>
+                    <div style="text-align: center; flex: 1;">
+                        <p style="margin-bottom: 40px; font-weight: 700;">توقيع المستلم</p>
                         <div style="border-top: 1px solid #000; width: 150px; margin: 0 auto;"></div>
-                        <p style="font-size: 11px; margin-top: 5px;">الاسم: _______________</p>
+                        <p style="margin-top: 5px; font-size: 11px;">الاسم: _______________</p>
                     </div>
-                    <div style="text-align: center; width: 30%;">
-                        <p style="margin-bottom: 8px; font-size: 13px; font-weight: 700;">المنشئ: ${b.createdBy}</p>
-                        <img src="${qrCanvas.toDataURL()}" style="width: 110px; height: 110px; margin: 0 auto;">
-                        <p style="font-size: 10px; color: #666; margin-top: 5px;">امسح للتحقق</p>
+                    <div style="text-align: center; flex: 1;">
+                        <img src="${qrCanvas.toDataURL()}" style="width: 120px; height: 120px; margin: 0 auto;">
+                        <p style="font-size: 10px; margin-top: 5px;">امسح للتحقق</p>
                     </div>
-                    <div style="text-align: center; width: 30%;">
-                        <p style="margin-bottom: 10px; font-size: 14px; font-weight: 700;">الختم</p>
-                        ${projectData.stamp? `<img src="${projectData.stamp}" style="max-width: 120px; max-height: 80px; margin: 0 auto;">` : '<div style="border: 2px dashed #ccc; width: 120px; height: 80px; margin: 0 auto;"></div>'}
+                    <div style="text-align: center; flex: 1;">
+                        <p style="margin-bottom: 10px; font-weight: 700;">الختم</p>
+                        ${projectData.stamp? `<img src="${projectData.stamp}" style="max-width: 120px; max-height: 80px; margin: 0 auto;">` : '<div style="border: 1px dashed #999; width: 120px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">ختم الشركة</div>'}
                     </div>
                 </div>
-                <div style="text-align: center; margin-top: 20px; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px;">
-                    تم الإنشاء بواسطة نظام السندات الذكية - ${new Date().toLocaleString('ar-SA')}
+                <div style="margin-top: 20px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;">
+                    <p>تم إنشاء هذا السند بواسطة نظام السندات الذكية - ${new Date().toLocaleString('ar-SA')}</p>
                 </div>
             </div>
         `;
         document.getElementById('printArea').innerHTML = printHTML;
-        setTimeout(() => window.print(), 500);
+        window.print();
     };
 
     window.exportToExcel = () => {
         if (allBondsData.length === 0) return Swal.fire('تنبيه', 'لا توجد سندات للتصدير', 'info');
-
+        
         const data = allBondsData.map(b => ({
             'رقم السند': b.number,
-            'النوع': b.typeName,
+            'نوع السند': b.typeName,
+            'نوع الحركة': b.typeKind === 'income'? 'قبض' : b.typeKind === 'expense'? 'صرف' : 'آخر',
             'العميل': b.client,
             'المبلغ': b.amount,
             'التاريخ': b.date,
@@ -1018,34 +1064,11 @@
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'السندات');
-        XLSX.writeFile(wb, `سندات_${projectData.name}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        
+        const fileName = `سندات_${projectData.name}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
         Swal.fire('تم', 'تم تصدير الملف بنجاح', 'success');
     };
-
-    function numberToWords(num) {
-        const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
-        const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
-        const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
-
-        if (num === 0) return 'صفر';
-        if (num < 10) return ones[num];
-        if (num < 100) {
-            const t = Math.floor(num / 10);
-            const o = num % 10;
-            return o === 0? tens[t] : ones[o] + ' و' + tens[t];
-        }
-        if (num < 1000) {
-            const h = Math.floor(num / 100);
-            const r = num % 100;
-            return r === 0? hundreds[h] : hundreds[h] + ' و' + numberToWords(r);
-        }
-        if (num < 1000000) {
-            const th = Math.floor(num / 1000);
-            const r = num % 1000;
-            return r === 0? numberToWords(th) + ' ألف' : numberToWords(th) + ' ألف و' + numberToWords(r);
-        }
-        return num.toString();
-    }
 
     window.showChangePassword = async () => {
         const result = await Swal.fire({
@@ -1102,6 +1125,10 @@
             document.getElementById('totalProjects').textContent = totalProjects;
             document.getElementById('totalUsers').textContent = totalUsers;
         });
+        
+        if (currentRole!== 'superadmin') {
+            loadBonds();
+        }
     }
 </script>
 </body>
