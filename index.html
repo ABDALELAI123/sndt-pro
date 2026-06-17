@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية V8.3</title>
+    <title>السندات الذكية V8.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -30,8 +30,9 @@
         <div class="text-center mb-8">
             <div class="flex justify-center mb-4">
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
+            </div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">السندات الذكية</h1>
             <p class="text-gray-500">نظام إدارة السندات السحابي</p>
         </div>
@@ -62,7 +63,6 @@
                     <h1 class="text-2xl font-extrabold">السندات الذكية</h1>
                     <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span id="currentRole" class="bg-white/20 px-2 py-1 rounded"></span></p>
                 </div>
-            </div>
             <div class="flex gap-2">
                 <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm">تغيير كلمة السر</button>
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm">خروج</button>
@@ -189,7 +189,6 @@
                         <button onclick="exportTableToPDF('bondTypesTable','انواع_السندات')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ نوع جديد</button>
                     </div>
-                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="bondTypesTable">
                         <thead class="bg-gray-50"><tr>
@@ -211,6 +210,7 @@
                         <button onclick="exportTableToExcel('managersTable','المدراء')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
                         <button onclick="exportTableToPDF('managersTable','المدراء')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto"><table class="w-full" id="managersTable"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold no-print">تحكم</th></tr></thead><tbody id="managersTableBody"></tbody></table></div>
             </div>
         </div>
@@ -278,6 +278,7 @@
                         <button onclick="exportTableToExcel('bondsTable','السندات')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
                         <button onclick="exportTableToPDF('bondsTable','السندات')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="bondsTable">
                         <thead class="bg-gray-50"><tr>
@@ -369,12 +370,16 @@
         const password = document.getElementById('password').value;
         if (!phone ||!password) return Swal.fire('خطأ', 'عبي الجوال وكلمة السر', 'error');
 
-        if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
-            currentUser = Object.assign({}, SUPERADMIN, { role: 'superadmin', active: true });
-            currentProject = 'SUPERADMIN'; currentRole = 'superadmin';
-            localStorage.setItem('projectCode', 'SUPERADMIN');
-            localStorage.setItem('phone', phone); localStorage.setItem('password', password);
-            showMainApp(); return;
+        if (projectCode === 'SUPERADMIN' || (phone === SUPERADMIN.phone && password === SUPERADMIN.password)) {
+            if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
+                currentUser = Object.assign({}, SUPERADMIN, { role: 'superadmin', active: true });
+                currentProject = 'SUPERADMIN'; currentRole = 'superadmin';
+                localStorage.setItem('projectCode', 'SUPERADMIN');
+                localStorage.setItem('phone', phone); localStorage.setItem('password', password);
+                showMainApp(); return;
+            } else {
+                return Swal.fire('خطأ', 'بيانات المدير العام غلط', 'error');
+            }
         }
 
         if (!projectCode) return Swal.fire('خطأ', 'ادخل كود المشروع', 'error');
@@ -882,20 +887,19 @@
         }
     };
 
-    window.toggleDelegate = async (phone, active) => {
-        await update(ref(db, `projects/${currentProject}/users/${phone}`), { active:!active });
-    };
-
-    function loadBondTypeSelect() {
-        onValue(ref(db, `projects/${currentProject}/bondTypes`), (snapshot) => {
-            const select = document.getElementById('bondTypeSelect');
-            select.innerHTML = '<option value="">اختر نوع السند</option>';
+              const select = document.getElementById('bondTypeSelect');
+           select.innerHTML = '<option value="">اختر نوع السند</option>';
             if (snapshot.exists()) {
-                snapshot.forEach((child) => {
-                    const t = child.val();
-                    if (currentRole === 'manager' || userPermissions.includes(t.id)) {
-                        select.innerHTML += `<option value="${t.id}">${t.name} (${t.prefix})</option>`;
-                    }
+               snapshot.forEach((child) => {
+                  const t = child.val();
+        if (currentRole === 'manager' || userPermissions.includes(t.id)) {
+                  select.innerHTML += `<option value="${t.id}">${t.name} (${t.prefix})</option>`;
+                   }
+               });
+           }
+        });
+    }
+}
                 });
             }
         });
@@ -963,8 +967,7 @@
                     if (currentRole === 'delegate' && b.createdByPhone!== currentUser.phone) return;
                     allBondsData.push(b);
                     count++;
-<!-- === نهاية الجزء 2 === -->
-if (b.date === today) todayCount++;
+                    if (b.date === today) todayCount++;
                     if (b.typeKind === 'income') totalIncome += b.amount;
                     if (b.typeKind === 'expense') totalExpense += b.amount;
                     tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
@@ -1202,5 +1205,4 @@ if (b.date === today) todayCount++;
     }
 </script>
 </body>
-</html>
-<!-- === نهاية الجزء 3 === -->                    
+</html>    
