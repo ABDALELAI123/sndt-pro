@@ -6,16 +6,14 @@
     <title>سندات برو V6.0 - سحابي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!-- Firebase SDK -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-      import { getDatabase, ref, set, get, child, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-      // TODO: حط بيانات مشروعك من Firebase Console
+      // 1. حط بياناتك هنا بعد ما تخلص خطوة Firebase
       const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_AUTH_DOMAIN",
@@ -32,21 +30,12 @@
       window.firebaseGet = get;
       window.firebaseSet = set;
       window.firebaseUpdate = update;
-      window.firebaseRemove = remove;
       window.firebaseOnValue = onValue;
     </script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
         body { font-family: 'Cairo', sans-serif; }
-        [lang="en"] body, [lang="fr"] body, [lang="de"] body, [lang="tr"] body { font-family: Arial, sans-serif; }
-        [dir="ltr"] { direction: ltr; }
         @media print {.no-print { display: none!important; } }
-       .company-logo { max-height: 80px; max-width: 200px; object-fit: contain; }
-       .upload-btn { position: relative; overflow: hidden; }
-       .upload-btn input[type=file] { position: absolute; top: 0; right: 0; opacity: 0; cursor: pointer; width:100%; height:100%; }
-       .qr-box { width: 200px; height: 200px; margin: 20px auto; padding: 10px; background: #fff; border: 2px solid #000; }
-       .qr-box img { width: 100%!important; height: 100%!important; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -55,32 +44,33 @@
         <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg">
             <h1 class="text-2xl font-bold text-center mb-2">سندات برو V6.0</h1>
             <p class="text-center text-gray-600 mb-6">نظام سحابي متعدد المشاريع</p>
+            
+            <!-- هنا مكان الادخال الظاهر على طول -->
             <div class="space-y-3">
-                <button onclick="joinProjectFlow()" class="w-full border-2 p-4 rounded-lg hover:bg-green-50 text-right">
-                    <div class="font-bold text-lg">🔗 الانضمام لمشروع</div>
-                    <div class="text-sm text-gray-600">أدخل كود المشروع + رقمك المسجل</div>
+                <input id="join-code" class="w-full border-2 p-3 rounded-lg" placeholder="كود المشروع PRJ-XXXX">
+                <input id="join-phone" class="w-full border-2 p-3 rounded-lg" placeholder="رقم الجوال 05xxxxxxxx">
+                <button onclick="joinProjectFlow()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-bold">
+                    🔗 دخول المشروع
                 </button>
             </div>
             <p class="text-xs text-gray-500 mt-6 text-center">ملاحظة: إنشاء المشروع الجديد يتم فقط من حساب المدير العام</p>
         </div>
     </div>
 
-    <!-- باقي شاشات login, mainApp, bondView مثل القديم مع تعديل بسيط -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
             <div class="text-center mb-6">
-                <img id="loginLogo" src="" class="company-logo mx-auto mb-3 hidden">
-                <h1 id="companyNameLogin" class="text-3xl font-bold text-blue-600" data-i18n="app_name">سندات برو</h1>
+                <h1 class="text-3xl font-bold text-blue-600">سندات برو</h1>
                 <div id="projectInfo" class="text-xs text-gray-500 mt-2"></div>
             </div>
             <input id="loginPass" type="password" placeholder="الرقم السري" class="w-full border-2 p-3 rounded-lg mb-4 text-center text-lg">
             <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold text-lg">دخول</button>
-            <button onclick="backToProjectSelect()" class="w-full mt-2 text-sm text-gray-600">رجوع</button>
         </div>
     </div>
 
-    <!--... هنا باقي HTML للـ mainApp و bondView... -->
-    <!-- نفس الهيكل اللي ارسلته لكن شلت شاشة اختيار المشروع الفردي --><script type="module">
+    <div id="mainApp" class="hidden">
+        <div id="tabContent" class="p-4"></div>
+    </div><script type="module">
 let currentLang = 'ar';
 let projectCode = null;
 let currentUser = null;
