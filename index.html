@@ -572,22 +572,46 @@
             await remove(ref(db, `projects/${currentProject}/bondTypes/${id}`));
         }
     };
-    window.addDelegate = async () => {
-        const bondTypesSnapshot = await get(ref(db, `projects/${currentProject}/bondTypes`));
-        let bondTypesHTML = '';
-        if (bondTypesSnapshot.exists()) {bondTypesSnapshot.forEach((child) => {const t = child.val();bondTypesHTML += `<label class="flex items-center gap-2 mb-2"><input type="checkbox" value="${t.id}" class="bond-perm"> ${t.name} (${t.prefix})</label>`;});}
-        const result = await Swal.fire({
-            title: 'مندوب جديد',
-            html: `<input id="swal-name" class="swal2-input" placeholder="الاسم"><input id="swal-phone" class="swal2-input" placeholder="الجوال"><input id="swal-password" type="password" class="swal2-input" placeholder="كلمة السر"><div class="text-right mt-4"><p class="font-bold mb-2">صلاحيات أنواع السندات:</p>${bondTypesHTML || '<p class="text-gray-500">لا توجد أنواع سندات</p>'}</div>`,
-            focusConfirm: false,
-            preConfirm: () => {const perms = [];document.querySelectorAll('.bond-perm:checked').forEach(cb => perms.push(cb.value));return {name: document.getElementById('swal-name').value,phone: document.getElementById('swal-phone').value,password: document.getElementById('swal-password').value,permissions: perms};}
-        });
-        const f = result.value;
-        if (f && f.name && f.phone && f.password) {
-            await set(ref(db, `projects/${currentProject}/users/${f.phone}`), {name: f.name,phone: f.phone,password: f.password,role: 'delegate',active: true,permissions: f.permissions});
-            Swal.fire('تم', 'انضاف المندوب', 'success');
+   function loadDelegates() {
+    onValue(ref(db, `projects/${currentProject}/users`), async (snapshot) => {
+        const tbody = document.getElementById('delegatesTableBody');
+        tbody.innerHTML = '';
+        allDelegatesData = [];
+        const bondTypesSnap = await get(ref(db, `projects/${currentProject}/bondTypes`));
+        const bondTypes = {};
+        if (bondTypesSnap.exists()) {
+            bondTypesSnap.forEach((child) => {bondTypes[child.val().id] = child.val().name;});
         }
-    };
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                const u = child.val();
+                if (u.role === 'delegate') {
+                    const perms = (u.permissions || []).map(p => bondTypes[p] || p).join(', ') || 'لا يوجد';
+                    const today = new Date().toISOString().split('T')[0];
+                    const contractEnded = u.endDate && u.endDate < today;
+                    const statusText = contractEnded ? 'منتهي العقد' : u.active ? 'نشط' : 'موقوف';
+                    const statusColor = contractEnded ? 'bg-orange-100 text-orange-800' : u.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    
+                    allDelegatesData.push(u);
+                    tbody.innerHTML += `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 font-bold">${u.name}</td>
+                        <td class="p-4">${u.phone}</td>
+                        <td class="p-4">${u.nationalId || '-'}</td>
+                        <td class="p-4">${u.startDate || '-'}</td>
+                        <td class="p-4">${u.endDate || '-'}</td>
+                        <td class="p-4 text-xs">${perms}</td>
+                        <td class="p-4"><span class="${statusColor} px-3 py-1 rounded-full text-xs font-bold">${statusText}</span></td>
+                        <td class="p-4 flex gap-2 no-print">
+                            <button onclick="editDelegatePermissions('${u.phone}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button>
+                            <button onclick="toggleDelegate('${u.phone}', ${u.active})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600">${u.active? 'إيقاف' : 'تفعيل'}</button>
+                            <button onclick="deleteUser('${currentProject}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+        }
+   });
+}
     function loadDelegates() {
         onValue(ref(db, `projects/${currentProject}/users`), async (snapshot) => {
             const tbody = document.getElementById('delegatesTableBody');
