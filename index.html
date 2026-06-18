@@ -101,312 +101,327 @@
                 </div>
             </div>
         </div>
-    <div id="superadminTabs" class="hidden bg-white shadow-md border-b no-print">
-        <div class="flex overflow-x-auto">
-            <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
-            <button onclick="showTab('projects', this)" class="tab-btn px-8 py-4">المشاريع</button>
-            <button onclick="showTab('managers', this)" class="tab-btn px-8 py-4">المدراء</button>
+        
+        <div id="superadminTabs" class="hidden bg-white shadow-md border-b no-print">
+            <div class="flex overflow-x-auto">
+                <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
+                <button onclick="showTab('projects', this)" class="tab-btn px-8 py-4">المشاريع</button>
+                <button onclick="showTab('managers', this)" class="tab-btn px-8 py-4">المدراء</button>
+            </div>
         </div>
-    <div id="managerTabs" class="hidden bg-white shadow-md border-b no-print">
-        <div class="flex overflow-x-auto">
-            <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
-            <button onclick="showTab('projectSettings', this)" class="tab-btn px-8 py-4">إعدادات المشروع</button>
-            <button onclick="showTab('bondSettings', this)" class="tab-btn px-8 py-4">إعدادات السند</button>
-            <button onclick="showTab('delegates', this)" class="tab-btn px-8 py-4">المناديب</button>
-            <button onclick="showTab('createBond', this)" class="tab-btn px-8 py-4">إنشاء سند</button>
-            <button onclick="showTab('bondsList', this)" class="tab-btn px-8 py-4">السندات</button>
+        
+        <div id="managerTabs" class="hidden bg-white shadow-md border-b no-print">
+            <div class="flex overflow-x-auto">
+                <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
+                <button onclick="showTab('projectSettings', this)" class="tab-btn px-8 py-4">إعدادات المشروع</button>
+                <button onclick="showTab('bondSettings', this)" class="tab-btn px-8 py-4">إعدادات السند</button>
+                <button onclick="showTab('delegates', this)" class="tab-btn px-8 py-4">المناديب</button>
+                <button onclick="showTab('createBond', this)" class="tab-btn px-8 py-4">إنشاء سند</button>
+                <button onclick="showTab('bondsList', this)" class="tab-btn px-8 py-4">السندات</button>
+            </div>
         </div>
-    <div id="delegateTabs" class="hidden bg-white shadow-md border-b no-print">
-        <div class="flex overflow-x-auto">
-            <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
-            <button onclick="showTab('createBond', this)" class="tab-btn px-8 py-4">إنشاء سند</button>
-            <button onclick="showTab('bondsList', this)" class="tab-btn px-8 py-4">سنداتي</button>
+        
+        <div id="delegateTabs" class="hidden bg-white shadow-md border-b no-print">
+            <div class="flex overflow-x-auto">
+                <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
+                <button onclick="showTab('createBond', this)" class="tab-btn px-8 py-4">إنشاء سند</button>
+                <button onclick="showTab('bondsList', this)" class="tab-btn px-8 py-4">سنداتي</button>
+            </div>
         </div>
-    </div>
-    <div class="p-6">
-        <div id="dashboardTab" class="tab-content">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">إجمالي المشاريع</p>
-                            <h3 class="text-3xl font-bold text-blue-600" id="totalProjects">0</h3>
+        
+        <div class="p-6">
+            <div id="dashboardTab" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">إجمالي المشاريع</p>
+                                <h3 class="text-3xl font-bold text-blue-600" id="totalProjects">0</h3>
+                            </div>
+                            <i class="fas fa-project-diagram text-4xl text-blue-200"></i>
                         </div>
-                        <i class="fas fa-project-diagram text-4xl text-blue-200"></i>
+                    </div>
+                    <div class="card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">إجمالي السندات</p>
+                                <h3 class="text-3xl font-bold text-green-600" id="totalBonds">0</h3>
+                            </div>
+                            <i class="fas fa-file-invoice text-4xl text-green-200"></i>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">إجمالي المبلغ</p>
+                                <h3 class="text-3xl font-bold text-purple-600" id="totalAmount">0</h3>
+                            </div>
+                            <i class="fas fa-dollar-sign text-4xl text-purple-200"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">إجمالي السندات</p>
-                            <h3 class="text-3xl font-bold text-green-600" id="totalBonds">0</h3>
-                        </div>
-                        <i class="fas fa-file-invoice text-4xl text-green-200"></i>
+                    <h2 class="text-xl font-bold mb-4">آخر السندات</h2>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>رقم السند</th>
+                                    <th>التاريخ</th>
+                                    <th>المندوب</th>
+                                    <th>المبلغ</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentBondsTable">
+                                <tr><td colspan="5" class="text-center text-gray-500 py-8">لا توجد سندات</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+            </div>
+            
+            <div id="projectsTab" class="tab-content hidden">
                 <div class="card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">إجمالي المبلغ</p>
-                            <h3 class="text-3xl font-bold text-purple-600" id="totalAmount">0</h3>
-                        </div>
-                        <i class="fas fa-dollar-sign text-4xl text-purple-200"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <h2 class="text-xl font-bold mb-4">آخر السندات</h2>
-                <div class="overflow-x-auto">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>رقم السند</th>
-                                <th>التاريخ</th>
-                                <th>المندوب</th>
-                                <th>المبلغ</th>
-                                <th>الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentBondsTable">
-                            <tr><td colspan="5" class="text-center text-gray-500 py-8">لا توجد سندات</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div id="projectsTab" class="tab-content hidden">
-            <div class="card">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">إدارة المشاريع</h2>
-                    <button onclick="openProjectModal()" class="btn-primary">
-                        <i class="fas fa-plus ml-2"></i>مشروع جديد
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>اسم المشروع</th>
-                                <th>المدير</th>
-                                <th>تاريخ البداية</th>
-                                <th>الحالة</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="projectsTable">
-                            <tr><td colspan="5" class="text-center text-gray-500 py-8">لا توجد مشاريع</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div id="managersTab" class="tab-content hidden">
-            <div class="card">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">إدارة المدراء</h2>
-                    <button onclick="openManagerModal()" class="btn-success">
-                       <i class="fas fa-user-plus ml-2"></i>مدير جديد
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>اسم المدير</th>
-                                <th>اسم المستخدم</th>
-                                <th>المشروع</th>
-                                <th>رقم الجوال</th>
-                                <th>الحالة</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="managersTable">
-                            <tr><td colspan="6" class="text-center text-gray-500 py-8">لا يوجد مدراء</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div id="projectSettingsTab" class="tab-content hidden">
-            <div class="card">
-                <h2 class="text-2xl font-bold mb-6">إعدادات المشروع</h2>
-                <form id="projectSettingsForm" onsubmit="saveProjectSettings(event)">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">اسم المشروع</label>
-                            <input type="text" id="projectName" class="input-field" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">تاريخ البداية</label>
-                            <input type="date" id="projectStartDate" class="input-field" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">تاريخ النهاية</label>
-                            <input type="date" id="projectEndDate" class="input-field" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">الحالة</label>
-                            <select id="projectStatus" class="input-field">
-                                <option value="active">نشط</option>
-                                <option value="paused">متوقف</option>
-                                <option value="completed">مكتمل</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-gray-700 font-bold mb-2">الوصف</label>
-                            <textarea id="projectDesc" class="input-field" rows="4"></textarea>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary mt-6">حفظ التغييرات</button>
-                </form>
-            </div>
-        </div>
-        <div id="bondSettingsTab" class="tab-content hidden">
-            <div class="card">
-                <h2 class="text-2xl font-bold mb-6">إعدادات السند</h2>
-                <form id="bondSettingsForm" onsubmit="saveBondSettings(event)">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">بادئة رقم السند</label>
-                            <input type="text" id="bondPrefix" class="input-field" placeholder="مثال: SND-">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">الرقم التسلسلي البدائي</label>
-                            <input type="number" id="bondStartNumber" class="input-field" value="1">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">الحد الأدنى للمبلغ</label>
-                            <input type="number" id="bondMinAmount" class="input-field" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">الحد الأقصى للمبلغ</label>
-                            <input type="number" id="bondMaxAmount" class="input-field" value="1000000">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-gray-700 font-bold mb-2">تذييل السند</label>
-                            <textarea id="bondFooter" class="input-field" rows="3" placeholder="نص يظهر أسفل كل سند"></textarea>
-                        </div>
-                        <div>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" id="bondRequireApproval" class="w-5 h-5">
-                                <span class="font-bold">يتطلب موافقة قبل الطباعة</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" id="bondAllowEdit" class="w-5 h-5">
-                                <span class="font-bold">السماح بتعديل السندات</span>
-                            </label>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary mt-6">حفظ الإعدادات</button>
-                </form>
-            </div>
-        </div>
-        <div id="delegatesTab" class="tab-content hidden">
-            <div class="card">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">إدارة المناديب</h2>
-                    <button onclick="openDelegateModal()" class="btn-success">
-                        <i class="fas fa-user-plus ml-2"></i>مندوب جديد
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>اسم المندوب</th>
-                                <th>اسم المستخدم</th>
-                                <th>رقم الجوال</th>
-                                <th>عدد السندات</th>
-                                <th>الحالة</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="delegatesTable">
-                            <tr><td colspan="6" class="text-center text-gray-500 py-8">لا يوجد مناديب</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div id="createBondTab" class="tab-content hidden">
-            <div class="card">
-                <h2 class="text-2xl font-bold mb-6">إنشاء سند جديد</h2>
-                <form id="createBondForm" onsubmit="createBond(event)">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">رقم السند</label>
-                            <input type="text" id="bondNumber" class="input-field" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">تاريخ السند</label>
-                            <input type="date" id="bondDate" class="input-field" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">اسم العميل</label>
-                            <input type="text" id="clientName" class="input-field" placeholder="أدخل اسم العميل" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">رقم جوال العميل</label>
-                            <input type="tel" id="clientPhone" class="input-field" placeholder="05xxxxxxxx">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">المبلغ</label>
-                            <input type="number" id="bondAmount" class="input-field" placeholder="0.00" step="0.01" required>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-bold mb-2">طريقة الدفع</label>
-                            <select id="paymentMethod" class="input-field">
-                                <option value="cash">نقدي</option>
-                                <option value="transfer">تحويل بنكي</option>
-                                <option value="check">شيك</option>
-                                <option value="card">بطاقة</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-gray-700 font-bold mb-2">البيان</label>
-                            <textarea id="bondDescription" class="input-field" rows="3" placeholder="تفاصيل السند" required></textarea>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-gray-700 font-bold mb-2">ملاحظات</label>
-                            <textarea id="bondNotes" class="input-field" rows="2" placeholder="ملاحظات إضافية"></textarea>
-                        </div>
-                    <div class="flex gap-4 mt-6">
-                        <button type="submit" class="btn-primary">حفظ السند</button>
-                        <button type="button" onclick="resetBondForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold">إلغاء</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div id="bondsListTab" class="tab-content hidden">
-            <div class="card">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">قائمة السندات</h2>
-                    <div class="flex gap-2">
-                        <input type="text" id="searchBond" class="input-field" placeholder="بحث برقم السند أو العميل" onkeyup="searchBonds()">
-                        <button onclick="exportBonds()" class="btn-success">
-                            <i class="fas fa-file-excel ml-2"></i>تصدير
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">إدارة المشاريع</h2>
+                        <button onclick="openProjectModal()" class="btn-primary">
+                            <i class="fas fa-plus ml-2"></i>مشروع جديد
                         </button>
                     </div>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>اسم المشروع</th>
+                                    <th>المدير</th>
+                                    <th>تاريخ البداية</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsTable">
+                                <tr><td colspan="5" class="text-center text-gray-500 py-8">لا توجد مشاريع</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>رقم السند</th>
-                                <th>التاريخ</th>
-                                <th>العميل</th>
-                                <th>المندوب</th>
-                                <th>المبلغ</th>
-                                <th>الحالة</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bondsListTable">
-                            <tr><td colspan="7" class="text-center text-gray-500 py-8">لا توجد سندات</td></tr>
-                        </tbody>
-                    </table>
+            </div>
+            
+            <div id="managersTab" class="tab-content hidden">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">إدارة المدراء</h2>
+                        <button onclick="openManagerModal()" class="btn-success">
+                           <i class="fas fa-user-plus ml-2"></i>مدير جديد
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>اسم المدير</th>
+                                    <th>اسم المستخدم</th>
+                                    <th>المشروع</th>
+                                    <th>رقم الجوال</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="managersTable">
+                                <tr><td colspan="6" class="text-center text-gray-500 py-8">لا يوجد مدراء</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="projectSettingsTab" class="tab-content hidden">
+                <div class="card">
+                    <h2 class="text-2xl font-bold mb-6">إعدادات المشروع</h2>
+                    <form id="projectSettingsForm" onsubmit="saveProjectSettings(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">اسم المشروع</label>
+                                <input type="text" id="projectName" class="input-field" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">تاريخ البداية</label>
+                                <input type="date" id="projectStartDate" class="input-field" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">تاريخ النهاية</label>
+                                <input type="date" id="projectEndDate" class="input-field" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">الحالة</label>
+                                <select id="projectStatus" class="input-field">
+                                    <option value="active">نشط</option>
+                                    <option value="paused">متوقف</option>
+                                    <option value="completed">مكتمل</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 font-bold mb-2">الوصف</label>
+                                <textarea id="projectDesc" class="input-field" rows="4"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary mt-6">حفظ التغييرات</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="bondSettingsTab" class="tab-content hidden">
+                <div class="card">
+                    <h2 class="text-2xl font-bold mb-6">إعدادات السند</h2>
+                    <form id="bondSettingsForm" onsubmit="saveBondSettings(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">بادئة رقم السند</label>
+                                <input type="text" id="bondPrefix" class="input-field" placeholder="مثال: SND-">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">الرقم التسلسلي البدائي</label>
+                                <input type="number" id="bondStartNumber" class="input-field" value="1">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">الحد الأدنى للمبلغ</label>
+                                <input type="number" id="bondMinAmount" class="input-field" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">الحد الأقصى للمبلغ</label>
+                                <input type="number" id="bondMaxAmount" class="input-field" value="1000000">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 font-bold mb-2">تذييل السند</label>
+                                <textarea id="bondFooter" class="input-field" rows="3" placeholder="نص يظهر أسفل كل سند"></textarea>
+                            </div>
+                            <div>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="bondRequireApproval" class="w-5 h-5">
+                                    <span class="font-bold">يتطلب موافقة قبل الطباعة</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="bondAllowEdit" class="w-5 h-5">
+                                    <span class="font-bold">السماح بتعديل السندات</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary mt-6">حفظ الإعدادات</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="delegatesTab" class="tab-content hidden">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">إدارة المناديب</h2>
+                        <button onclick="openDelegateModal()" class="btn-success">
+                            <i class="fas fa-user-plus ml-2"></i>مندوب جديد
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>اسم المندوب</th>
+                                    <th>اسم المستخدم</th>
+                                    <th>رقم الجوال</th>
+                                    <th>عدد السندات</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="delegatesTable">
+                                <tr><td colspan="6" class="text-center text-gray-500 py-8">لا يوجد مناديب</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="createBondTab" class="tab-content hidden">
+                <div class="card">
+                    <h2 class="text-2xl font-bold mb-6">إنشاء سند جديد</h2>
+                    <form id="createBondForm" onsubmit="createBond(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">رقم السند</label>
+                                <input type="text" id="bondNumber" class="input-field" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">تاريخ السند</label>
+                                <input type="date" id="bondDate" class="input-field" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">اسم العميل</label>
+                                <input type="text" id="clientName" class="input-field" placeholder="أدخل اسم العميل" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">رقم جوال العميل</label>
+                                <input type="tel" id="clientPhone" class="input-field" placeholder="05xxxxxxxx">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">المبلغ</label>
+                                <input type="number" id="bondAmount" class="input-field" placeholder="0.00" step="0.01" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2">طريقة الدفع</label>
+                                <select id="paymentMethod" class="input-field">
+                                    <option value="cash">نقدي</option>
+                                    <option value="transfer">تحويل بنكي</option>
+                                    <option value="check">شيك</option>
+                                    <option value="card">بطاقة</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 font-bold mb-2">البيان</label>
+                                <textarea id="bondDescription" class="input-field" rows="3" placeholder="تفاصيل السند" required></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 font-bold mb-2">ملاحظات</label>
+                                <textarea id="bondNotes" class="input-field" rows="2" placeholder="ملاحظات إضافية"></textarea>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 mt-6">
+                            <button type="submit" class="btn-primary">حفظ السند</button>
+                            <button type="button" onclick="resetBondForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="bondsListTab" class="tab-content hidden">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">قائمة السندات</h2>
+                        <div class="flex gap-2">
+                            <input type="text" id="searchBond" class="input-field" placeholder="بحث برقم السند أو العميل" onkeyup="searchBonds()">
+                            <button onclick="exportBonds()" class="btn-success">
+                                <i class="fas fa-file-excel ml-2"></i>تصدير
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>رقم السند</th>
+                                    <th>التاريخ</th>
+                                    <th>العميل</th>
+                                    <th>المندوب</th>
+                                    <th>المبلغ</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bondsListTable">
+                                <tr><td colspan="7" class="text-center text-gray-500 py-8">لا توجد سندات</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -541,6 +556,7 @@
                             <option value="inactive">غير نشط</option>
                         </select>
                     </div>
+                </div>
                 <div class="flex gap-2 mt-6">
                     <button type="submit" class="btn-primary flex-1">حفظ المندوب</button>
                     <button type="button" onclick="closeDelegateModal()" class="btn-danger flex-1">إلغاء</button>
@@ -799,6 +815,7 @@
 
         loadRecentBonds();
     }
+
     function countStore(store) {
         return new Promise((resolve) => {
             const request = store.count();
@@ -1150,7 +1167,8 @@
                 managers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
         };
     }
-        async function saveProject(e) {
+
+    async function saveProject(e) {
         e.preventDefault();
 
         const projectId = document.getElementById('projectId').value;
@@ -1370,7 +1388,7 @@
         if (delegateId) {
             const getRequest = store.get(parseInt(delegateId));
             getRequest.onsuccess = () => {
-                const existing = getRequest.result;
+                               const existing = getRequest.result;
                 delegateData.id = parseInt(delegateId);
                 if (!password) delegateData.password = existing.password;
                 store.put(delegateData).onsuccess = () => {
@@ -1599,5 +1617,4 @@
     }
 </script>
 </body>
-</html>
-
+</html>                 
