@@ -618,27 +618,7 @@
         }
    });
 }
-    function loadDelegates() {
-        onValue(ref(db, `projects/${currentProject}/users`), async (snapshot) => {
-            const tbody = document.getElementById('delegatesTableBody');
-            tbody.innerHTML = '';
-            allDelegatesData = [];
-            const bondTypesSnap = await get(ref(db, `projects/${currentProject}/bondTypes`));
-            const bondTypes = {};
-            if (bondTypesSnap.exists()) {bondTypesSnap.forEach((child) => {bondTypes[child.val().id] = child.val().name;});}
-            if (snapshot.exists()) {
-                snapshot.forEach((child) => {
-                    const u = child.val();
-                    if (u.role === 'delegate') {
-                        const perms = (u.permissions || []).map(p => bondTypes[p] || p).join(', ') || 'لا يوجد';
-                        allDelegatesData.push({ name: u.name, phone: u.phone, permissions: perms, status: u.active? 'نشط' : 'موقوف' });
-                        tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-bold">${u.name}</td><td class="p-4">${u.phone}</td><td class="p-4 text-xs">${perms}</td><td class="p-4"><span class="${u.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-3 py-1 rounded-full text-xs font-bold">${u.active? 'نشط' : 'موقوف'}</span></td><td class="p-4 flex gap-2 no-print"><button onclick="editDelegatePermissions('${u.phone}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">تعديل</button><button onclick="toggleDelegate('${u.phone}', ${u.active})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600">${u.active? 'إيقاف' : 'تفعيل'}</button><button onclick="deleteUser('${currentProject}','${u.phone}')" class="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">حذف</button></td></tr>`;
-                    }
-                });
-            }
-        });
-    }
-    window.editDelegatePermissions = async (phone) => {
+        window.editDelegatePermissions = async (phone) => {
         const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
         const user = userSnap.val();
         const bondTypesSnapshot = await get(ref(db, `projects/${currentProject}/bondTypes`));
