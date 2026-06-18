@@ -27,11 +27,11 @@
 <div id="loginScreen" class="min-h-screen login-bg flex items-center justify-center p-4">
     <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
         <div class="text-center mb-8">
-<div class="flex justify-center mb-4">
-    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-        <span class="text-4xl">📝</span>
-    </div>
-</div>
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                    <span class="text-4xl">📝</span>
+                </div>
+            </div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">السندات الذكية</h1>
             <p class="text-gray-500">نظام إدارة السندات السحابي</p>
         </div>
@@ -67,7 +67,6 @@
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm">خروج</button>
             </div>
         </div>
-    </div>
     <div id="superadminTabs" class="hidden bg-white shadow-md border-b no-print">
         <div class="flex overflow-x-auto">
             <button onclick="showTab('dashboard', this)" class="tab-btn px-8 py-4 active">الرئيسية</button>
@@ -91,7 +90,6 @@
             <button onclick="showTab('createBond', this)" class="tab-btn px-8 py-4">إنشاء سند</button>
             <button onclick="showTab('bondsList', this)" class="tab-btn px-8 py-4">سنداتي</button>
         </div>
-    </div>
     <div class="p-6">
         <div id="dashboard" class="tab-content">
             <h2 class="text-3xl font-extrabold mb-6 text-gray-800">لوحة التحكم</h2>
@@ -170,6 +168,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         <div id="bondSettings" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -179,6 +178,7 @@
                         <button onclick="exportTableToPDF('bondTypesTable','انواع_السندات')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
                         <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ نوع جديد</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="bondTypesTable">
                         <thead class="bg-gray-50"><tr>
@@ -198,11 +198,23 @@
                     <div class="flex gap-2">
                         <button onclick="exportTableToExcel('managersTable','المدراء')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
                         <button onclick="exportTableToPDF('managersTable','المدراء')" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">📄 PDF</button>
+                        <button id="addManagerBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ مدير جديد</button>
                     </div>
-                <div class="overflow-x-auto"><table class="w-full" id="managersTable"><thead class="bg-gray-50"><tr><th class="p-4 text-right font-bold">المشروع</th><th class="p-4 text-right font-bold">الاسم</th><th class="p-4 text-right font-bold">الجوال</th><th class="p-4 text-right font-bold">الحالة</th><th class="p-4 text-right font-bold no-print">تحكم</th></tr></thead><tbody id="managersTableBody"></tbody></table></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="managersTable">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="p-4 text-right font-bold">المشروع</th>
+                            <th class="p-4 text-right font-bold">الاسم</th>
+                            <th class="p-4 text-right font-bold">الجوال</th>
+                            <th class="p-4 text-right font-bold">الحالة</th>
+                            <th class="p-4 text-right font-bold no-print">تحكم</th>
+                        </tr></thead>
+                        <tbody id="managersTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        
+
         <div id="delegates" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -214,7 +226,7 @@
                     </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="delegatesTable">
-                      <thead class="bg-gray-50"><tr>
+                        <thead class="bg-gray-50"><tr>
                             <th class="p-4 text-right font-bold">الاسم</th>
                             <th class="p-4 text-right font-bold">الجوال</th>
                             <th class="p-4 text-right font-bold">الهوية</th>
@@ -303,6 +315,8 @@
         document.getElementById('createProjectBtn').addEventListener('click', createProject);
         document.getElementById('saveProjectSettingsBtn').addEventListener('click', saveProjectSettings);
         document.getElementById('addBondTypeBtn').addEventListener('click', addBondType);
+        document.getElementById('addDelegateBtn').addEventListener('click', addDelegate);
+        document.getElementById('addManagerBtn').addEventListener('click', addManager);
         document.getElementById('saveBondBtn').addEventListener('click', saveBond);
         if(document.getElementById('bondDate')) { document.getElementById('bondDate').value = new Date().toISOString().split('T')[0]; }
         document.getElementById('set_logo').addEventListener('change', async (e) => {if (e.target.files[0]) {const base64 = await toBase64(e.target.files[0]);document.getElementById('preview_logo').src = base64;document.getElementById('preview_logo').classList.remove('hidden');}});
@@ -336,15 +350,12 @@
             const user = snapshot.val();
             if (user.password!== password) return Swal.fire('خطأ', 'كلمة السر غلط', 'error');
             if (!user.active) return Swal.fire('خطأ', 'حسابك موقوف', 'error');
-
-            // منع المندوب المنتهي عقده من الدخول
             if (user.role === 'delegate' && user.endDate) {
                 const today = new Date().toISOString().split('T')[0];
                 if (user.endDate < today) {
                     return Swal.fire('خطأ', 'عقدك منتهي. راجع المدير', 'error');
                 }
             }
-
             const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
             projectData = projectSnap.val();
             if (!projectData.active) return Swal.fire('خطأ', 'المشروع موقوف', 'error');
@@ -414,6 +425,25 @@
             }
         }
     }
+
+    window.addManager = async () => {
+        const result = await Swal.fire({
+            title: 'إضافة مدير جديد',
+            html: `<input id="swal-name" class="swal2-input" placeholder="اسم المدير"><input id="swal-phone" class="swal2-input" placeholder="رقم الجوال 05xxxx"><input id="swal-password" type="password" class="swal2-input" placeholder="كلمة المرور">`,
+            focusConfirm: false,
+            preConfirm: () => {return {name: document.getElementById('swal-name').value,phone: document.getElementById('swal-phone').value,password: document.getElementById('swal-password').value};}
+        });
+        const f = result.value;
+        if (f && f.name && f.phone && f.password) {
+            try {
+                await set(ref(db, `projects/${currentProject}/users/${f.phone}`), {name: f.name,phone: f.phone,password: f.password,role: 'manager',active: true,permissions: []});
+                Swal.fire('تم', 'انضاف المدير', 'success');
+            } catch (e) {
+                console.error(e);
+                Swal.fire('خطأ', 'فشل الإضافة', 'error');
+            }
+        }
+    };
 
     function loadProjects() {
         onValue(ref(db, 'projects'), (snapshot) => {
@@ -718,8 +748,7 @@
         });
     }
 
-   window.saveBond = async () => {
-        // منع المندوب المنتهي عقده من إنشاء سند
+    window.saveBond = async () => {
         if (currentRole === 'delegate' && currentUser.endDate) {
             const today = new Date().toISOString().split('T')[0];
             if (currentUser.endDate < today) {
@@ -757,6 +786,7 @@
         document.getElementById('bondClient').value = '';
         document.getElementById('bondDescription').value = '';
     };
+
     function loadBonds() {
         onValue(ref(db, `projects/${currentProject}/bonds`), (snapshot) => {
             const tbody = document.getElementById('bondsTableBody');
@@ -823,7 +853,7 @@
         const qrData = JSON.stringify({number: b.number,type: b.typeName,amount: b.amount,date: b.date,client: b.client,description: b.description,company: projectData.name,cr: projectData.cr || '',tax: projectData.tax || '',createdBy: b.createdBy,timestamp: new Date(b.createdAt).toLocaleString('ar-SA')});
         const qrCanvas = document.createElement('canvas');
         await QRCode.toCanvas(qrCanvas, qrData, { width: 150, margin: 1, errorCorrectionLevel: 'H' });
-        const printHTML = `<div class="bond-print"><div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #000; padding-bottom: 15px;">${projectData.logo? `<img src="${projectData.logo}" style="max-width: 100px; margin: 0 auto 10px;">` : ''}<h1 style="font-size: 26px; font-weight: 800; margin: 8px 0;">${projectData.name}</h1><p style="font-size: 12px; color: #333; margin: 3px 0;">${projectData.cr? `س.ت: ${projectData.cr}` : ''} ${projectData.tax? `| الرقم الضريبي: ${projectData.tax}` : ''}</p><p style="font-size: 12px; color: #333;">${projectData.address || ''}</p><p style="font-size: 12px; color: #333;">${projectData.contact? `هاتف: ${projectData.contact}` : ''}</p></div><div style="border: 2px solid #000; padding: 15px; margin-bottom: 15px;"><h2 style="text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px;">${b.typeName} رقم ${b.number}</h2><table style="width: 100%; font-size: 14px; border-collapse: collapse;"><tr><td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">التاريخ:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.date}</td><td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">الوقت:</td><td style="padding: 6px; border: 1px solid #ddd;">${new Date(b.createdAt).toLocaleTimeString('ar-SA')}</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">العميل:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.client}</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ:</td><td colspan="3" style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ كتابة:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${numberToWords(b.amount)} ريال فقط لا غير</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.description}</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المنشئ:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.createdBy}</td></tr></table></div><div style="display: flex; justify-content: space-between; margin-top: 30px; align-items: flex-end;"><div style="text-align: center; flex: 1;"><p style="margin-bottom: 40px; font-weight: 700;">توقيع المستلم</p><div style="border-top: 1px solid #000; width: 150px; margin: 0 auto;"></div><p style="margin-top: 5px; font-size: 11px;">الاسم: _______________</p></div><div style="text-align: center; flex: 1;"><img src="${qrCanvas.toDataURL()}" style="width: 120px; height: 120px; margin: 0 auto;"><p style="font-size: 10px; margin-top: 5px;">امسح للتحقق</p></div><div style="text-align: center; flex: 1;"><p style="margin-bottom: 10px; font-weight: 700;">الختم</p>${projectData.stamp? `<img src="${projectData.stamp}" style="max-width: 120px; max-height: 80px; margin: 0 auto;">` : '<div style="border: 1px dashed #999; width: 120px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">ختم الشركة</div>'}</div></div><div style="margin-top: 20px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;"><p>تم إنشاء هذا السند بواسطة نظام السندات الذكية - ${new Date().toLocaleString('ar-SA')}</p></div></div>`;
+        const printHTML = `<div class="bond-print"><div style="text-align: center; margin-bottom: 25px; border-bottom: 3px double #000; padding-bottom: 15px;">${projectData.logo? `<img src="${projectData.logo}" style="max-width: 100px; margin: 0 auto 10px;">` : ''}<h1 style="font-size: 26px; font-weight: 800; margin: 8px 0;">${projectData.name}</h1><p style="font-size: 12px; color: #333; margin: 3px 0;">${projectData.cr? `س.ت: ${projectData.cr}` : ''} ${projectData.tax? `| الرقم الضريبي: ${projectData.tax}` : ''}</p><p style="font-size: 12px; color: #333;">${projectData.address || ''}</p><p style="font-size: 12px; color: #333;">${projectData.contact? `هاتف: ${projectData.contact}` : ''}</p></div><div style="border: 2px solid #000; padding: 15px; margin-bottom: 15px;"><h2 style="text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px;">${b.typeName} رقم ${b.number}</h2><table style="width: 100%; font-size: 14px; border-collapse: collapse;"><tr><td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">التاريخ:</td><td style="padding: 6px; border: 1px solid #ddd;">${b.date}</td><td style="padding: 6px; font-weight: 700; width: 120px; border: 1px solid #ddd;">الوقت:</td><td style="padding: 6px; border: 1px solid #ddd;">${new Date(b.createdAt).toLocaleTimeString('ar-SA')}</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">العميل:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.client}</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ:</td><td colspan="3" style="padding: 6px; font-size: 18px; font-weight: 800; border: 1px solid #ddd;">${b.amount.toFixed(2)} ريال سعودي</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المبلغ كتابة:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${numberToWords(b.amount)} ريال فقط لا غير</td></tr><tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">البيان:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.description}</td></tr><td style="padding: 6px; font-weight: 700; border: 1px solid #ddd;">المنشئ:</td><td colspan="3" style="padding: 6px; border: 1px solid #ddd;">${b.createdBy}</td></tr></table></div><div style="display: flex; justify-content: space-between; margin-top: 30px; align-items: flex-end;"><div style="text-align: center; flex: 1;"><p style="margin-bottom: 40px; font-weight: 700;">توقيع المستلم</p><div style="border-top: 1px solid #000; width: 150px; margin: 0 auto;"></div><p style="margin-top: 5px; font-size: 11px;">الاسم: _______________</p></div><div style="text-align: center; flex: 1;"><img src="${qrCanvas.toDataURL()}" style="width: 120px; height: 120px; margin: 0 auto;"><p style="font-size: 10px; margin-top: 5px;">امسح للتحقق</p></div><div style="text-align: center; flex: 1;"><p style="margin-bottom: 10px; font-weight: 700;">الختم</p>${projectData.stamp? `<img src="${projectData.stamp}" style="max-width: 120px; max-height: 80px; margin: 0 auto;">` : '<div style="border: 1px dashed #999; width: 120px; height: 80px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">ختم الشركة</div>'}</div></div><div style="margin-top: 20px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;"><p>تم إنشاء هذا السند بواسطة نظام السندات الذكية - ${new Date().toLocaleString('ar-SA')}</p></div></div>`;
         document.getElementById('printArea').innerHTML = printHTML;
         window.print();
     };
@@ -840,7 +870,6 @@
         else if (intPart < 100) {const t = Math.floor(intPart / 10);const o = intPart % 10;if (o === 0) result = tens[t];else if (t === 1) {if (o === 1) result = 'أحد عشر';else if (o === 2) result = 'اثنا عشر';else result = ones[o] + ' عشر';}else result = ones[o] + ' و' + tens[t];}
         else if (intPart < 1000) {const h = Math.floor(intPart / 100);const r = intPart % 100;result = r === 0? hundreds[h] : hundreds[h] + ' و' + numberToWords(r);}
         else if (intPart < 1000000) {const th = Math.floor(intPart / 1000);const r = intPart % 1000;if (th === 1) result = 'ألف';else if (th === 2) result = 'ألفان';else if (th <= 10) result = ones[th] + ' آلاف';else result = numberToWords(th) + ' ألف';if (r > 0) result += ' و' + numberToWords(r);}
-        else if (intPart < 1000000000) {const m = Math.floor(intPart / 1000000);const r = intPart % 1000000;if (m === 1) result = 'مليون';else if (m === 2) result = 'مليونان';else if (m <= 10) result = ones[m] + ' ملايين';else result = numberToWords(m) + ' مليون';if (r > 0) result += ' و' + numberToWords(r);}
         else result = intPart.toString();
         if (decimalPart > 0) {result += ' و ' + numberToWords(decimalPart) + ' هللة';}
         return result;
@@ -920,21 +949,7 @@
             loadBonds();
         }
     }
-
-    // تشغيل زر اضافة مندوب
-    setTimeout(() => {
-        const addBtn = document.getElementById('addDelegateBtn');
-        if (addBtn) {
-            addBtn.addEventListener('click', () => window.addDelegate());
-        }
-    }, 1500);
-
-    // تحميل المناديب لما تفتح التاب
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('[data-tab="delegates"]')) {
-            setTimeout(() => loadDelegates(), 100);
-        }
-    });
     </script>
 </body>
 </html>
+
