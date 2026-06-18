@@ -718,7 +718,7 @@
         });
     }
 
-    window.saveBond = async () => {
+   window.saveBond = async () => {
         // منع المندوب المنتهي عقده من إنشاء سند
         if (currentRole === 'delegate' && currentUser.endDate) {
             const today = new Date().toISOString().split('T')[0];
@@ -733,18 +733,30 @@
         const client = document.getElementById('bondClient').value;
         const description = document.getElementById('bondDescription').value;
         if (!typeId ||!amount ||!date ||!client) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
+
         const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
         const type = typeSnap.val();
         const bondNumber = `${type.prefix}${type.current}`;
         const bondData = {id: Date.now().toString(),number: bondNumber,typeId: typeId,typeName: type.name,typeKind: type.kind,amount: amount,date: date,client: client,description: description,createdBy: currentUser.name,createdByPhone: currentUser.phone,createdAt: Date.now()};
+
         await set(ref(db, `projects/${currentProject}/bonds/${bondData.id}`), bondData);
         await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: type.current + 1 });
-        Swal.fire({title: 'تم الحفظ',text: `تم حفظ السند ${bondNumber}`,icon: 'success',showCancelButton: true,confirmButtonText: '📱 مشاركة, cancelButtonText: 'إغلاق'}).then((result) => {if (result.isConfirmed) {shareBondWhatsApp(bondData);}});
+
+        Swal.fire({
+            title: 'تم الحفظ',
+            text: `تم حفظ السند ${bondNumber}`,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: '📱 مشاركة واتساب',
+            cancelButtonText: 'إغلاق'
+        }).then((result) => {
+            if (result.isConfirmed) {shareBondWhatsApp(bondData);}
+        });
+
         document.getElementById('bondAmount').value = '';
         document.getElementById('bondClient').value = '';
         document.getElementById('bondDescription').value = '';
     };
-
     function loadBonds() {
         onValue(ref(db, `projects/${currentProject}/bonds`), (snapshot) => {
             const tbody = document.getElementById('bondsTableBody');
