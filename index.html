@@ -821,6 +821,26 @@
             loadBonds();
         }
     }
-</script>
+// تشغيل زر اضافة مندوب وتحميل الجدول
+setTimeout(() => {
+    const addBtn = document.getElementById('addDelegateBtn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => window.addDelegate());
+    }
+}, 1500);
+// تشغيل زر اضافة مندوب
+setTimeout(() => {
+    const addBtn = document.getElementById('addDelegateBtn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => window.addDelegate());
+    }
+}, 1500);
+// تحميل المناديب لما تفتح التاب
+document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-tab="delegates"]')) {
+        setTimeout(() => loadDelegates(), 100);
+    }
+});
+    </script>
 </body>
 </html>                       
