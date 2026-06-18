@@ -418,7 +418,6 @@
         if (projectData.logo) {document.getElementById('preview_logo').src = projectData.logo;document.getElementById('preview_logo').classList.remove('hidden');}
         if (projectData.stamp) {document.getElementById('preview_stamp').src = projectData.stamp;document.getElementById('preview_stamp').classList.remove
          }
-        }
     }
     window.saveProjectSettings = async () => {
         const data = {name: document.getElementById('set_companyName').value,cr: document.getElementById('set_cr').value,tax: document.getElementById('set_tax').value,contact: document.getElementById('set_contact').value,address: document.getElementById('set_address').value,logo: document.getElementById('preview_logo').src || '',stamp: document.getElementById('preview_stamp').src || ''};
