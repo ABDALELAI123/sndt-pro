@@ -1,1 +1,1451 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة السندات V2.0</title>
+    <!-- المكتبات الأساسية -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- أيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        * { font-family: 'Cairo', sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .hidden { display: none!important; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .tab-btn.active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 800; background: #1e293b; }
+        .login-bg { background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%); }
+        .project-logo { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 2px solid white; }
+        .logo-preview { max-width: 180px; max-height: 180px; border-radius: 12px; border: 2px dashed #475569; object-fit: contain; }
+        .icon-sm { width: 18px; height: 18px; }
+        .icon-md { width: 22px; height: 22px; }
+        .icon-lg { width: 28px; height: 28px; }
+        @media print {.no-print { display: none!important; }.print-area { display: block!important; } body { background: white; } }
+        .print-area { display: none; }
+        .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; }
+        .table-editable td { position: relative; }
+        .table-editable td:focus { outline: 2px solid #3b82f6; background: #1e293b; }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+
+<!-- شاشة تسجيل الدخول مع اللغات -->
+<div id="loginScreen" class="min-h-screen login-bg flex items-center justify-center p-4">
+    <div class="glass p-10 rounded-3xl shadow-2xl w-full max-w-md">
+        <!-- اختيار اللغة -->
+        <div class="flex justify-end mb-4">
+            <select id="langSelect" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm border border-slate-600">
+                <option value="ar">العربية</option>
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="fr">Français</option>
+                <option value="tr">Türkçe</option>
+                <option value="ur">اردو</option>
+                <option value="zh">中文</option>
+                <option value="fa">فارسی</option>
+            </select>
+        </div>
+        
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <i class="fas fa-file-invoice text-4xl"></i>
+            </div>
+            <h1 class="text-4xl font-extrabold mb-2" data-i18n="app_title">إدارة السندات</h1>
+            <p class="text-gray-400" data-i18n="app_subtitle">نظام سحابي متكامل</p>
+        </div>
+        
+        <div class="space-y-5">
+            <div>
+                <label class="block text-sm font-bold mb-2" data-i18n="project_code">كود المشروع</label>
+                <input id="projectCode" type="text" class="w-full p-4 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none text-center" placeholder="SANADAT-001">
+            </div>
+            <div>
+                <label class="block text-sm font-bold mb-2" data-i18n="phone">رقم الجوال</label>
+                <input id="phone" type="text" class="w-full p-4 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none text-center" placeholder="05xxxxxxxx">
+            </div>
+            <div>
+                <label class="block text-sm font-bold mb-2" data-i18n="password">كلمة المرور</label>
+                <input id="password" type="password" class="w-full p-4 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none text-center" placeholder="••••••••">
+            </div>
+            <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition" data-i18n="login">
+                <i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- التطبيق الرئيسي -->
+<div id="mainApp" class="hidden">
+    <!-- الهيدر العلوي -->
+    <div class="glass border-b border-slate-700 sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img id="headerLogo" class="project-logo hidden" src="" alt="Logo">
+                <div>
+                    <h1 class="text-2xl font-extrabold" data-i18n="app_title">إدارة السندات</h1>
+                    <p class="text-sm text-gray-400">
+                        <span id="currentProjectName"></span> | 
+                        <span id="currentUser"></span> | 
+                        <span id="currentRole" class="bg-blue-600/30 px-2 py-0.5 rounded"></span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="translateBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition text-sm">
+                    <i class="fas fa-language ml-1"></i> <span data-i18n="translate">ترجمة</span>
+                </button>
+                <button id="changePassBtn" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition text-sm">
+                    <i class="fas fa-key ml-1"></i> <span data-i18n="change_password">تغيير كلمة السر</span>
+                </button>
+                <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition text-sm">
+                    <i class="fas fa-sign-out-alt ml-1"></i> <span data-i18n="logout">خروج</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    // إعدادات الفايربيس - بياناتك جاهزة
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, get, update, remove, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+        authDomain: "sanadat-pro.firebaseapp.com",
+        databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "sanadat-pro",
+        storageBucket: "sanadat-pro.firebasestorage.app",
+        messagingSenderId: "1039476751095",
+        appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    
+    // متغيرات عامة
+    window.db = db;
+    window.ref = ref;
+    window.set = set;
+    window.get = get;
+    window.update = update;
+    window.remove = remove;
+    window.onValue = onValue;
+    window.push = push;
+
+    // المدير العام الافتراضي
+    const SUPERADMIN = { 
+        phone: "0597087767", 
+        password: "500600", 
+        name: "المدير العام",
+        role: "superadmin"
+    };
+    window.SUPERADMIN = SUPERADMIN;
+
+    // متغيرات الجلسة
+    let currentUser = null;
+    let currentProject = null;
+    let currentRole = null;
+    let projectData = null;
+    let userPermissions = [];
+    let currentLang = 'ar';
+
+    // قواميس اللغات
+    const translations = {
+        ar: { app_title: "إدارة السندات", app_subtitle: "نظام سحابي متكامل", project_code: "كود المشروع", phone: "رقم الجوال", password: "كلمة المرور", login: "تسجيل الدخول", logout: "خروج", change_password: "تغيير كلمة السر", translate: "ترجمة" },
+        en: { app_title: "Bonds Management", app_subtitle: "Integrated Cloud System", project_code: "Project Code", phone: "Phone Number", password: "Password", login: "Login", logout: "Logout", change_password: "Change Password", translate: "Translate" },
+        de: { app_title: "Anleihenverwaltung", app_subtitle: "Integriertes Cloud-System", project_code: "Projektcode", phone: "Telefonnummer", password: "Passwort", login: "Anmelden", logout: "Abmelden", change_password: "Passwort ändern", translate: "Übersetzen" },
+        fr: { app_title: "Gestion des Obligations", app_subtitle: "Système Cloud Intégré", project_code: "Code Projet", phone: "Numéro de téléphone", password: "Mot de passe", login: "Connexion", logout: "Déconnexion", change_password: "Changer le mot de passe", translate: "Traduire" },
+        tr: { app_title: "Tahvil Yönetimi", app_subtitle: "Entegre Bulut Sistemi", project_code: "Proje Kodu", phone: "Telefon Numarası", password: "Şifre", login: "Giriş", logout: "Çıkış", change_password: "Şifre Değiştir", translate: "Çevir" },
+        ur: { app_title: "بانڈز کا انتظام", app_subtitle: "مربوط کلاؤڈ سسٹم", project_code: "پروجیکٹ کوڈ", phone: "فون نمبر", password: "پاس ورڈ", login: "لاگ ان", logout: "لاگ آؤٹ", change_password: "پاس ورڈ تبدیل کریں", translate: "ترجمہ" },
+        zh: { app_title: "债券管理", app_subtitle: "集成云系统", project_code: "项目代码", phone: "电话号码", password: "密码", login: "登录", logout: "登出", change_password: "更改密码", translate: "翻译" },
+        fa: { app_title: "مدیریت اوراق", app_subtitle: "سیستم ابری یکپارچه", project_code: "کد پروژه", phone: "شماره تلفن", password: "رمز عبور", login: "ورود", logout: "خروج", change_password: "تغییر رمز عبور", translate: "ترجمه" }
+    };
+    window.translations = translations;
+    window.currentLang = currentLang;
+<script>
+// ========== نظام اللغات ==========
+function applyLanguage(lang) {
+    currentLang = lang;
+    window.currentLang = lang;
+    const t = translations[lang];
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+    });
+
+    // تغيير اتجاه الصفحة للغات RTL
+    const rtlLangs = ['ar', 'ur', 'fa'];
+    document.documentElement.dir = rtlLangs.includes(lang)? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+}
+
+// تغيير اللغة من القائمة
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('langSelect').addEventListener('change', (e) => {
+        applyLanguage(e.target.value);
+        localStorage.setItem('appLang', e.target.value);
+    });
+
+    // تحميل اللغة المحفوظة
+    const savedLang = localStorage.getItem('appLang') || 'ar';
+    document.getElementById('langSelect').value = savedLang;
+    applyLanguage(savedLang);
+
+    // أزرار تسجيل الدخول
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
+    document.getElementById('translateBtn').addEventListener('click', showTranslateDialog);
+});
+
+// ========== نظام تسجيل الدخول ==========
+async function handleLogin() {
+    const projectCode = document.getElementById('projectCode').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!phone ||!password) {
+        return Swal.fire({
+            icon: 'error',
+            title: translations[currentLang].login || 'خطأ',
+            text: 'املأ الجوال وكلمة السر'
+        });
+    }
+
+    // التحقق من المدير العام
+    if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
+        currentUser = {...SUPERADMIN, active: true };
+        currentProject = 'SUPERADMIN';
+        currentRole = 'superadmin';
+        projectData = { name: 'الإدارة العامة', code: 'SUPERADMIN', active: true };
+
+        localStorage.setItem('projectCode', 'SUPERADMIN');
+        localStorage.setItem('phone', phone);
+        localStorage.setItem('password', password);
+
+        showMainApp();
+        return;
+    }
+
+    if (!projectCode) {
+        return Swal.fire({
+            icon: 'error',
+            title: translations[currentLang].login || 'خطأ',
+            text: 'ادخل كود المشروع'
+        });
+    }
+
+    try {
+        // جلب بيانات المستخدم من الفايربيس
+        const userSnap = await get(ref(db, `projects/${projectCode}/users/${phone}`));
+
+        if (!userSnap.exists()) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: 'المستخدم غير موجود في هذا المشروع'
+            });
+        }
+
+        const user = userSnap.val();
+
+        if (user.password!== password) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: 'كلمة السر غير صحيحة'
+            });
+        }
+
+        if (!user.active) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: 'حسابك موقوف. راجع المدير'
+            });
+        }
+
+        // جلب بيانات المشروع
+        const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
+        projectData = projectSnap.val();
+
+        if (!projectData.active) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: 'المشروع موقوف حالياً'
+            });
+        }
+
+        // حفظ بيانات الجلسة
+        currentUser = user;
+        currentProject = projectCode;
+        currentRole = user.role;
+        userPermissions = user.permissions || [];
+
+        localStorage.setItem('projectCode', projectCode);
+        localStorage.setItem('phone', phone);
+        localStorage.setItem('password', password);
+
+        showMainApp();
+
+    } catch (error) {
+        console.error(error);
+        Swal.fire({
+            icon: 'error',
+            title: 'خطأ',
+            text: 'حدث خطأ في الاتصال. تأكد من البيانات'
+        });
+    }
+}
+
+// عرض التطبيق الرئيسي بعد تسجيل الدخول
+function showMainApp() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+
+    // تحديث بيانات الهيدر
+    document.getElementById('currentProjectName').textContent = projectData?.name || currentProject;
+    document.getElementById('currentUser').textContent = currentUser.name;
+    document.getElementById('currentRole').textContent = getRoleText(currentRole);
+
+    // عرض شعار المشروع
+    if (projectData?.logo) {
+        document.getElementById('headerLogo').src = projectData.logo;
+        document.getElementById('headerLogo').classList.remove('hidden');
+    }
+
+    // تحميل واجهة المستخدم حسب الدور
+    loadUserInterface();
+}
+
+// تحويل نص الدور
+function getRoleText(role) {
+    const roles = {
+        superadmin: 'مدير عام',
+        manager: 'مدير مشروع',
+        accountant: 'محاسب',
+        delegate: 'مندوب'
+    };
+    return roles[role] || role;
+}
+
+// تسجيل الخروج
+function handleLogout() {
+    Swal.fire({
+        title: 'تأكيد الخروج',
+        text: 'هل تريد تسجيل الخروج؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم',
+        cancelButtonText: 'لا'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.clear();
+            location.reload();
+        }
+    });
+}
+
+// تغيير كلمة السر
+function showChangePassword() {
+    Swal.fire({
+        title: 'تغيير كلمة السر',
+        html: `
+            <input id="swal-old" type="password" class="swal2-input" placeholder="كلمة السر القديمة">
+            <input id="swal-new" type="password" class="swal2-input" placeholder="كلمة السر الجديدة">
+            <input id="swal-confirm" type="password" class="swal2-input" placeholder="تأكيد كلمة السر">
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+            const oldPass = document.getElementById('swal-old').value;
+            const newPass = document.getElementById('swal-new').value;
+            const confirmPass = document.getElementById('swal-confirm').value;
+
+            if (!oldPass ||!newPass ||!confirmPass) {
+                Swal.showValidationMessage('املأ كل الحقول');
+                return false;
+            }
+            if (oldPass!== currentUser.password) {
+                Swal.showValidationMessage('كلمة السر القديمة غير صحيحة');
+                return false;
+            }
+            if (newPass!== confirmPass) {
+                Swal.showValidationMessage('كلمة السر الجديدة غير متطابقة');
+                return false;
+            }
+            if (newPass.length < 4) {
+                Swal.showValidationMessage('كلمة السر قصيرة جداً');
+                return false;
+            }
+            return { newPass };
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), {
+                password: result.value.newPass
+            });
+            currentUser.password = result.value.newPass;
+            localStorage.setItem('password', result.value.newPass);
+            Swal.fire('تم', 'تم تغيير كلمة السر بنجاح', 'success');
+        }
+    });
+}
+
+// نافذة الترجمة
+function showTranslateDialog() {
+    Swal.fire({
+        title: 'ترجمة النصوص',
+        text: 'اختر اللغة المطلوبة للترجمة',
+        input: 'select',
+        inputOptions: {
+            'ar': 'العربية',
+            'en': 'English',
+            'de': 'Deutsch',
+            'fr': 'Français',
+            'tr': 'Türkçe',
+            'ur': 'اردو',
+            'zh': '中文',
+            'fa': 'فارسی'
+        },
+        inputValue: currentLang,
+        showCancelButton: true,
+        confirmButtonText: 'ترجمة',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            applyLanguage(result.value);
+            document.getElementById('langSelect').value = result.value;
+            localStorage.setItem('appLang', result.value);
+            Swal.fire('تم', 'تم تغيير اللغة', 'success');
+        }
+    });
+}
+</script>
+<script>
+// ========== تحميل واجهة المستخدم حسب الدور ==========
+function loadUserInterface() {
+    // إخفاء كل التبويبات أول
+    document.getElementById('superadminTabs').classList.add('hidden');
+    document.getElementById('managerTabs').classList.add('hidden');
+    document.getElementById('accountantTabs').classList.add('hidden');
+    document.getElementById('delegateTabs').classList.add('hidden');
+
+    // إظهار التبويبات المناسبة للدور
+    if (currentRole === 'superadmin') {
+        document.getElementById('superadminTabs').classList.remove('hidden');
+        loadDashboard();
+    } else if (currentRole === 'manager') {
+        document.getElementById('managerTabs').classList.remove('hidden');
+        loadDashboard();
+        loadProjectData();
+    } else if (currentRole === 'accountant') {
+        document.getElementById('accountantTabs').classList.remove('hidden');
+        loadDashboard();
+    } else if (currentRole === 'delegate') {
+        document.getElementById('delegateTabs').classList.remove('hidden');
+        loadDashboard();
+    }
+
+    // عرض التاب الأول
+    showTab('dashboard', document.querySelector('.tab-btn.active'));
+}
+
+// ========== تبديل التبويبات ==========
+function showTab(tabName, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    const tabEl = document.getElementById(tabName);
+    if (tabEl) tabEl.classList.remove('hidden');
+    if (btn) btn.classList.add('active');
+
+    // تحميل بيانات التاب عند الفتح
+    if (tabName === 'dashboard') loadDashboard();
+    if (tabName === 'projects') loadProjects();
+    if (tabName === 'allManagers') loadAllManagers();
+    if (tabName === 'managers') loadProjectManagers();
+    if (tabName === 'accountants') loadProjectAccountants();
+    if (tabName === 'delegates') loadProjectDelegates();
+    if (tabName === 'bondTypes') loadBondTypes();
+}
+
+// ========== لوحة التحكم ==========
+function loadDashboard() {
+    if (currentRole === 'superadmin') {
+        loadSuperAdminDashboard();
+    } else if (currentRole === 'manager') {
+        loadManagerDashboard();
+    } else if (currentRole === 'accountant') {
+        loadAccountantDashboard();
+    } else if (currentRole === 'delegate') {
+        loadDelegateDashboard();
+    }
+}
+
+function loadSuperAdminDashboard() {
+    // إحصائيات المدير العام
+    onValue(ref(db, 'projects'), (snap) => {
+        let totalProjects = 0;
+        let totalManagers = 0;
+        let totalBonds = 0;
+
+        if (snap.exists()) {
+            const projects = snap.val();
+            totalProjects = Object.keys(projects).length;
+
+            Object.values(projects).forEach(project => {
+                if (project.users) {
+                    Object.values(project.users).forEach(user => {
+                        if (user.role === 'manager') totalManagers++;
+                    });
+                }
+                if (project.bonds) {
+                    totalBonds += Object.keys(project.bonds).length;
+                }
+            });
+        }
+
+        document.getElementById('totalIncome').textContent = totalProjects;
+        document.getElementById('totalExpense').textContent = totalManagers;
+        document.getElementById('totalBalance').textContent = '-';
+        document.getElementById('totalBonds').textContent = totalBonds;
+    });
+}
+
+function loadManagerDashboard() {
+    // إحصائيات مدير المشروع
+    onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
+        let income = 0, expense = 0, totalBonds = 0;
+
+        if (snap.exists()) {
+            const bonds = Object.values(snap.val());
+            totalBonds = bonds.length;
+
+            bonds.forEach(b => {
+                const amount = parseFloat(b.amount) || 0;
+                if (b.accountingEffect === '+1' || b.type === 'قبض') {
+                    income += amount;
+                } else if (b.accountingEffect === '-1' || b.type === 'صرف') {
+                    expense += amount;
+                }
+            });
+        }
+
+        document.getElementById('totalIncome').textContent = income.toFixed(2);
+        document.getElementById('totalExpense').textContent = expense.toFixed(2);
+        document.getElementById('totalBalance').textContent = (income - expense).toFixed(2);
+        document.getElementById('totalBonds').textContent = totalBonds;
+    });
+}
+
+function loadAccountantDashboard() {
+    // المحاسب يشوف نفس إحصائيات المدير
+    loadManagerDashboard();
+}
+
+function loadDelegateDashboard() {
+    // المندوب يشوف سنداته فقط
+    onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
+        let myBonds = 0;
+        let pendingCount = 0;
+        let approvedCount = 0;
+
+        if (snap.exists()) {
+            const bonds = Object.values(snap.val());
+            bonds.forEach(b => {
+                if (b.createdBy === currentUser.phone) {
+                    myBonds++;
+                    if (b.status === 'pending') pendingCount++;
+                    if (b.status === 'approved') approvedCount++;
+                }
+            });
+        }
+
+        document.getElementById('totalIncome').textContent = approvedCount;
+        document.getElementById('totalExpense').textContent = pendingCount;
+        document.getElementById('totalBalance').textContent = '-';
+        document.getElementById('totalBonds').textContent = myBonds;
+    });
+}
+
+window.showTab = showTab;
+window.loadUserInterface = loadUserInterface;
+window.loadDashboard = loadDashboard;
+</script>
+
+<!-- تبويبات المدير العام -->
+<div id="superadminTabs" class="hidden glass border-b border-slate-700 no-print">
+    <div class="max-w-7xl mx-auto flex overflow-x-auto">
+        <button onclick="showTab('dashboard', this)" class="tab-btn px-6 py-4 active">
+            <i class="fas fa-home ml-2 icon-sm"></i> <span data-i18n="dashboard">الرئيسية</span>
+        </button>
+        <button onclick="showTab('projects', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-folder ml-2 icon-sm"></i> <span data-i18n="projects">المشاريع</span>
+        </button>
+        <button onclick="showTab('allManagers', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-users-cog ml-2 icon-sm"></i> <span data-i18n="managers">المدراء</span>
+        </button>
+        <button onclick="showTab('systemSettings', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-cogs ml-2 icon-sm"></i> <span data-i18n="settings">الإعدادات</span>
+        </button>
+    </div>
+</div>
+
+<!-- تبويبات مدير المشروع -->
+<div id="managerTabs" class="hidden glass border-b border-slate-700 no-print">
+    <div class="max-w-7xl mx-auto flex overflow-x-auto">
+        <button onclick="showTab('dashboard', this)" class="tab-btn px-6 py-4 active">
+            <i class="fas fa-home ml-2 icon-sm"></i> <span data-i18n="dashboard">الرئيسية</span>
+        </button>
+        <button onclick="showTab('projectSettings', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-sliders-h ml-2 icon-sm"></i> <span data-i18n="project_settings">إعدادات المشروع</span>
+        </button>
+        <button onclick="showTab('bondTypes', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-file-invoice ml-2 icon-sm"></i> <span data-i18n="bond_types">أنواع السندات</span>
+        </button>
+        <button onclick="showTab('managers', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-user-tie ml-2 icon-sm"></i> <span data-i18n="managers">المدراء</span>
+        </button>
+        <button onclick="showTab('accountants', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-calculator ml-2 icon-sm"></i> <span data-i18n="accountants">المحاسبين</span>
+        </button>
+        <button onclick="showTab('delegates', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-users ml-2 icon-sm"></i> <span data-i18n="delegates">المناديب</span>
+        </button>
+        <button onclick="showTab('allBonds', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-file-invoice-dollar ml-2 icon-sm"></i> <span data-i18n="bonds">السندات</span>
+        </button>
+    </div>
+</div>
+
+<!-- تبويبات المحاسب -->
+<div id="accountantTabs" class="hidden glass border-b border-slate-700 no-print">
+    <div class="max-w-7xl mx-auto flex overflow-x-auto">
+        <button onclick="showTab('dashboard', this)" class="tab-btn px-6 py-4 active">
+            <i class="fas fa-home ml-2 icon-sm"></i> <span data-i18n="dashboard">الرئيسية</span>
+        </button>
+        <button onclick="showTab('bondsMovement', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-exchange-alt ml-2 icon-sm"></i> <span data-i18n="bonds_movement">حركة السندات</span>
+        </button>
+        <button onclick="showTab('cashFlow', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-coins ml-2 icon-sm"></i> <span data-i18n="cash_flow">حركة الصندوق</span>
+        </button>
+        <button onclick="showTab('smartSheet', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-table ml-2 icon-sm"></i> <span data-i18n="smart_sheet">الجداول الذكية</span>
+        </button>
+    </div>
+</div>
+
+<!-- تبويبات المندوب -->
+<div id="delegateTabs" class="hidden glass border-b border-slate-700 no-print">
+    <div class="max-w-7xl mx-auto flex overflow-x-auto">
+        <button onclick="showTab('dashboard', this)" class="tab-btn px-6 py-4 active">
+            <i class="fas fa-home ml-2 icon-sm"></i> <span data-i18n="dashboard">الرئيسية</span>
+        </button>
+        <button onclick="showTab('createBond', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-plus-circle ml-2 icon-sm"></i> <span data-i18n="create_bond">إنشاء سند</span>
+        </button>
+        <button onclick="showTab('myBonds', this)" class="tab-btn px-6 py-4">
+            <i class="fas fa-folder-open ml-2 icon-sm"></i> <span data-i18n="my_bonds">سنداتي</span>
+        </button>
+    </div>
+</div>
+
+<!-- محتوى الصفحات -->
+<div class="max-w-7xl mx-auto p-6">
+
+    <!-- لوحة التحكم -->
+    <div id="dashboard" class="tab-content">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-3xl font-extrabold" data-i18n="dashboard">لوحة التحكم</h2>
+            <button id="refreshDashboard" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition">
+                <i class="fas fa-sync-alt ml-2"></i> تحديث
+            </button>
+        </div>
+
+        <!-- كروت الإحصائيات -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+            <div class="glass p-6 rounded-2xl border-r-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm" data-i18n="total_income">إجمالي القبض</p>
+                        <p id="totalIncome" class="text-3xl font-extrabold text-green-400 mt-2">0.00</p>
+                    </div>
+                    <i class="fas fa-arrow-down text-4xl text-green-500/30"></i>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-2xl border-r-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm" data-i18n="total_expense">إجمالي الصرف</p>
+                        <p id="totalExpense" class="text-3xl font-extrabold text-red-400 mt-2">0.00</p>
+                    </div>
+                    <i class="fas fa-arrow-up text-4xl text-red-500/30"></i>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-2xl border-r-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm" data-i18n="balance">الرصيد الحالي</p>
+                        <p id="totalBalance" class="text-3xl font-extrabold text-blue-400 mt-2">0.00</p>
+                    </div>
+                    <i class="fas fa-wallet text-4xl text-blue-500/30"></i>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-2xl border-r-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm" data-i18n="total_bonds">إجمالي السندات</p>
+                        <p id="totalBonds" class="text-3xl font-extrabold text-purple-400 mt-2">0</p>
+                    </div>
+                    <i class="fas fa-file-invoice text-4xl text-purple-500/30"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+            <!-- صفحة المشاريع للمدير العام -->
+        <div id="projects" class="tab-content hidden">
+            <div class="glass p-8 rounded-3xl">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <h2 class="text-3xl font-extrabold">
+                        <i class="fas fa-folder ml-2"></i> <span data-i18n="projects">المشاريع</span>
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportProjectsExcel()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">
+                            <i class="fas fa-file-excel ml-2"></i> اكسل
+                        </button>
+                        <button onclick="exportProjectsPDF()" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">
+                            <i class="fas fa-file-pdf ml-2"></i> PDF
+                        </button>
+                        <button id="createProjectBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
+                            <i class="fas fa-plus ml-2"></i> إنشاء مشروع
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="projectsTable">
+                        <thead class="bg-slate-800">
+                            <tr>
+                                <th class="p-4 text-right font-bold">الشعار</th>
+                                <th class="p-4 text-right font-bold">كود المشروع</th>
+                                <th class="p-4 text-right font-bold">اسم الشركة</th>
+                                <th class="p-4 text-right font-bold">المدراء</th>
+                                <th class="p-4 text-right font-bold">الحالة</th>
+                                <th class="p-4 text-right font-bold no-print">تحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectsTableBody" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة كل المدراء - للمدير العام -->
+        <div id="allManagers" class="tab-content hidden">
+            <div class="glass p-8 rounded-3xl">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <h2 class="text-3xl font-extrabold">
+                        <i class="fas fa-users-cog ml-2"></i> <span data-i18n="all_managers">كل المدراء</span>
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportManagersExcel()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">
+                            <i class="fas fa-file-excel ml-2"></i> اكسل
+                        </button>
+                        <button onclick="exportManagersPDF()" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">
+                            <i class="fas fa-file-pdf ml-2"></i> PDF
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="allManagersTable">
+                        <thead class="bg-slate-800">
+                            <tr>
+                                <th class="p-4 text-right font-bold">المشروع</th>
+                                <th class="p-4 text-right font-bold">الاسم</th>
+                                <th class="p-4 text-right font-bold">الجوال</th>
+                                <th class="p-4 text-right font-bold">المناديب</th>
+                                <th class="p-4 text-right font-bold">الحالة</th>
+                                <th class="p-4 text-right font-bold no-print">تحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allManagersTableBody" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+<script>
+// ========== إدارة المشاريع - المدير العام ==========
+function loadProjects() {
+    onValue(ref(db, 'projects'), (snap) => {
+        const tbody = document.getElementById('projectsTableBody');
+        tbody.innerHTML = '';
+        
+        if (snap.exists()) {
+            Object.entries(snap.val()).forEach(([code, project]) => {
+                if (code === 'SUPERADMIN') return;
+                
+                const info = project.info || {};
+                const managersCount = project.users? Object.values(project.users).filter(u => u.role === 'manager').length : 0;
+                
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="p-4">
+                            <img src="${info.logo || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover">
+                        </td>
+                        <td class="p-4 font-bold">${code}</td>
+                        <td class="p-4">${info.companyName || '-'}</td>
+                        <td class="p-4">
+                            <span class="bg-blue-600/30 px-3 py-1 rounded-full text-sm">
+                                ${managersCount} مدير
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            ${info.active ? 
+                                '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">نشط</span>' : 
+                                '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">موقوف</span>'
+                            }
+                        </td>
+                        <td class="p-4 no-print">
+                            <button onclick="viewProjectManagers('${code}')" class="text-blue-400 hover:text-blue-300 ml-3">
+                                <i class="fas fa-users"></i>
+                            </button>
+                            <button onclick="toggleProject('${code}', ${!info.active})" class="text-yellow-400 hover:text-yellow-300 ml-3">
+                                <i class="fas fa-${info.active ? 'pause' : 'play'}"></i>
+                            </button>
+                            <button onclick="deleteProject('${code}')" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        }
+    });
+}
+
+// إنشاء مشروع جديد مع مدراء متعددين
+async function createProject() {
+    const { value: formValues } = await Swal.fire({
+        title: 'إنشاء مشروع جديد',
+        html: `
+            <div class="text-right">
+                <input id="swal-code" class="swal2-input" placeholder="كود المشروع (بالإنجليزي)">
+                <input id="swal-name" class="swal2-input" placeholder="اسم الشركة">
+                <input id="swal-cr" class="swal2-input" placeholder="السجل التجاري">
+                <input id="swal-tax" class="swal2-input" placeholder="الرقم الضريبي">
+                <textarea id="swal-address" class="swal2-textarea" placeholder="العنوان"></textarea>
+                <div class="border-t border-gray-600 my-4 pt-4">
+                    <p class="font-bold mb-2">بيانات المدير الأول:</p>
+                    <input id="swal-manager-name" class="swal2-input" placeholder="اسم المدير">
+                    <input id="swal-manager-phone" class="swal2-input" placeholder="جوال المدير">
+                    <input id="swal-manager-pass" type="password" class="swal2-input" placeholder="كلمة السر">
+                </div>
+            </div>
+        `,
+        focusConfirm: false,
+        width: '600px',
+        confirmButtonText: 'إنشاء',
+        cancelButtonText: 'إلغاء',
+        showCancelButton: true,
+        preConfirm: () => {
+            const code = document.getElementById('swal-code').value;
+            const name = document.getElementById('swal-name').value;
+            const managerName = document.getElementById('swal-manager-name').value;
+            const managerPhone = document.getElementById('swal-manager-phone').value;
+            const managerPass = document.getElementById('swal-manager-pass').value;
+
+            if (!code || !name || !managerName || !managerPhone || !managerPass) {
+                Swal.showValidationMessage('املأ كل الحقول المطلوبة');
+                return false;
+            }
+            if (!/^[A-Z0-9_-]+$/.test(code)) {
+                Swal.showValidationMessage('كود المشروع حروف إنجليزية وأرقام فقط');
+                return false;
+            }
+
+            return {
+                code: code,
+                name: name,
+                cr: document.getElementById('swal-cr').value,
+                tax: document.getElementById('swal-tax').value,
+                address: document.getElementById('swal-address').value,
+                managerName: managerName,
+                managerPhone: managerPhone,
+                managerPass: managerPass
+            };
+        }
+    });
+
+    if (!formValues) return;
+
+    // التحقق من عدم تكرار الكود
+    const existsSnap = await get(ref(db, `projects/${formValues.code}`));
+    if (existsSnap.exists()) {
+        return Swal.fire('خطأ', 'كود المشروع موجود مسبقاً', 'error');
+    }
+
+    // إنشاء المشروع
+    await set(ref(db, `projects/${formValues.code}/info`), {
+        code: formValues.code,
+        companyName: formValues.name,
+        cr: formValues.cr,
+        tax: formValues.tax,
+        address: formValues.address,
+        active: true,
+        createdAt: Date.now(),
+        createdBy: 'SUPERADMIN'
+    });
+
+    // إضافة المدير الأول
+    await set(ref(db, `projects/${formValues.code}/users/${formValues.managerPhone}`), {
+        name: formValues.managerName,
+        phone: formValues.managerPhone,
+        password: formValues.managerPass,
+        role: 'manager',
+        active: true,
+        createdAt: Date.now()
+    });
+
+    Swal.fire('تم', 'تم إنشاء المشروع بنجاح', 'success');
+}
+
+// عرض مدراء مشروع محدد
+async function viewProjectManagers(projectCode) {
+    const snap = await get(ref(db, `projects/${projectCode}/users`));
+    let managersHTML = '<div class="space-y-2 text-right">';
+
+    if (snap.exists()) {
+        Object.values(snap.val()).forEach(user => {
+            if (user.role === 'manager') {
+                managersHTML += `
+                    <div class="flex justify-between items-center bg-slate-700 p-3 rounded-lg">
+                        <div>
+                            <p class="font-bold">${user.name}</p>
+                            <p class="text-sm text-gray-400">${user.phone}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm ${user.active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                            ${user.active ? 'نشط' : 'موقوف'}
+                        </span>
+                    </div>
+                `;
+            }
+        });
+    }
+    managersHTML += '</div>';
+
+    Swal.fire({
+        title: 'مدراء المشروع',
+        html: managersHTML,
+        width: '600px',
+        confirmButtonText: 'إغلاق'
+    });
+}
+
+// إضافة مدير جديد لمشروع موجود
+async function addManagerToProject(projectCode) {
+    const { value: formValues } = await Swal.fire({
+        title: 'إضافة مدير جديد',
+        html: `
+            <input id="swal-name" class="swal2-input" placeholder="اسم المدير">
+            <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال">
+            <input id="swal-pass" type="password" class="swal2-input" placeholder="كلمة السر">
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'إضافة',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+            const name = document.getElementById('swal-name').value;
+            const phone = document.getElementById('swal-phone').value;
+            const pass = document.getElementById('swal-pass').value;
+
+            if (!name || !phone || !pass) {
+                Swal.showValidationMessage('املأ كل الحقول');
+                return false;
+            }
+            return { name, phone, pass };
+        }
+    });
+
+    if (!formValues) return;
+
+    await set(ref(db, `projects/${projectCode}/users/${formValues.phone}`), {
+        name: formValues.name,
+        phone: formValues.phone,
+        password: formValues.pass,
+        role: 'manager',
+        active: true,
+        createdAt: Date.now()
+    });
+
+    Swal.fire('تم', 'تم إضافة المدير بنجاح', 'success');
+}
+
+function toggleProject(code, status) {
+    Swal.fire({
+        title: 'تأكيد',
+        text: `هل تريد ${status ? 'تفعيل' : 'إيقاف'} المشروع؟`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم',
+        cancelButtonText: 'لا'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            update(ref(db, `projects/${code}/info`), { active: status });
+        }
+    });
+}
+
+function deleteProject(code) {
+    Swal.fire({
+        title: 'تحذير!',
+        text: "سيتم حذف المشروع وكل بياناته نهائياً. لا يمكن التراجع!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم احذف',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#d33'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            remove(ref(db, `projects/${code}`));
+            Swal.fire('تم الحذف', 'تم حذف المشروع', 'success');
+        }
+    });
+}
+
+// تحميل كل المدراء
+function loadAllManagers() {
+    onValue(ref(db, 'projects'), (snap) => {
+        const tbody = document.getElementById('allManagersTableBody');
+        tbody.innerHTML = '';
+
+        if (snap.exists()) {
+            Object.entries(snap.val()).forEach(([projectCode, project]) => {
+                if (projectCode === 'SUPERADMIN') return;
+
+                const users = project.users || {};
+                Object.values(users).forEach(user => {
+                    if (user.role === 'manager') {
+                        const delegatesCount = Object.values(users).filter(u => u.role === 'delegate').length;
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-800/50 transition">
+                                <td class="p-4">${project.info.companyName}</td>
+                                <td class="p-4 font-bold">${user.name}</td>
+                                <td class="p-4">${user.phone}</td>
+                                <td class="p-4">
+                                    <span class="bg-blue-600/30 px-3 py-1 rounded-full text-sm">
+                                        ${delegatesCount} مندوب
+                                    </span>
+                                </td>
+                                <td class="p-4">
+                                    ${user.active ?
+                                        '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">نشط</span>' :
+                                        '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">موقوف</span>'
+                                    }
+                                </td>
+                                <td class="p-4 no-print">
+                                    <button onclick="toggleUserStatus('${projectCode}', '${user.phone}', ${!user.active})" class="text-yellow-400 hover:text-yellow-300 ml-3">
+                                        <i class="fas fa-${user.active ? 'pause' : 'play'}"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
+                    }
+                });
+            });
+        }
+    });
+}
+
+function toggleUserStatus(projectCode, phone, status) {
+    update(ref(db, `projects/${projectCode}/users/${phone}`), { active: status });
+}
+
+function exportProjectsExcel() {
+    const wb = XLSX.utils.table_to_book(document.getElementById('projectsTable'));
+    XLSX.writeFile(wb, 'المشاريع.xlsx');
+}
+
+function exportProjectsPDF() {
+    const { jsPDF } = window.jspdf;
+    html2canvas(document.getElementById('projectsTable')).then(canvas => {
+        const img = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        pdf.addImage(img, 'PNG', 10, 10, 277, 0);
+        pdf.save('المشاريع.pdf');
+    });
+}
+
+function exportManagersExcel() {
+    const wb = XLSX.utils.table_to_book(document.getElementById('allManagersTable'));
+    XLSX.writeFile(wb, 'المدراء.xlsx');
+}
+
+function exportManagersPDF() {
+    const { jsPDF } = window.jspdf;
+    html2canvas(document.getElementById('allManagersTable')).then(canvas => {
+        const img = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        pdf.addImage(img, 'PNG', 10, 10, 277, 0);
+        pdf.save('المدراء.pdf');
+    });
+}
+
+// ربط الأزرار
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('createProjectBtn')?.addEventListener('click', createProject);
+});
+
+window.loadProjects = loadProjects;
+window.loadAllManagers = loadAllManagers;
+window.createProject = createProject;
+window.viewProjectManagers = viewProjectManagers;
+window.addManagerToProject = addManagerToProject;
+window.toggleProject = toggleProject;
+window.deleteProject = deleteProject;
+window.toggleUserStatus = toggleUserStatus;
+window.exportProjectsExcel = exportProjectsExcel;
+window.exportProjectsPDF = exportProjectsPDF;
+window.exportManagersExcel = exportManagersExcel;
+window.exportManagersPDF = exportManagersPDF;
+</script>
+        <!-- صفحة إعدادات المشروع -->
+        <div id="projectSettings" class="tab-content hidden">
+            <div class="glass p-8 rounded-3xl max-w-5xl">
+                <h2 class="text-3xl font-extrabold mb-6">
+                    <i class="fas fa-sliders-h ml-2"></i> <span data-i18n="project_settings">إعدادات المشروع</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-300">اسم الشركة</label>
+                        <input id="set_companyName" type="text" class="w-full p-3 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-300">السجل التجاري</label>
+                        <input id="set_cr" type="text" class="w-full p-3 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-300">الرقم الضريبي</label>
+                        <input id="set_tax" type="text" class="w-full p-3 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-300">رقم التواصل</label>
+                        <input id="set_contact" type="text" class="w-full p-3 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block mb-2 font-bold text-gray-300">العنوان</label>
+                    <textarea id="set_address" class="w-full p-3 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-blue-500 focus:outline-none" rows="2"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-300">شعار الشركة</label>
+                        <input id="set_logo" type="file" accept="image/*" class="w-full p-3 rounded-xl bg-slate-800 border-2 border-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                        <img id="preview_logo" class="logo-preview mt-3 hidden">
+                    </div>
+                    <div>
+                        <label class="block mb-2 font-bold text-gray-300">الختم</label>
+                        <input id="set_stamp" type="file" accept="image/*" class="w-full p-3 rounded-xl bg-slate-800 border-2 border-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                        <img id="preview_stamp" class="logo-preview mt-3 hidden">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 flex-wrap">
+                    <button id="saveProjectSettingsBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition">
+                        <i class="fas fa-save ml-2"></i> حفظ الإعدادات
+                    </button>
+                    <button onclick="shareProjectWhatsApp()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold transition">
+                        <i class="fab fa-whatsapp ml-2"></i> مشاركة واتساب
+                    </button>
+                    <button onclick="exportProjectInfoPDF()" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-bold transition">
+                        <i class="fas fa-file-pdf ml-2"></i> تصدير PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة أنواع السندات + الأثر المحاسبي -->
+        <div id="bondTypes" class="tab-content hidden">
+            <div class="glass p-8 rounded-3xl">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <h2 class="text-3xl font-extrabold">
+                        <i class="fas fa-file-invoice ml-2"></i> <span data-i18n="bond_types">أنواع السندات</span>
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportBondTypesExcel()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">
+                            <i class="fas fa-file-excel ml-2"></i> اكسل
+                        </button>
+                        <button onclick="exportBondTypesPDF()" class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-bold transition">
+                            <i class="fas fa-file-pdf ml-2"></i> PDF
+                        </button>
+                        <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
+                            <i class="fas fa-plus ml-2"></i> نوع جديد
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="bondTypesTable">
+                        <thead class="bg-slate-800">
+                            <tr>
+                                <th class="p-4 text-right font-bold">اسم النوع</th>
+                                <th class="p-4 text-right font-bold">البادئة</th>
+                                <th class="p-4 text-right font-bold">النوع</th>
+                                <th class="p-4 text-right font-bold">الأثر المحاسبي</th>
+                                <th class="p-4 text-right font-bold">بداية التسلسل</th>
+                                <th class="p-4 text-right font-bold">نهاية التسلسل</th>
+                                <th class="p-4 text-right font-bold">الرقم الحالي</th>
+                                <th class="p-4 text-right font-bold no-print">تحكم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bondTypesTableBody" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+<script>
+// ========== إعدادات المشروع ==========
+function loadProjectSettings() {
+    if (!projectData) return;
+    document.getElementById('set_companyName').value = projectData.companyName || '';
+    document.getElementById('set_cr').value = projectData.cr || '';
+    document.getElementById('set_tax').value = projectData.tax || '';
+    document.getElementById('set_contact').value = projectData.contact || '';
+    document.getElementById('set_address').value = projectData.address || '';
+    
+    if (projectData.logo) {
+        document.getElementById('preview_logo').src = projectData.logo;
+        document.getElementById('preview_logo').classList.remove('hidden');
+    }
+    if (projectData.stamp) {
+        document.getElementById('preview_stamp').src = projectData.stamp;
+        document.getElementById('preview_stamp').classList.remove('hidden');
+    }
+}
+
+async function saveProjectSettings() {
+    const data = {
+        companyName: document.getElementById('set_companyName').value,
+        cr: document.getElementById('set_cr').value,
+        tax: document.getElementById('set_tax').value,
+        contact: document.getElementById('set_contact').value,
+        address: document.getElementById('set_address').value,
+        logo: document.getElementById('preview_logo').src || '',
+        stamp: document.getElementById('preview_stamp').src || ''
+    };
+    
+    await update(ref(db, `projects/${currentProject}/info`), data);
+    projectData = {...projectData, ...data};
+    Swal.fire('تم', 'انحفظت الإعدادات بنجاح', 'success');
+}
+
+// رفع الصور
+function toBase64(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('set_logo')?.addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            const base64 = await toBase64(e.target.files[0]);
+            document.getElementById('preview_logo').src = base64;
+            document.getElementById('preview_logo').classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('set_stamp')?.addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            const base64 = await toBase64(e.target.files[0]);
+            document.getElementById('preview_stamp').src = base64;
+            document.getElementById('preview_stamp').classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('saveProjectSettingsBtn')?.addEventListener('click', saveProjectSettings);
+});
+
+// ========== أنواع السندات + الأثر المحاسبي ==========
+function loadBondTypes() {
+    onValue(ref(db, `projects/${currentProject}/bondTypes`), (snap) => {
+        const tbody = document.getElementById('bondTypesTableBody');
+        tbody.innerHTML = '';
+        
+        if (snap.exists()) {
+            Object.entries(snap.val()).forEach(([id, type]) => {
+                const effectText = type.accountingEffect === '+1' ? 
+                    '<span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">موجب +1</span>' :
+                    type.accountingEffect === '-1' ? 
+                    '<span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">سالب -1</span>' :
+                    '<span class="bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full text-sm">محايد 0</span>';
+                
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="p-4 font-bold">${type.name}</td>
+                        <td class="p-4">${type.prefix}</td>
+                        <td class="p-4">${type.type}</td>
+                        <td class="p-4">${effectText}</td>
+                        <td class="p-4">${type.start}</td>
+                        <td class="p-4">${type.end}</td>
+                        <td class="p-4">${type.current || type.start}</td>
+                        <td class="p-4 no-print">
+                            <button onclick="editBondType('${id}')" class="text-blue-400 hover:text-blue-300 ml-3">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteBondType('${id}')" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        }
+    });
+}
+
+// إضافة نوع سند جديد مع الأثر المحاسبي الإجباري
+async function addBondType() {
+    const { value: formValues } = await Swal.fire({
+        title: 'نوع سند جديد',
+        html: `
+            <div class="text-right space-y-3">
+                <input id="swal-name" class="swal2-input" placeholder="اسم النوع (مثال: سند قبض)">
+                <input id="swal-prefix" class="swal2-input" placeholder="البادئة (مثال: RC)">
+                <select id="swal-type" class="swal2-input">
+                    <option value="قبض">قبض</option>
+                    <option value="صرف">صرف</option>
+                    <option value="قيد">قيد</option>
+                </select>
+                <select id="swal-effect" class="swal2-input">
+                    <option value="">-- اختر الأثر المحاسبي (إجباري) --</option>
+                    <option value="+1">موجب +1 (يزيد الرصيد - يحتاج توريد)</option>
+                    <option value="-1">سالب -1 (ينقص الرصيد - يحتاج توثيق)</option>
+                    <option value="0">محايد 0 (لا يؤثر على الرصيد)</option>
+                </select>
+                <input id="swal-start" type="number" class="swal2-input" placeholder="بداية التسلسل (مثال: 1)">
+                <input id="swal-end" type="number" class="swal2-input" placeholder="نهاية التسلسل (مثال: 99999)">
+            </div>
+        `,
+        width: '600px',
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'إضافة',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+            const name = document.getElementById('swal-name').value;
+            const prefix = document.getElementById('swal-prefix').value;
+            const type = document.getElementById('swal-type').value;
+            const effect = document.getElementById('swal-effect').value;
+            const start = parseInt(document.getElementById('swal-start').value);
+            const end = parseInt(document.getElementById('swal-end').value);
+
+            if (!name || !prefix || !effect || !start || !end) {
+                Swal.showValidationMessage('املأ كل الحقول - الأثر المحاسبي إجباري');
+                return false;
+            }
+            if (start >= end) {
+                Swal.showValidationMessage('نهاية التسلسل يجب تكون أكبر من البداية');
+                return false;
+            }
+            return { name, prefix, type, accountingEffect: effect, start, end };
+        }
+    });
+
+    if (!formValues) return;
+
+    const id = Date.now().toString();
+    await set(ref(db, `projects/${currentProject}/bondTypes/${id}`), {
+        ...formValues,
+        current: formValues.start,
+        createdAt: Date.now()
+    });
+
+    Swal.fire('تم', 'انضاف نوع السند بنجاح', 'success');
+}
+
+function deleteBondType(id) {
+    Swal.fire({
+        title: 'متأكد؟',
+        text: "ما تقدر تتراجع بعد الحذف",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'نعم احذف',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            remove(ref(db, `projects/${currentProject}/bondTypes/${id}`));
+            Swal.fire('تم الحذف', 'تم حذف نوع السند', 'success');
+        }
+    });
+}
+
+function exportBondTypesExcel() {
+    const wb = XLSX.utils.table_to_book(document.getElementById('bondTypesTable'));
+    XLSX.writeFile(wb, 'انواع_السندات.xlsx');
+}
+
+function exportBondTypesPDF() {
+    const { jsPDF } = window.jspdf;
+    html2canvas(document.getElementById('bondTypesTable')).then(canvas => {
+        const img = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        pdf.addImage(img, 'PNG', 10, 10, 277, 0);
+        pdf.save('انواع_السندات.pdf');
+    });
+}
+
+function shareProjectWhatsApp() {
+    const text = `*${projectData.companyName}*\nكود المشروع: ${currentProject}\nللدخول: ${window.location.origin}${window.location.pathname}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+}
+
+function exportProjectInfoPDF() {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    pdf.setFont('Cairo');
+    pdf.text(projectData.companyName || 'المشروع', 105, 20, { align: 'center' });
+    pdf.text(`كود: ${currentProject}`, 105, 30, { align: 'center' });
+    pdf.text(`السجل التجاري: ${projectData.cr || '-'}`, 105, 40, { align: 'center' });
+    pdf.text(`الرقم الضريبي: ${projectData.tax || '-'}`, 105, 50, { align: 'center' });
+    pdf.save('معلومات_المشروع.pdf');
+}
+
+// ربط الأزرار
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('addBondTypeBtn')?.addEventListener('click', addBondType);
+});
+
+window.loadProjectSettings = loadProjectSettings;
+window.saveProjectSettings = saveProjectSettings;
+window.loadBondTypes = loadBondTypes;
+window.addBondType = addBondType;
+window.deleteBondType = deleteBondType;
+window.exportBondTypesExcel = exportBondTypesExcel;
+window.exportBondTypesPDF = exportBondTypesPDF;
+window.shareProjectWhatsApp = shareProjectWhatsApp;
+window.exportProjectInfoPDF = exportProjectInfoPDF;
+</script>
