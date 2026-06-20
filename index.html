@@ -4,39 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>السندات الذكية V9.0</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
-    
-    <!-- المكتبات الأساسية -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/handsontable@13.1.0/dist/handsontable.full.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/handsontable@13.1.0/dist/handsontable.full.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/hyperformula/dist/hyperformula.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@14.3.0/dist/handsontable.full.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/handsontable@14.3.0/dist/handsontable.full.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hyperformula@2.6.2/dist/hyperformula.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-        body { font-family: 'Tajawal', sans-serif; }
-        .hidden { display: none !important; }
-        .tab-btn.active { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; }
-        .icon-sm { width: 1.1rem; height: 1.1rem; }
-        .toast { position: fixed; top: 20px; left: 20px; padding: 1rem 1.5rem; border-radius: 0.5rem; color: white; z-index: 9999; }
-        .toast.success { background-color: #10b981; }
-        .toast.error { background-color: #ef4444; }
-        .toast.info { background-color: #3b82f6; }
-        .chat-bubble { padding: 0.75rem 1rem; border-radius: 1rem; max-width: 70%; word-wrap: break-word; }
-        .chat-sent { background: #4f46e5; color: white; margin-left: auto; }
-        .chat-received { background: #e5e7eb; color: #1f2937; }
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; }
+        * { font-family: 'Cairo', sans-serif; }
+        .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .toast {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            padding: 16px 24px; border-radius: 12px; color: white; font-weight: bold;
+            animation: slideIn 0.3s ease-out;
         }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        .toast.warning { background: #f59e0b; }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .tab-btn.active { background: #3b82f6; color: white; }
+        .handsontable { font-size: 14px; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
     <!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="min-h-screen login-bg flex items-center justify-center p-4">
     <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
@@ -64,10 +58,9 @@
                 </select>
             </div>
             
-            <!-- حقل كود المشروع - مخفي للمدير العام -->
-            <div id="projectCodeField">
+            <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">كود المشروع</label>
-                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="للمدراء والمناديب فقط">
+                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="ادخل كود المشروع">
             </div>
             
             <div>
@@ -82,22 +75,82 @@
         </div>
     </div>
 </div>
-        <!-- تبويب الرئيسية -->
+<!-- التطبيق الرئيسي -->
+<div id="mainApp" class="hidden min-h-screen">
+    <!-- الهيدر -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <span class="text-2xl">📝</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-gray-800" data-i18n="app_title">السندات الذكية</h1>
+                        <p class="text-sm text-gray-500" id="userInfo">مرحبا</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="langSelectMain" class="px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none">
+                        <option value="ar">العربية</option>
+                        <option value="en">English</option>
+                        <option value="ur">اردو</option>
+                        <option value="fa">فارسی</option>
+                        <option value="tr">Türkçe</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="zh">中文</option>
+                    </select>
+                    <button onclick="logout()" class="px-6 py-2 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition" data-i18n="logout">خروج</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- المحتوى -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- التبويبات -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="flex flex-wrap gap-2" id="tabsContainer">
+                <button onclick="showTab('dashboard', this)" class="tab-btn active px-6 py-3 rounded-xl font-bold transition bg-blue-600 text-white" data-i18n="dashboard">الرئيسية</button>
+                <button onclick="showTab('projects', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="projects">المشاريع</button>
+                <button onclick="showTab('managers', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="managers">المدراء</button>
+                <button onclick="showTab('delegates', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="delegates">المناديب</button>
+                <button onclick="showTab('accountants', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="accountants">المحاسبين</button>
+                <button onclick="showTab('cashFlow', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="cash_flow">حركة الصندوق</button>
+                <button onclick="showTab('meetingRoom', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="meeting_room">قاعة الاجتماع</button>
+                <button onclick="showTab('bonds', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="bonds">السندات</button>
+                <button onclick="showTab('myBonds', this)" class="tab-btn px-6 py-3 rounded-xl font-bold transition bg-gray-100 hover:bg-gray-200" data-i18n="create_bond">سنداتي</button>
+            </div>
+        </div>
+               <!-- تبويب الرئيسية -->
         <div id="dashboard" class="tab-content">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h2 class="text-2xl font-extrabold text-gray-800 mb-6" data-i18n="dashboard">الرئيسية</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-                        <div class="text-4xl font-extrabold" id="totalProjects">0</div>
-                        <div class="text-sm mt-2 opacity-90">إجمالي المشاريع</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-blue-100 mb-2">إجمالي المشاريع</p>
+                            <h3 class="text-4xl font-extrabold" id="totalProjects">0</h3>
+                        </div>
+                        <div class="text-5xl opacity-50">📊</div>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-                        <div class="text-4xl font-extrabold" id="totalManagers">0</div>
-                        <div class="text-sm mt-2 opacity-90">إجمالي المدراء</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-purple-100 mb-2">إجمالي المدراء</p>
+                            <h3 class="text-4xl font-extrabold" id="totalManagers">0</h3>
+                        </div>
+                        <div class="text-5xl opacity-50">👥</div>
                     </div>
-                    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-                        <div class="text-4xl font-extrabold" id="totalBonds">0</div>
-                        <div class="text-sm mt-2 opacity-90">إجمالي السندات</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-2xl shadow-lg text-white">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-green-100 mb-2">إجمالي السندات</p>
+                            <h3 class="text-4xl font-extrabold" id="totalBonds">0</h3>
+                        </div>
+                        <div class="text-5xl opacity-50">📄</div>
                     </div>
                 </div>
             </div>
@@ -105,907 +158,1023 @@
 
         <!-- تبويب المشاريع -->
         <div id="projects" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="projects">المشاريع</h2>
-                    <button id="addProjectBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-700 transition shadow-lg">
-                        + إضافة مشروع
-                    </button>
+                    <button onclick="addProject()" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">+ مشروع جديد</button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">اسم المشروع</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الكود</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">المدير</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الحالة</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="projectsTableBody">
-                            <!-- يتم تعبئتها من Firebase -->
-                        </tbody>
-                    </table>
-                </div>
+                <div id="projectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
 
         <!-- تبويب المدراء -->
         <div id="managers" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="managers">المدراء</h2>
-                    <button id="addManagerBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-700 transition shadow-lg">
-                        + إضافة مدير
-                    </button>
+                    <button onclick="addManager()" class="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition">+ مدير جديد</button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الاسم</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الجوال</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">المشروع</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الحالة</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="managersTableBody">
-                            <!-- يتم تعبئتها من Firebase -->
-                        </tbody>
-                    </table>
+                <div id="managersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+                <!-- تبويب المناديب -->
+        <div id="delegates" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="delegates">المناديب</h2>
+                    <button onclick="addDelegate()" class="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition">+ مندوب جديد</button>
                 </div>
+                <div id="delegatesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
 
-        <!-- تبويب المناديب -->
-        <div id="delegates" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
+        <!-- تبويب المحاسبين -->
+        <div id="accountants" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="delegates">المناديب</h2>
-                    <button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-700 transition shadow-lg">
-                        + إضافة مندوب
-                    </button>
+                    <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="accountants">المحاسبين</h2>
+                    <button onclick="addAccountant()" class="px-6 py-3 bg-yellow-600 text-white rounded-xl font-bold hover:bg-yellow-700 transition">+ محاسب جديد</button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الاسم</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الجوال</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الحد اليومي</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">سقف السند</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="delegatesTableBody">
-                            <!-- يتم تعبئتها من Firebase -->
-                        </tbody>
-                    </table>
-                </div>
+                <div id="accountantsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
-<!-- تبويب السندات -->
-        <div id="bonds" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-                    <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="bonds">السندات</h2>
-                    <div class="flex flex-wrap gap-2">
-                        <button id="approveAllBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition" data-i18n="approve_all">
-                            ✅ توثيق الكل
-                        </button>
-                        <button id="exportExcelBtn" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition" data-i18n="excel">
-                            📊 اكسل
-                        </button>
-                        <button id="exportPdfBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition" data-i18n="pdf">
-                            📄 PDF
-                        </button>
-                        <button onclick="window.print()" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700 transition no-print" data-i18n="print">
-                            🖨 طباعة
-                        </button>
+
+        <!-- تبويب حركة الصندوق -->
+        <div id="cashFlow" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-6" data-i18n="cash_flow">حركة الصندوق</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl text-white">
+                        <p class="text-green-100 mb-2">الرصيد الحالي</p>
+                        <h3 class="text-3xl font-extrabold" id="currentBalance">0.00</h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl text-white">
+                        <p class="text-blue-100 mb-2">إجمالي المقبوضات</p>
+                        <h3 class="text-3xl font-extrabold" id="totalIncome">0.00</h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-red-500 to-red-600 p-6 rounded-xl text-white">
+                        <p class="text-red-100 mb-2">إجمالي المدفوعات</p>
+                        <h3 class="text-3xl font-extrabold" id="totalExpense">0.00</h3>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl text-white">
+                        <p class="text-purple-100 mb-2">عدد الحركات</p>
+                        <h3 class="text-3xl font-extrabold" id="totalTransactions">0</h3>
                     </div>
                 </div>
 
-                <!-- فلاتر -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 p-4 bg-gray-50 rounded-xl">
-                    <input id="filterDelegate" type="text" placeholder="فلتر بالمستخدم" class="p-2 border-2 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
-                    <input id="filterFromDate" type="date" class="p-2 border-2 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
-                    <input id="filterToDate" type="date" class="p-2 border-2 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
-                    <select id="filterStatus" class="p-2 border-2 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:outline-none">
+                <div class="mb-4 flex gap-3">
+                    <button onclick="addCashTransaction('income')" class="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition">+ قبض</button>
+                    <button onclick="addCashTransaction('expense')" class="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition">- صرف</button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-right">التاريخ</th>
+                                <th class="p-3 text-right">النوع</th>
+                                <th class="p-3 text-right">المبلغ</th>
+                                <th class="p-3 text-right">البيان</th>
+                                <th class="p-3 text-right">المستخدم</th>
+                                <th class="p-3 text-right">الرصيد</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashFlowTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+               <!-- تبويب قاعة الاجتماع -->
+        <div id="meetingRoom" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-6" data-i18n="meeting_room">قاعة الاجتماع</h2>
+                
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-2xl p-6 mb-6">
+                    <h3 class="text-xl font-bold text-blue-900 mb-4">📢 تنبيهات المشروع</h3>
+                    <div id="projectAlerts" class="space-y-3"></div>
+                </div>
+
+                <div class="bg-white border-2 border-gray-200 rounded-2xl p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">💬 الدردشة الجماعية</h3>
+                    <div id="chatMessages" class="h-96 overflow-y-auto bg-gray-50 rounded-xl p-4 mb-4 space-y-3"></div>
+                    <div class="flex gap-2">
+                        <input id="chatInput" type="text" class="flex-1 p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="اكتب رسالتك...">
+                        <button onclick="sendChatMessage()" class="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">إرسال</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب السندات -->
+        <div id="bonds" class="tab-content hidden">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="bonds">السندات</h2>
+                    <div class="flex gap-3">
+                        <button onclick="exportBondsToExcel()" class="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition">📊 تصدير Excel</button>
+                        <button onclick="printBonds()" class="px-6 py-3 bg-gray-600 text-white rounded-xl font-bold hover:bg-gray-700 transition">🖨️ طباعة</button>
+                    </div>
+                </div>
+                
+                <div class="mb-4 flex flex-wrap gap-3">
+                    <input id="searchBonds" type="text" class="flex-1 min-w- p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="بحث...">
+                    <select id="filterBondType" class="p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none">
+                        <option value="">كل الأنواع</option>
+                    </select>
+                    <select id="filterBondStatus" class="p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none">
                         <option value="">كل الحالات</option>
-                        <option value="pending">بانتظار التوثيق</option>
-                        <option value="verified">موثق</option>
-                        <option value="supplied">مورد</option>
-                        <option value="not_supplied">غير مورد</option>
+                        <option value="pending">معلق</option>
+                        <option value="approved">معتمد</option>
+                        <option value="rejected">مرفوض</option>
                     </select>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الرقم</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">النوع</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">المبلغ</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">المستخدم</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">التاريخ</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">الحالة</th>
-                                <th class="p-3 text-right text-sm font-bold text-gray-700">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bondsTableBody">
-                            <!-- يتم تعبئتها من Firebase -->
-                        </tbody>
-                    </table>
-                </div>
+                <div id="bondsTable" class="overflow-x-auto"></div>
             </div>
         </div>
 
-        <!-- تبويب إنشاء سند -->
-        <div id="createBond" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h2 class="text-2xl font-extrabold text-gray-800 mb-6" data-i18n="create_bond">إنشاء سند جديد</h2>
-                
-                <!-- تنبيه صلاحيات المندوب -->
-                <div id="delegateLimitsAlert" class="hidden mb-6 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
-                    <div class="flex items-center gap-2 text-amber-800 font-bold mb-2">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
-                        صلاحياتك اليومية
-                    </div>
-                    <div id="delegateLimitsInfo" class="text-sm text-amber-700"></div>
-                </div>
-
-                <form id="createBondForm" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">نوع السند</label>
-                            <select id="bondType" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
-                                <option value="">اختر النوع</option>
-                                <option value="قبض">قبض</option>
-                                <option value="صرف">صرف</option>
-                                <option value="قيد">قيد</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">المبلغ</label>
-                            <input id="bondAmount" type="number" step="0.01" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="0.00">
-                            <p id="amountLimitHint" class="text-xs text-red-600 mt-1 hidden"></p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">طريقة الدفع</label>
-                            <select id="paymentMethod" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
-                                <option value="">اختر الطريقة</option>
-                                <option value="كاش">كاش</option>
-                                <option value="تحويل">تحويل بنكي</option>
-                                <option value="شبكة">شبكة</option>
-                                <option value="شيك">شيك</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">التاريخ</label>
-                            <input id="bondDate" type="date" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">البيان</label>
-                        <textarea id="bondDescription" rows="3" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="اكتب تفاصيل السند..."></textarea>
-                    </div>
-                    <button id="submitBondBtn" type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition shadow-lg" data-i18n="create_bond">
-                        إنشاء السند
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- تبويب سنداتي - للمندوب -->
+        <!-- تبويب سنداتي -->
         <div id="myBonds" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h2 class="text-2xl font-extrabold text-gray-800 mb-6">سنداتي</h2>
-                <div id="myBondsList" class="space-y-3">
-                    <!-- يتم تعبئتها من Firebase -->
-                </div>
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h2 class="text-2xl font-extrabold text-gray-800 mb-6" data-i18n="create_bond">سنداتي</h2>
+                <div id="myBondsList" class="space-y-4"></div>
             </div>
         </div>
 
-        <!-- الصفحة 1: المحاسبين + الشيت الذكي -->
-        <div id="accountants" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-extrabold text-gray-800" data-i18n="accountants">المحاسبين - الشيت الذكي</h2>
-                    <div class="flex gap-2">
-                        <button id="saveSheetBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition" data-i18n="save">💾 حفظ</button>
-                        <button id="sendToDelegatesBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition" data-i18n="send">📤 إرسال للمناديب</button>
-                    </div>
-                </div>
-                <div id="smartSheetContainer" class="w-full h- border-2 border-gray-300 rounded-xl overflow-hidden"></div>
-            </div>
-        </div>
-
-        <!-- الصفحة 2: حركة الصندوق -->
-        <div id="cashFlow" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h2 class="text-2xl font-extrabold text-gray-800 mb-6" data-i18n="cash_flow">حركة الصندوق</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-green-50 border-2 border-green-300 rounded-xl p-6">
-                        <div class="text-sm text-green-700 font-bold mb-2">إجمالي القبض</div>
-                        <div id="totalIncome" class="text-3xl font-extrabold text-green-600">0.00 ريال</div>
-                    </div>
-                    <div class="bg-red-50 border-2 border-red-300 rounded-xl p-6">
-                        <div class="text-sm text-red-700 font-bold mb-2">إجمالي الصرف</div>
-                        <div id="totalExpense" class="text-3xl font-extrabold text-red-600">0.00 ريال</div>
-                    </div>
-                </div>
-                <div class="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
-                    <div class="text-sm text-blue-700 font-bold mb-2">الرصيد الحالي</div>
-                    <div id="currentBalance" class="text-4xl font-extrabold text-blue-600">0.00 ريال</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- الصفحة 3: قاعة الاجتماع -->
-        <div id="meetingRoom" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <h2 class="text-2xl font-extrabold text-gray-800 mb-6" data-i18n="meeting_room">قاعة الاجتماع</h2>
-                <div class="border-2 border-gray-300 rounded-xl h- flex flex-col">
-                    <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3">
-                        <!-- الرسائل -->
-                    </div>
-                    <div class="border-t-2 border-gray-300 p-4">
-                        <div class="flex gap-2">
-                            <input id="chatInput" type="text" placeholder="اكتب رسالتك..." class="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
-                            <button id="sendChatBtn" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition">إرسال</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 </div>
-
-<!-- مودال عرض السند -->
-<div id="bondModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h- overflow-y-auto">
-        <div class="p-6">
-            <div class="flex justify-between items-start mb-6">
-                <h3 class="text-2xl font-extrabold text-gray-800">تفاصيل السند</h3>
-                <button onclick="closeBondModal()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <div id="bondModalContent"></div>
-            <div id="managerActions" class="hidden mt-6 flex gap-3">
-                <button id="verifyBondBtn" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition">✅ توثيق</button>
-                <button id="rejectBondBtn" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition">❌ رفض</button>
-                <button id="suspendBondBtn" class="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition">⛔ إيقاف</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- حاوية التوست -->
-<div id="toastContainer"></div>
 <script type="module">
-// ====== المكتبات ======
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, get, push, onValue, update, remove, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+import { getDatabase, ref, set, get, push, update, remove, onValue, off, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-// ====== ✅ إعدادات Firebase حقك - جاهزة 100% ======
+// إعدادات Firebase - استبدلها بإعداداتك
 const firebaseConfig = {
-    apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
-    authDomain: "sanadat-pro.firebaseapp.com",
-    databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "sanadat-pro",
-    storageBucket: "sanadat-pro.appspot.com",
-    messagingSenderId: "1039476751095",
-    appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const storage = getStorage(app);
 
-<script type="module">
-// ====== المكتبات ======
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, set, get, push, onValue, update, remove, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
-
-// ====== ✅ إعدادات Firebase حقك - جاهزة 100% ======
-const firebaseConfig = {
-    apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
-    authDomain: "sanadat-pro.firebaseapp.com",
-    databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "sanadat-pro",
-    storageBucket: "sanadat-pro.appspot.com",
-    messagingSenderId: "1039476751095",
-    appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const storage = getStorage(app);
-
-// ====== المتغيرات العامة ======
+// المتغيرات العامة
 let currentUser = null;
 let currentProject = null;
-let currentProjectId = null;
-let projectData = {};
-let projectPages = [];
+let currentLang = 'ar';
 let hotInstance = null;
-let currentLang = localStorage.getItem('app_lang') || 'ar';
-let currentRole = null;
-let userPermissions = [];
-let delegateLimits = { dailyLimit: 0, maxAmount: 0, dailyCount: 0, allowedBondTypes: [], allowedPayments: [] };
-let allBonds = [];
-let allUsers = [];
+let bondsData = [];
+let projectsData = {};
+let managersData = {};
+let delegatesData = {};
+let accountantsData = {};
+let cashFlowData = [];
+let usersData = {};
 let chatMessages = [];
+let delegateLimits = null;
+let paymentMethods = ['نقدي', 'تحويل بنكي', 'شيك', 'بطاقة ائتمان'];
+let bondTypes = ['سند قبض', 'سند صرف', 'سند قيد'];
 
-// ====== الترجمة - 8 لغات كاملة ======
+// الترجمات
 const translations = {
     ar: {
-        app_title: "السندات الذكية", login: "تسجيل الدخول", logout: "خروج", dashboard: "الرئيسية", projects: "المشاريع", managers: "المدراء", delegates: "المناديب", accountants: "المحاسبين", cash_flow: "حركة الصندوق", meeting_room: "قاعة الاجتماع", create_bond: "إنشاء سند", bonds: "السندات", excel: "اكسل", pdf: "PDF", print: "طباعة", whatsapp: "واتساب", qr: "QR", save: "حفظ", send: "إرسال", filter: "فلتر", verified: "موثق", pending: "بانتظار التوثيق", supplied: "مورد", not_supplied: "غير مورد", suspend_bond: "إيقاف سند", delete_bond: "حذف سند", edit_bond: "تعديل سند", approve_all: "توثيق الكل", project_code: "كود المشروع", phone: "رقم الجوال", password: "كلمة المرور"
+        app_title: 'السندات الذكية',
+        logout: 'خروج',
+        dashboard: 'الرئيسية',
+        projects: 'المشاريع',
+        managers: 'المدراء',
+        delegates: 'المناديب',
+        accountants: 'المحاسبين',
+        cash_flow: 'حركة الصندوق',
+        meeting_room: 'قاعة الاجتماع',
+        bonds: 'السندات',
+        create_bond: 'سنداتي',
+        login_success: 'تم تسجيل الدخول بنجاح',
+        login_error: 'بيانات الدخول غير صحيحة',
+        project_code_required: 'كود المشروع مطلوب',
+        bond_created: 'تم إنشاء السند بنجاح',
+        bond_approved: 'تم اعتماد السند',
+        bond_rejected: 'تم رفض السند',
+        fill_all_fields: 'املأ كل الحقول',
+        confirm_delete: 'هل أنت متأكد من الحذف؟',
+        deleted_success: 'تم الحذف بنجاح',
+        updated_success: 'تم التحديث بنجاح'
     },
     en: {
-        app_title: "Smart Bonds", login: "Login", logout: "Logout", dashboard: "Dashboard", projects: "Projects", managers: "Managers", delegates: "Delegates", accountants: "Accountants", cash_flow: "Cash Flow", meeting_room: "Meeting Room", create_bond: "Create Bond", bonds: "Bonds", excel: "Excel", pdf: "PDF", print: "Print", whatsapp: "WhatsApp", qr: "QR", save: "Save", send: "Send", filter: "Filter", verified: "Verified", pending: "Pending", supplied: "Supplied", not_supplied: "Not Supplied", suspend_bond: "Suspend Bond", delete_bond: "Delete Bond", edit_bond: "Edit Bond", approve_all: "Approve All", project_code: "Project Code", phone: "Phone", password: "Password"
-    },
-    ur: { app_title: "اسمارٹ بانڈز", login: "لاگ ان", logout: "لاگ آؤٹ", dashboard: "ڈیش بورڈ", projects: "پروجیکٹس", managers: "مینیجرز", delegates: "نمائندے", accountants: "اکاؤنٹنٹس", cash_flow: "کیش فلو", meeting_room: "میٹنگ روم", create_bond: "بانڈ بنائیں", bonds: "بانڈز", save: "محفوظ کریں", send: "بھیجیں" },
-    fa: { app_title: "اوراق هوشمند", login: "ورود", logout: "خروج", dashboard: "داشبورد", projects: "پروژهها", managers: "مدیران", delegates: "نمایندگان", accountants: "حسابداران", cash_flow: "جریان نقدی", meeting_room: "اتاق جلسه", create_bond: "ایجاد سند", bonds: "اسناد", save: "ذخیره", send: "ارسال" },
-    tr: { app_title: "Akıllı Senetler", login: "Giriş", logout: "Çıkış", dashboard: "Panel", projects: "Projeler", managers: "Yöneticiler", delegates: "Temsilciler", accountants: "Muhasebeciler", cash_flow: "Nakit Akışı", meeting_room: "Toplantı Odası", create_bond: "Senet Oluştur", bonds: "Senetler", save: "Kaydet", send: "Gönder" },
-    fr: { app_title: "Obligations Intelligentes", login: "Connexion", logout: "Déconnexion", dashboard: "Tableau de bord", projects: "Projets", managers: "Gestionnaires", delegates: "Délégués", accountants: "Comptables", cash_flow: "Flux de trésorerie", meeting_room: "Salle de réunion", create_bond: "Créer un bon", bonds: "Bons", save: "Enregistrer", send: "Envoyer" },
-    de: { app_title: "Intelligente Anleihen", login: "Anmelden", logout: "Abmelden", dashboard: "Dashboard", projects: "Projekte", managers: "Manager", delegates: "Delegierte", accountants: "Buchhalter", cash_flow: "Cashflow", meeting_room: "Besprechungsraum", create_bond: "Beleg erstellen", bonds: "Belege", save: "Speichern", send: "Senden" },
-    zh: { app_title: "智能债券", login: "登录", logout: "登出", dashboard: "仪表板", projects: "项目", managers: "经理", delegates: "代表", accountants: "会计", cash_flow: "现金流", meeting_room: "会议室", create_bond: "创建债券", bonds: "债券", save: "保存", send: "发送" }
+        app_title: 'Smart Bonds',
+        logout: 'Logout',
+        dashboard: 'Dashboard',
+        projects: 'Projects',
+        managers: 'Managers',
+        delegates: 'Delegates',
+        accountants: 'Accountants',
+        cash_flow: 'Cash Flow',
+        meeting_room: 'Meeting Room',
+        bonds: 'Bonds',
+        create_bond: 'My Bonds',
+        login_success: 'Login successful',
+        login_error: 'Invalid credentials',
+        project_code_required: 'Project code required',
+        bond_created: 'Bond created successfully',
+        bond_approved: 'Bond approved',
+        bond_rejected: 'Bond rejected',
+        fill_all_fields: 'Fill all fields',
+        confirm_delete: 'Are you sure to delete?',
+        deleted_success: 'Deleted successfully',
+        updated_success: 'Updated successfully'
+    }
 };
 
-// ====== دالة الترجمة ======
-function translatePage(lang) {
-    currentLang = lang;
-    localStorage.setItem('app_lang', lang);
-    document.documentElement.dir = ['ar', 'ur', 'fa'].includes(lang)? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
+// دالة Toast
+window.showToast = function(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
+// دالة تغيير اللغة
+window.changeLang = function(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = ['ar', 'ur', 'fa'].includes(lang)? 'rtl' : 'ltr';
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang] && translations[lang][key]) {
             el.textContent = translations[lang][key];
         }
     });
-
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (translations[lang] && translations[lang][key]) {
-            el.placeholder = translations[lang][key];
-        }
-    });
+    localStorage.setItem('lang', lang);
 }
 
-// ====== دالة التبديل بين التبويبات ======
-function showTab(tabId, btnElement) {
+// دالة عرض التبويب
+window.showTab = function(tabName, btn) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.classList.add('bg-gray-100');
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active', 'bg-blue-600', 'text-white');
+        b.classList.add('bg-gray-100');
     });
-    const targetTab = document.getElementById(tabId);
-    if (targetTab) targetTab.classList.remove('hidden');
-    if (btnElement) {
-        btnElement.classList.add('active');
-        btnElement.classList.remove('bg-gray-100');
+    document.getElementById(tabName).classList.remove('hidden');
+    if (btn) {
+        btn.classList.add('active', 'bg-blue-600', 'text-white');
+        btn.classList.remove('bg-gray-100');
     }
-    if (tabId === 'dashboard') loadDashboard();
-    if (tabId === 'projects') loadProjects();
-    if (tabId === 'managers') loadManagers();
-    if (tabId === 'delegates') loadDelegates();
-    if (tabId === 'bonds') loadBonds();
-    if (tabId === 'accountants') initSmartSheet();
-    if (tabId === 'cashFlow') loadCashFlow();
-    if (tabId === 'meetingRoom') loadChatMessages();
-    if (tabId === 'myBonds') loadMyBonds();
-}
-window.showTab = showTab;
-
-// ====== دالة التوست ======
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.getElementById('toastContainer').appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    
+    // تحميل البيانات حسب التبويب
+    if (tabName === 'bonds') loadBonds();
+    if (tabName === 'myBonds') loadMyBonds();
+    if (tabName === 'cashFlow') loadCashFlow();
+    if (tabName === 'meetingRoom') loadChat();
 }
 
-// ====== دالة إغلاق المودال ======
-function closeBondModal() {
-    document.getElementById('bondModal').classList.add('hidden');
+// دالة تسجيل الخروج
+window.logout = function() {
+    Swal.fire({
+        title: 'تأكيد',
+        text: 'هل تريد تسجيل الخروج؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم',
+        cancelButtonText: 'لا'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('currentUser');
+            location.reload();
+        }
+    });
 }
-window.closeBondModal = closeBondModal;
-
-// ====== تسجيل الدخول - محدث ======
-async function handleLogin() {
-    const projectCode = document.getElementById('projectCode')?.value.trim();
-    const phone = document.getElementById('phone')?.value.trim();
-    const password = document.getElementById('password')?.value.trim();
-
-    if (!phone ||!password) {
-        Swal.fire('تنبيه', 'املأ الجوال وكلمة المرور', 'warning');
+    // تسجيل الدخول
+document.getElementById('loginBtn').onclick = async function() {
+    const projectCode = document.getElementById('projectCode').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value.trim();
+    
+    if (!projectCode ||!phone ||!password) {
+        showToast(translations[currentLang].fill_all_fields, 'error');
         return;
     }
-
-    if (phone === '0597087767' && password === '500600') {
-        showToast('جاري تسجيل الدخول...', 'info');
-        currentUser = { phone: '0597087767', password: '500600', name: 'المدير العام', role: 'superadmin', active: true };
-        currentProject = 'SUPERADMIN';
-        currentProjectId = 'SUPERADMIN';
-        currentRole = 'superadmin';
-        projectData = { name: 'الإدارة العامة', code: 'SUPERADMIN', active: true };
-        localStorage.setItem('phone', phone);
-        localStorage.setItem('password', password);
-        localStorage.removeItem('projectCode');
-        showMainApp();
-        return;
-    }
-
-    if (!projectCode) {
-        Swal.fire('تنبيه', 'ادخل كود المشروع', 'warning');
-        return;
-    }
-
+    
     try {
-        showToast('جاري تسجيل الدخول...', 'info');
-        const snapshot = await get(ref(db, `projects/${projectCode}/users/${phone}`));
-        if (!snapshot.exists()) {
-            Swal.fire('خطأ', 'المستخدم غير موجود في هذا المشروع', 'error');
+        // التحقق من المشروع
+        const projectRef = ref(db, `projects/${projectCode}`);
+        const projectSnap = await get(projectRef);
+        
+        if (!projectSnap.exists()) {
+            showToast('كود المشروع غير صحيح', 'error');
             return;
         }
-        const user = snapshot.val();
-        if (user.password!== password) {
-            Swal.fire('خطأ', 'كلمة السر غلط', 'error');
+        
+        currentProject = { code: projectCode,...projectSnap.val() };
+        
+        // التحقق من المستخدم
+        const usersRef = ref(db, 'users');
+        const usersQuery = query(usersRef, orderByChild('phone'), equalTo(phone));
+        const usersSnap = await get(usersQuery);
+        
+        if (!usersSnap.exists()) {
+            showToast(translations[currentLang].login_error, 'error');
             return;
         }
-        if (!user.active) {
-            Swal.fire('خطأ', 'حسابك موقوف', 'error');
-            return;
-        }
-        const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
-        projectData = projectSnap.val();
-        if (!projectData.active) {
-            Swal.fire('خطأ', 'المشروع موقوف', 'error');
-            return;
-        }
-        userPermissions = user.permissions || [];
-        currentUser = user;
-        currentProject = projectCode;
-        currentProjectId = projectCode;
-        currentRole = user.role;
-        localStorage.setItem('projectCode', projectCode);
-        localStorage.setItem('phone', phone);
-        localStorage.setItem('password', password);
-        showMainApp();
-    } catch (e) {
-        console.error(e);
-        Swal.fire('خطأ', 'تأكد من البيانات', 'error');
-    }
-}
-
-// ====== إظهار التطبيق الرئيسي ======
-function showMainApp() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
-    translatePage(currentLang);
-    loadDashboard();
-    if (currentUser.role === 'delegate') loadDelegateLimits();
-}
-
-// ====== إخفاء/إظهار حقل كود المشروع ======
-document.addEventListener('DOMContentLoaded', () => {
-    const phoneInput = document.getElementById('phone');
-    const projectField = document.getElementById('projectCodeField');
-    if (phoneInput && projectField) {
-        phoneInput.addEventListener('input', (e) => {
-            if (e.target.value === '0597087767') {
-                projectField.classList.add('hidden');
-                document.getElementById('projectCode').value = '';
-            } else {
-                projectField.classList.remove('hidden');
+        
+        let userFound = false;
+        usersSnap.forEach((child) => {
+            const user = child.val();
+            if (user.password === password && user.projectCode === projectCode) {
+                currentUser = { id: child.key,...user };
+                userFound = true;
             }
         });
+        
+        if (!userFound) {
+            showToast(translations[currentLang].login_error, 'error');
+            return;
+        }
+        
+        // حفظ البيانات وتحميل التطبيق
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('currentProject', JSON.stringify(currentProject));
+        
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        document.getElementById('userInfo').textContent = `مرحبا ${currentUser.name}`;
+        
+        showToast(translations[currentLang].login_success, 'success');
+        
+        // تحميل البيانات
+        await loadAllData();
+        await checkDelegateLimits();
+        await loadBondTypes();
+        await loadPaymentMethods();
+        
+    } catch (error) {
+        console.error(error);
+        showToast('حدث خطأ في تسجيل الدخول', 'error');
     }
-    document.getElementById('loginBtn')?.addEventListener('click', handleLogin);
-    document.getElementById('createBondForm')?.addEventListener('submit', handleCreateBond);
-    document.getElementById('filterDelegate')?.addEventListener('input', filterBonds);
-    document.getElementById('filterFromDate')?.addEventListener('change', filterBonds);
-    document.getElementById('filterToDate')?.addEventListener('change', filterBonds);
-    document.getElementById('filterStatus')?.addEventListener('change', filterBonds);
-});
+};
 
-// ====== تحميل صلاحيات المندوب ======
-async function loadDelegateLimits() {
-    if (currentUser.role!== 'delegate') return;
-    delegateLimits.dailyLimit = currentUser.dailyBondLimit || 0;
-    delegateLimits.maxAmount = currentUser.maxBondAmount || 0;
-    delegateLimits.allowedBondTypes = currentUser.allowedBondTypes || ['قبض', 'صرف'];
-    delegateLimits.allowedPayments = currentUser.allowedPayments || ['كاش', 'تحويل', 'شبكة'];
-    const today = new Date().toISOString().split('T')[0];
-    const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
-    const snapshot = await get(query(bondsRef, orderByChild('createdBy'), equalTo(currentUser.id)));
-    delegateLimits.dailyCount = 0;
-    snapshot.forEach((child) => {
-        if (child.val().createdAt.startsWith(today)) delegateLimits.dailyCount++;
+// تحميل كل البيانات
+async function loadAllData() {
+    await Promise.all([
+        loadProjects(),
+        loadManagers(),
+        loadDelegates(),
+        loadAccountants(),
+        loadBonds(),
+        loadCashFlow(),
+        loadUsers()
+    ]);
+    updateDashboard();
+}
+
+// تحميل المشاريع
+async function loadProjects() {
+    const projectsRef = ref(db, 'projects');
+    onValue(projectsRef, (snapshot) => {
+        projectsData = snapshot.val() || {};
+        renderProjects();
+        document.getElementById('totalProjects').textContent = Object.keys(projectsData).length;
     });
-    updateDelegateAlert();
 }
 
-// ====== تحديث تنبيه صلاحيات المندوب ======
-function updateDelegateAlert() {
-    const alertDiv = document.getElementById('delegateLimitsAlert');
-    const infoDiv = document.getElementById('delegateLimitsInfo');
-    const submitBtn = document.getElementById('submitBondBtn');
-    const amountHint = document.getElementById('amountLimitHint');
-    if (!alertDiv ||!infoDiv ||!submitBtn) return;
-    alertDiv.classList.remove('hidden');
-    const remaining = delegateLimits.dailyLimit - delegateLimits.dailyCount;
-    if (remaining <= 0) {
-        infoDiv.innerHTML = `<div class="font-bold text-red-700">⛔ تم الوصول للحد اليومي ${delegateLimits.dailyCount}/${delegateLimits.dailyLimit}</div>`;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'مقفل - تم الوصول للحد';
-        submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.remove('from-blue-600', 'to-purple-600');
-    } else {
-        infoDiv.innerHTML = `المتبقي: <span class="font-bold">${remaining}</span> سند من ${delegateLimits.dailyLimit} | سقف السند: <span class="font-bold">${delegateLimits.maxAmount}</span> ريال`;
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'إنشاء السند';
-        submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.add('from-blue-600', 'to-purple-600');
+// تحميل المدراء
+async function loadManagers() {
+    const managersRef = ref(db, 'users');
+    const managersQuery = query(managersRef, orderByChild('role'), equalTo('manager'));
+    onValue(managersQuery, (snapshot) => {
+        managersData = {};
+        snapshot.forEach((child) => {
+            managersData[child.key] = child.val();
+        });
+        renderManagers();
+        document.getElementById('totalManagers').textContent = Object.keys(managersData).length;
+    });
+}
+
+// تحميل المناديب
+async function loadDelegates() {
+    const delegatesRef = ref(db, 'users');
+    const delegatesQuery = query(delegatesRef, orderByChild('role'), equalTo('delegate'));
+    onValue(delegatesQuery, (snapshot) => {
+        delegatesData = {};
+        snapshot.forEach((child) => {
+            delegatesData[child.key] = child.val();
+        });
+        renderDelegates();
+    });
+}
+
+// تحميل المحاسبين
+async function loadAccountants() {
+    const accountantsRef = ref(db, 'users');
+    const accountantsQuery = query(accountantsRef, orderByChild('role'), equalTo('accountant'));
+    onValue(accountantsQuery, (snapshot) => {
+        accountantsData = {};
+        snapshot.forEach((child) => {
+            accountantsData[child.key] = child.val();
+        });
+        renderAccountants();
+    });
+}
+
+// تحميل السندات
+async function loadBonds() {
+    const bondsRef = ref(db, `bonds/${currentProject.code}`);
+    onValue(bondsRef, (snapshot) => {
+        bondsData = [];
+        snapshot.forEach((child) => {
+            bondsData.push({ id: child.key,...child.val() });
+        });
+        bondsData.sort((a, b) => b.createdAt - a.createdAt);
+        renderBondsTable();
+        document.getElementById('totalBonds').textContent = bondsData.length;
+        updateDashboard();
+    });
+}
+
+// تحميل سنداتي
+async function loadMyBonds() {
+    const myBonds = bondsData.filter(b => b.createdBy === currentUser.id);
+    renderMyBonds(myBonds);
+}
+
+// تحميل حركة الصندوق
+async function loadCashFlow() {
+    const cashRef = ref(db, `cashflow/${currentProject.code}`);
+    onValue(cashRef, (snapshot) => {
+        cashFlowData = [];
+        snapshot.forEach((child) => {
+            cashFlowData.push({ id: child.key,...child.val() });
+        });
+        cashFlowData.sort((a, b) => b.createdAt - a.createdAt);
+        renderCashFlow();
+        updateCashFlowSummary();
+    });
+}
+
+// تحميل المستخدمين
+async function loadUsers() {
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, (snapshot) => {
+        usersData = snapshot.val() || {};
+        renderOnlineUsers();
+    });
+}
+
+// تحميل الدردشة
+async function loadChat() {
+    const chatRef = ref(db, `chat/${currentProject.code}`);
+    onValue(chatRef, (snapshot) => {
+        chatMessages = [];
+        snapshot.forEach((child) => {
+            chatMessages.push({ id: child.key,...child.val() });
+        });
+        renderChatMessages();
+    });
+}
+
+// التحقق من صلاحيات المندوب
+async function checkDelegateLimits() {
+    if (currentUser.role === 'delegate') {
+        const limitsRef = ref(db, `delegates/${currentUser.id}/limits`);
+        const limitsSnap = await get(limitsRef);
+        delegateLimits = limitsSnap.val();
+        
+        if (delegateLimits) {
+            document.getElementById('delegateLimitsAlert').classList.remove('hidden');
+            document.getElementById('delegateLimitsInfo').innerHTML = `
+                <p>• الحد الأقصى للسند: ${delegateLimits.maxBondAmount} ريال</p>
+                <p>• عدد السندات اليومي: ${delegateLimits.dailyLimit}</p>
+                <p>• الأنواع المسموحة: ${delegateLimits.allowedTypes.join(', ')}</p>
+            `;
+            document.getElementById('amountLimitHint').classList.remove('hidden');
+            document.getElementById('amountLimitHint').textContent = `الحد الأقصى: ${delegateLimits.maxBondAmount} ريال`;
+        }
     }
+}
+
+// تحميل أنواع السندات
+async function loadBondTypes() {
+    const typesRef = ref(db, `settings/${currentProject.code}/bondTypes`);
+    const typesSnap = await get(typesRef);
+    if (typesSnap.exists()) {
+        bondTypes = typesSnap.val();
+    }
+    
     const bondTypeSelect = document.getElementById('bondType');
-    if (bondTypeSelect) {
-        bondTypeSelect.innerHTML = '<option value="">اختر النوع</option>';
-        delegateLimits.allowedBondTypes.forEach(type => {
-            bondTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
-        });
-    }
-    const paymentMethodSelect = document.getElementById('paymentMethod');
-    if (paymentMethodSelect) {
-        paymentMethodSelect.innerHTML = '<option value="">اختر الطريقة</option>';
-        delegateLimits.allowedPayments.forEach(method => {
-            paymentMethodSelect.innerHTML += `<option value="${method}">${method}</option>`;
-        });
-    }
-    if (amountHint) {
-        amountHint.textContent = `الحد الأقصى: ${delegateLimits.maxAmount} ريال`;
-        amountHint.classList.remove('hidden');
-    }
+    const quickBondTypeSelect = document.getElementById('quickBondType');
+    const filterBondTypeSelect = document.getElementById('filterBondType');
+    
+    bondTypes.forEach(type => {
+        if (bondTypeSelect) bondTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
+        if (quickBondTypeSelect) quickBondTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
+        if (filterBondTypeSelect) filterBondTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
+    });
 }
 
-// ====== إنشاء سند جديد ======
-async function handleCreateBond(e) {
+// تحميل طرق الدفع
+async function loadPaymentMethods() {
+    const methodsRef = ref(db, `settings/${currentProject.code}/paymentMethods`);
+    const methodsSnap = await get(methodsRef);
+    if (methodsSnap.exists()) {
+        paymentMethods = methodsSnap.val();
+    }
+    
+    const paymentSelect = document.getElementById('paymentMethod');
+    const quickPaymentSelect = document.getElementById('quickPaymentMethod');
+    
+    paymentMethods.forEach(method => {
+        if (paymentSelect) paymentSelect.innerHTML += `<option value="${method}">${method}</option>`;
+        if (quickPaymentSelect) quickPaymentSelect.innerHTML += `<option value="${method}">${method}</option>`;
+    });
+}
+
+// تحديث الداشبورد
+function updateDashboard() {
+    document.getElementById('totalProjects').textContent = Object.keys(projectsData).length;
+    document.getElementById('totalManagers').textContent = Object.keys(managersData).length;
+    document.getElementById('totalBonds').textContent = bondsData.length;
+}
+
+// إنشاء سند
+document.getElementById('createBondForm').onsubmit = async function(e) {
     e.preventDefault();
-    const bondType = document.getElementById('bondType').value;
-    const bondAmount = parseFloat(document.getElementById('bondAmount').value);
+    
+    const type = document.getElementById('bondType').value;
+    const amount = parseFloat(document.getElementById('bondAmount').value);
     const paymentMethod = document.getElementById('paymentMethod').value;
-    const bondDate = document.getElementById('bondDate').value;
-    const bondDescription = document.getElementById('bondDescription').value.trim();
-    if (!bondType ||!bondAmount ||!paymentMethod ||!bondDate ||!bondDescription) {
-        showToast('املأ كل الحقول', 'error');
+    const date = document.getElementById('bondDate').value;
+    const description = document.getElementById('bondDescription').value;
+    
+    if (!type ||!amount ||!paymentMethod ||!date ||!description) {
+        showToast(translations[currentLang].fill_all_fields, 'error');
         return;
     }
-    if (currentUser.role === 'delegate') {
-        const remaining = delegateLimits.dailyLimit - delegateLimits.dailyCount;
-        if (remaining <= 0) {
-            Swal.fire('مرفوض', 'تم الوصول للحد اليومي', 'error');
+    
+    // التحقق من صلاحيات المندوب
+    if (currentUser.role === 'delegate' && delegateLimits) {
+        if (amount > delegateLimits.maxBondAmount) {
+            showToast(`المبلغ يتجاوز الحد الأقصى ${delegateLimits.maxBondAmount} ريال`, 'error');
             return;
         }
-        if (bondAmount > delegateLimits.maxAmount) {
-            Swal.fire('مرفوض', `المبلغ يتجاوز السقف المسموح ${delegateLimits.maxAmount} ريال`, 'error');
-            return;
-        }
-        if (!delegateLimits.allowedBondTypes.includes(bondType)) {
-            Swal.fire('مرفوض', 'نوع السند غير مسموح لك', 'error');
-            return;
-        }
-        if (!delegateLimits.allowedPayments.includes(paymentMethod)) {
-            Swal.fire('مرفوض', 'طريقة الدفع غير مسموحة لك', 'error');
+        if (!delegateLimits.allowedTypes.includes(type)) {
+            showToast('نوع السند غير مسموح لك', 'error');
             return;
         }
     }
+    
     try {
-        showToast('جاري إنشاء السند...', 'info');
-        const bondsSnap = await get(ref(db, `projects/${currentProjectId}/bonds`));
-        const bondNumber = (bondsSnap.size || 0) + 1;
         const newBond = {
-            bondNumber: bondNumber,
-            type: bondType,
-            amount: bondAmount,
-            paymentMethod: paymentMethod,
-            date: bondDate,
-            description: bondDescription,
+            type,
+            amount,
+            paymentMethod,
+            date,
+            description,
+            status: 'pending',
             createdBy: currentUser.id,
             createdByName: currentUser.name,
-            createdAt: new Date().toISOString(),
-            status: currentUser.role === 'delegate'? 'pending' : 'verified',
-            supplied: false
+            createdAt: Date.now(),
+            projectCode: currentProject.code
         };
-        const newBondRef = push(ref(db, `projects/${currentProjectId}/bonds`));
-        await set(newBondRef, newBond);
-        if (currentUser.role === 'delegate') {
-            delegateLimits.dailyCount++;
-            updateDelegateAlert();
-        }
-        showToast('تم إنشاء السند بنجاح', 'success');
+        
+        const bondsRef = ref(db, `bonds/${currentProject.code}`);
+        await push(bondsRef, newBond);
+        
+        showToast(translations[currentLang].bond_created, 'success');
         document.getElementById('createBondForm').reset();
-        document.getElementById('bondDate').valueAsDate = new Date();
-        loadBonds();
-        loadMyBonds();
+        
     } catch (error) {
         console.error(error);
-        showToast('فشل إنشاء السند', 'error');
+        showToast('حدث خطأ في إنشاء السند', 'error');
     }
-}
+};
 
-// ====== تحميل السندات ======
-async function loadBonds() {
-    try {
-        const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
-        const snapshot = await get(bondsRef);
-        const tbody = document.getElementById('bondsTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        allBonds = [];
-        snapshot.forEach((child) => {
-            const bond = {...child.val(), id: child.key };
-            allBonds.push(bond);
-        });
-        allBonds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        renderBonds(allBonds);
-    } catch (error) {
-        console.error('خطأ في تحميل السندات:', error);
-        showToast('فشل تحميل السندات', 'error');
-    }
-}
+// تحميل اللغة المحفوظة
+const savedLang = localStorage.getItem('lang') || 'ar';
+document.getElementById('langSelect').value = savedLang;
+document.getElementById('langSelectMain').value = savedLang;
+changeLang(savedLang);
 
-// ====== عرض السندات ======
-function renderBonds(bonds) {
-    const tbody = document.getElementById('bondsTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    bonds.forEach(bond => {
-        const row = document.createElement('tr');
-        row.className = 'border-b hover:bg-gray-50';
-        let statusBadge = '';
-        if (bond.status === 'verified') {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">موثق</span>';
-        } else if (bond.status === 'pending') {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">بانتظار التوثيق</span>';
-        } else if (bond.status === 'suspended') {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">موقوف</span>';
-        } else {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">مرفوض</span>';
-        }
-        let suppliedBadge = bond.supplied? '<span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">مورد</span>' : '<span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">غير مورد</span>';
-        row.innerHTML = `
-            <td class="p-3 text-sm font-bold">${bond.bondNumber}</td>
-            <td class="p-3 text-sm">${bond.type}</td>
-            <td class="p-3 text-sm font-bold">${bond.amount.toFixed(2)} ريال</td>
-            <td class="p-3 text-sm">${bond.createdByName}</td>
-            <td class="p-3 text-sm">${bond.date}</td>
-            <td class="p-3">${statusBadge} ${suppliedBadge}</td>
-            <td class="p-3">
-                <button onclick="viewBond('${bond.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-bold mx-1">عرض</button>
-                ${currentUser.role === 'manager' && bond.status === 'pending'? `<button onclick="verifyBond('${bond.id}')" class="text-green-600 hover:text-green-800 text-sm font-bold mx-1">توثيق</button>` : ''}
-                <button onclick="printBond('${bond.id}')" class="text-gray-600 hover:text-gray-800 text-sm font-bold mx-1">طباعة</button>
-            </td>
+document.getElementById('langSelect').onchange = (e) => changeLang(e.target.value);
+document.getElementById('langSelectMain').onchange = (e) => changeLang(e.target.value);
+
+// تحميل المستخدم المحفوظ
+const savedUser = localStorage.getItem('currentUser');
+const savedProject = localStorage.getItem('currentProject');
+if (savedUser && savedProject) {
+    currentUser = JSON.parse(savedUser);
+    currentProject = JSON.parse(savedProject);
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('userInfo').textContent = `مرحبا ${currentUser.name}`;
+    loadAllData();
+    checkDelegateLimits();
+    loadBondTypes();
+    loadPaymentMethods();
+}
+// ============ دوال العرض ============
+
+// عرض المشاريع
+function renderProjects() {
+    const container = document.getElementById('projectsList');
+    container.innerHTML = '';
+    Object.entries(projectsData).forEach(([code, project]) => {
+        container.innerHTML += `
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-200">
+                <h3 class="text-xl font-bold text-blue-900 mb-2">${project.name}</h3>
+                <p class="text-sm text-gray-600 mb-4">كود: ${code}</p>
+                <div class="flex gap-2">
+                    <button onclick="editProject('${code}')" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">تعديل</button>
+                    <button onclick="deleteProject('${code}')" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700">حذف</button>
+                </div>
+            </div>
         `;
-        tbody.appendChild(row);
     });
 }
 
-// ====== فلترة السندات ======
-function filterBonds() {
-    const delegateFilter = document.getElementById('filterDelegate').value.toLowerCase();
-    const fromDate = document.getElementById('filterFromDate').value;
-    const toDate = document.getElementById('filterToDate').value;
-    const statusFilter = document.getElementById('filterStatus').value;
-    let filtered = allBonds.filter(bond => {
-        if (delegateFilter &&!bond.createdByName.toLowerCase().includes(delegateFilter)) return false;
-        if (fromDate && bond.date < fromDate) return false;
-        if (toDate && bond.date > toDate) return false;
-        if (statusFilter && bond.status!== statusFilter) return false;
-        return true;
-    });
-    renderBonds(filtered);
-}
-
-// ====== تحميل سنداتي ======
-async function loadMyBonds() {
-    if (currentUser.role!== 'delegate') return;
-    try {
-        const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
-        const snapshot = await get(query(bondsRef, orderByChild('createdBy'), equalTo(currentUser.id)));
-        const listDiv = document.getElementById('myBondsList');
-        if (!listDiv) return;
-        listDiv.innerHTML = '';
-        const myBonds = [];
-        snapshot.forEach((child) => {
-            myBonds.push({...child.val(), id: child.key });
-        });
-        myBonds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        myBonds.forEach(bond => {
-            const card = document.createElement('div');
-            card.className = 'border-2 border-gray-200 rounded-xl p-4 hover:shadow-md transition';
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <div class="font-bold text-lg">سند #${bond.bondNumber}</div>
-                        <div class="text-sm text-gray-600">${bond.type} - ${bond.amount.toFixed(2)} ريال</div>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold ${bond.status === 'verified'? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                        ${bond.status === 'verified'? 'موثق' : 'بانتظار التوثيق'}
-                    </span>
+// عرض المدراء
+function renderManagers() {
+    const container = document.getElementById('managersList');
+    container.innerHTML = '';
+    Object.entries(managersData).forEach(([id, manager]) => {
+        container.innerHTML += `
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border-2 border-purple-200">
+                <h3 class="text-xl font-bold text-purple-900 mb-2">${manager.name}</h3>
+                <p class="text-sm text-gray-600 mb-1">📱 ${manager.phone}</p>
+                <p class="text-sm text-gray-600 mb-4">المشروع: ${manager.projectCode}</p>
+                <div class="flex gap-2">
+                    <button onclick="editUser('${id}')" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700">تعديل</button>
+                    <button onclick="deleteUser('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700">حذف</button>
                 </div>
-                <div class="text-sm text-gray-600 mb-3">${bond.description}</div>
-                <div class="flex justify-between items-center text-xs text-gray-500">
-                    <span>${bond.date}</span>
-                    <button onclick="viewBond('${bond.id}')" class="text-blue-600 hover:text-blue-800 font-bold">عرض التفاصيل</button>
-                </div>
-            `;
-            listDiv.appendChild(card);
-        });
-    } catch (error) {
-        console.error('خطأ في تحميل سنداتي:', error);
-    }
-}
-
-async function addBondType() {
-    const { value: formValues } = await Swal.fire({
-        title: 'نوع سند جديد',
-        html: `
-            <input id="swal-name" class="swal2-input" placeholder="اسم النوع">
-            <input id="swal-prefix" class="swal2-input" placeholder="البادئة">
-            <select id="swal-type" class="swal2-select">
-                <option value="قبض">قبض</option>
-                <option value="صرف">صرف</option>
-                <option value="قيد">قيد</option>
-            </select>
-            <select id="swal-effect" class="swal2-select">
-                <option value="positive">موجب (+) - يزيد الرصيد</option>
-                <option value="negative">سالب (-) - ينقص الرصيد</option>
-                <option value="neutral">محايد - لا يؤثر</option>
-            </select>
-            <input id="swal-start" type="number" class="swal2-input" placeholder="بداية التسلسل">
-            <input id="swal-end" type="number" class="swal2-input" placeholder="نهاية التسلسل">`,
-        preConfirm: () => ({
-            name: document.getElementById('swal-name').value,
-            prefix: document.getElementById('swal-prefix').value,
-            type: document.getElementById('swal-type').value,
-            effect: document.getElementById('swal-effect').value,
-            start: parseInt(document.getElementById('swal-start').value),
-            end: parseInt(document.getElementById('swal-end').value)
-        })
+            </div>
+        `;
     });
-    if (!formValues) return;
-    if (!formValues.name ||!formValues.prefix ||!formValues.start ||!formValues.end) {
-        return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
-    }
-    const id = Date.now().toString();
-    await set(ref(db, `projects/${currentProject}/bondTypes/${id}`), {...formValues, current: formValues.start});
-    Swal.fire('تم', 'انضاف النوع', 'success');
 }
 
-// ====== Handsontable للشيت الذكي ======
-function initSmartSheet() {
-    const container = document.getElementById('smartSheetContainer');
-    if (!container || hotInstance) return;
-    const defaultData = [
-        ['', 'البيان', 'مدين', 'دائن', 'الرصيد'],
-        ['', 'رصيد افتتاحي', 0, 0, 0],
-        ['', '', '', '', ''],
-        ['', '', '', '', ''],
-        ['', '', '', '', ''],
-    ];
+// عرض المناديب
+function renderDelegates() {
+    const container = document.getElementById('delegatesList');
+    container.innerHTML = '';
+    Object.entries(delegatesData).forEach(([id, delegate]) => {
+        container.innerHTML += `
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border-2 border-green-200">
+                <h3 class="text-xl font-bold text-green-900 mb-2">${delegate.name}</h3>
+                <p class="text-sm text-gray-600 mb-1">📱 ${delegate.phone}</p>
+                <p class="text-sm text-gray-600 mb-4">المشروع: ${delegate.projectCode}</p>
+                <div class="flex gap-2">
+                    <button onclick="editUser('${id}')" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700">تعديل</button>
+                    <button onclick="setDelegateLimits('${id}')" class="px-4 py-2 bg-yellow-600 text-white rounded-lg font-bold hover:bg-yellow-700">صلاحيات</button>
+                    <button onclick="deleteUser('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700">حذف</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// عرض المحاسبين
+function renderAccountants() {
+    const container = document.getElementById('accountantsList');
+    container.innerHTML = '';
+    Object.entries(accountantsData).forEach(([id, accountant]) => {
+        container.innerHTML += `
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl border-2 border-yellow-200">
+                <h3 class="text-xl font-bold text-yellow-900 mb-2">${accountant.name}</h3>
+                <p class="text-sm text-gray-600 mb-1">📱 ${accountant.phone}</p>
+                <p class="text-sm text-gray-600 mb-4">المشروع: ${accountant.projectCode}</p>
+                <div class="flex gap-2">
+                    <button onclick="editUser('${id}')" class="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg font-bold hover:bg-yellow-700">تعديل</button>
+                    <button onclick="deleteUser('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700">حذف</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// عرض جدول السندات بـ Handsontable
+function renderBondsTable() {
+    const container = document.getElementById('hotBonds');
+    if (hotInstance) hotInstance.destroy();
+    
+    const data = bondsData.map(bond => [
+        new Date(bond.createdAt).toLocaleDateString('ar-SA'),
+        bond.type,
+        bond.amount,
+        bond.paymentMethod,
+        bond.description,
+        bond.createdByName,
+        bond.status === 'pending'? 'معلق' : bond.status === 'approved'? 'معتمد' : 'مرفوض',
+        bond.id
+    ]);
+    
     hotInstance = new Handsontable(container, {
-        data: defaultData,
-        rowHeaders: true,
-        colHeaders: true,
-        height: '100%',
-        width: '100%',
-        licenseKey: 'non-commercial-and-evaluation',
-        contextMenu: true,
-        minSpareRows: 5,
-        stretchH: 'all',
-        formulas: { engine: HyperFormula },
+        data: data,
+        colHeaders: ['التاريخ', 'النوع', 'المبلغ', 'طريقة الدفع', 'البيان', 'أنشئ بواسطة', 'الحالة', ''],
         columns: [
             { type: 'text', readOnly: true },
-            { type: 'text' },
-            { type: 'numeric', numericFormat: { pattern: '0,0.00' } },
-            { type: 'numeric', numericFormat: { pattern: '0,0.00' } },
-            { type: 'numeric', readOnly: true, numericFormat: { pattern: '0,0.00' } }
-        ]
+            { type: 'text', readOnly: true },
+            { type: 'numeric', numericFormat: { pattern: '0,0.00' }, readOnly: true },
+            { type: 'text', readOnly: true },
+            { type: 'text', readOnly: true },
+            { type: 'text', readOnly: true },
+            { type: 'text', readOnly: true },
+            { renderer: actionsRenderer, readOnly: true }
+        ],
+        rowHeaders: true,
+        height: 600,
+        licenseKey: 'non-commercial-and-evaluation',
+        contextMenu: false,
+        filters: true,
+        dropdownMenu: true,
+        columnSorting: true
     });
-    console.log('✅ Handsontable جاهز');
 }
 
-// ====== حفظ الشيت الذكي ======
-async function saveSmartSheet() {
-    if (!hotInstance) return;
-    try {
-        const data = hotInstance.getData();
-        await set(ref(db, `projects/${currentProjectId}/smartSheet`), {
-            data: data,
-            updatedAt: new Date().toISOString(),
-            updatedBy: currentUser.id
+// زر الإجراءات في الجدول
+function actionsRenderer(instance, td, row, col, prop, value, cellProperties) {
+    const bondId = instance.getDataAtRow(row)[7];
+    const bond = bondsData.find(b => b.id === bondId);
+    
+    td.innerHTML = '';
+    td.classList.add('htCenter', 'htMiddle');
+    
+    if (currentUser.role === 'accountant' && bond.status === 'pending') {
+        td.innerHTML = `
+            <button onclick="approveBond('${bondId}')" class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 mr-1">اعتماد</button>
+            <button onclick="rejectBond('${bondId}')" class="px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700">رفض</button>
+        `;
+    } else if (bond.createdBy === currentUser.id) {
+        td.innerHTML = `
+            <button onclick="editBond('${bondId}')" class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 mr-1">تعديل</button>
+            <button onclick="deleteBond('${bondId}')" class="px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700">حذف</button>
+        `;
+    }
+    
+    return td;
+}
+
+// عرض سنداتي
+function renderMyBonds(bonds) {
+    const container = document.getElementById('myBondsList');
+    container.innerHTML = '';
+    
+    if (bonds.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500 py-8">لا توجد سندات</p>';
+        return;
+    }
+    
+    bonds.forEach(bond => {
+        const statusColor = bond.status === 'approved'? 'green' : bond.status === 'rejected'? 'red' : 'yellow';
+        const statusText = bond.status === 'approved'? 'معتمد' : bond.status === 'rejected'? 'مرفوض' : 'معلق';
+        
+        container.innerHTML += `
+            <div class="bg-gray-50 p-4 rounded-xl border-2 border-gray-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-bold text-lg">${bond.type}</h4>
+                        <p class="text-sm text-gray-600">${new Date(bond.createdAt).toLocaleString('ar-SA')}</p>
+                    </div>
+                    <span class="px-4 py-2 bg-${statusColor}-100 text-${statusColor}-800 rounded-lg font-bold text-sm">${statusText}</span>
+                </div>
+                <p class="text-2xl font-extrabold text-blue-600 mb-2">${bond.amount.toLocaleString()} ريال</p>
+                <p class="text-gray-700 mb-3">${bond.description}</p>
+                <div class="flex gap-2">
+                    <button onclick="editBond('${bond.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">تعديل</button>
+                    <button onclick="deleteBond('${bond.id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700">حذف</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// عرض حركة الصندوق
+function renderCashFlow() {
+    const tbody = document.getElementById('cashFlowTable');
+    tbody.innerHTML = '';
+    
+    let balance = 0;
+    cashFlowData.forEach(entry => {
+        balance += entry.type === 'income'? entry.amount : -entry.amount;
+        const typeText = entry.type === 'income'? 'قبض' : 'صرف';
+        const typeColor = entry.type === 'income'? 'text-green-600' : 'text-red-600';
+        
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3">${new Date(entry.createdAt).toLocaleDateString('ar-SA')}</td>
+                <td class="p-3 font-bold ${typeColor}">${typeText}</td>
+                <td class="p-3 font-bold">${entry.amount.toLocaleString()} ريال</td>
+                <td class="p-3">${entry.description}</td>
+                <td class="p-3">${entry.createdByName}</td>
+                <td class="p-3 font-bold">${balance.toLocaleString()} ريال</td>
+            </tr>
+        `;
+    });
+}
+
+// تحديث ملخص الصندوق
+function updateCashFlowSummary() {
+    let income = 0, expense = 0;
+    cashFlowData.forEach(entry => {
+        if (entry.type === 'income') income += entry.amount;
+        else expense += entry.amount;
+    });
+    
+    document.getElementById('totalIncome').textContent = income.toLocaleString();
+    document.getElementById('totalExpense').textContent = expense.toLocaleString();
+    document.getElementById('currentBalance').textContent = (income - expense).toLocaleString();
+    document.getElementById('totalTransactions').textContent = cashFlowData.length;
+}
+
+// عرض الدردشة
+function renderChatMessages() {
+    const container = document.getElementById('chatMessages');
+    container.innerHTML = '';
+    
+    chatMessages.forEach(msg => {
+        const isMe = msg.userId === currentUser.id;
+        container.innerHTML += `
+            <div class="flex ${isMe? 'justify-end' : 'justify-start'}">
+                <div class="max-w-[70%] ${isMe? 'bg-blue-600 text-white' : 'bg-white border-2 border-gray-200'} rounded-2xl p-4">
+                    <p class="font-bold text-sm mb-1">${msg.userName}</p>
+                    <p>${msg.message}</p>
+                    <p class="text-xs opacity-70 mt-2">${new Date(msg.createdAt).toLocaleTimeString('ar-SA')}</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.scrollTop = container.scrollHeight;
+}
+
+// عرض المستخدمين المتصلين
+function renderOnlineUsers() {
+    const container = document.getElementById('onlineUsersList');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    Object.values(usersData).forEach(user => {
+        if (user.projectCode === currentProject.code) {
+            container.innerHTML += `
+                <div class="flex items-center gap-3 p-3 bg-white rounded-lg">
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div>
+                        <p class="font-bold">${user.name}</p>
+                        <p class="text-xs text-gray-500">${user.role}</p>
+                    </div>
+                </div>
+            `;
+        }
+    });
+}
+
+// ============ دوال التعديل والحذف ============
+
+// تعديل سند
+window.editBond = async function(bondId) {
+    const bond = bondsData.find(b => b.id === bondId);
+    if (!bond) return;
+    
+    const { value: formValues } = await Swal.fire({
+        title: 'تعديل السند',
+        html: `
+            <select id="swal-type" class="swal2-input">
+                ${bondTypes.map(t => `<option value="${t}" ${t === bond.type? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+            <input id="swal-amount" class="swal2-input" type="number" value="${bond.amount}" placeholder="المبلغ">
+            <select id="swal-payment" class="swal2-input">
+                ${paymentMethods.map(m => `<option value="${m}" ${m === bond.paymentMethod? 'selected' : ''}>${m}</option>`).join('')}
+            </select>
+            <input id="swal-date" class="swal2-input" type="date" value="${bond.date}">
+            <textarea id="swal-desc" class="swal2-textarea" placeholder="البيان">${bond.description}</textarea>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+            return {
+                type: document.getElementById('swal-type').value,
+                amount: parseFloat(document.getElementById('swal-amount').value),
+                paymentMethod: document.getElementById('swal-payment').value,
+                date: document.getElementById('swal-date').value,
+                description: document.getElementById('swal-desc').value
+            }
+        }
+    });
+    
+    if (formValues) {
+        await update(ref(db, `bonds/${currentProject.code}/${bondId}`), formValues);
+        showToast(translations[currentLang].updated_success, 'success');
+    }
+};
+
+// حذف سند
+window.deleteBond = async function(bondId) {
+    const result = await Swal.fire({
+        title: 'تأكيد الحذف',
+        text: translations[currentLang].confirm_delete,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء'
+    });
+    
+    if (result.isConfirmed) {
+        await remove(ref(db, `bonds/${currentProject.code}/${bondId}`));
+        showToast(translations[currentLang].deleted_success, 'success');
+    }
+};
+
+// اعتماد سند
+window.approveBond = async function(bondId) {
+    await update(ref(db, `bonds/${currentProject.code}/${bondId}`), { status: 'approved', approvedBy: currentUser.id, approvedAt: Date.now() });
+    showToast(translations[currentLang].bond_approved, 'success');
+};
+
+// رفض سند
+window.rejectBond = async function(bondId) {
+    await update(ref(db, `bonds/${currentProject.code}/${bondId}`), { status: 'rejected', rejectedBy: currentUser.id, rejectedAt: Date.now() });
+    showToast(translations[currentLang].bond_rejected, 'success');
+};
+
+// إرسال رسالة دردشة
+window.sendChatMessage = async function() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    await push(ref(db, `chat/${currentProject.code}`), {
+        userId: currentUser.id,
+        userName: currentUser.name,
+        message: message,
+        createdAt: Date.now()
+    });
+    
+    input.value = '';
+};
+
+// إضافة حركة صندوق
+window.addCashTransaction = async function(type) {
+    const { value: formValues } = await Swal.fire({
+        title: type === 'income'? 'إضافة قبض' : 'إضافة صرف',
+        html: `
+            <input id="swal-amount" class="swal2-input" type="number" step="0.01" placeholder="المبلغ">
+            <input id="swal-desc" class="swal2-input" placeholder="البيان">
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'حفظ',
+        cancelButtonText: 'إلغاء',
+        preConfirm: () => {
+            return {
+                amount: parseFloat(document.getElementById('swal-amount').value),
+                description: document.getElementById('swal-desc').value
+            }
+        }
+    });
+    
+    if (formValues && formValues.amount && formValues.description) {
+        await push(ref(db, `cashflow/${currentProject.code}`), {
+            type,
+            amount: formValues.amount,
+            description: formValues.description,
+            createdBy: currentUser.id,
+            createdByName: currentUser.name,
+            createdAt: Date.now()
         });
-        showToast('تم حفظ الشيت بنجاح', 'success');
-    } catch (error) {
-        console.error(error);
-        showToast('فشل حفظ الشيت', 'error');
+        showToast('تمت الإضافة بنجاح', 'success');
     }
-}
+};
 
-// ====== إرسال الشيت للمناديب ======
-async function sendSheetToDelegates() {
-    showToast('تم إرسال الشيت للمناديب', 'success');
-}
+// تصدير السندات
+window.exportBondsToExcel = function() {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(bondsData.map(b => ({
+        'التاريخ': new Date(b.createdAt).toLocaleDateString('ar-SA'),
+        'النوع': b.type,
+        'المبلغ': b.amount,
+        'طريقة الدفع': b.paymentMethod,
+        'البيان': b.description,
+        'أنشئ بواسطة': b.createdByName,
+        'الحالة': b.status === 'approved'? 'معتمد' : b.status === 'rejected'? 'مرفوض' : 'معلق'
+    })));
+    XLSX.utils.book_append_sheet(wb, ws, 'السندات');
+    XLSX.writeFile(wb, `bonds_${currentProject.code}_${Date.now()}.xlsx`);
+};
 
-// ====== تحميل حركة الصندوق - مع الأثر المحاسبي ======
-async function loadCashFlow() {
-    try {
-        const [bondsSnap, typesSnap] = await Promise.all([
-            get(ref(db, `projects/${currentProjectId}/bonds`)),
-            get(ref(db, `projects/${currentProjectId}/bondTypes`))
-        ]);
-        const bondTypes = {};
-        if (typesSnap.exists()) {
-            typesSnap.forEach(child => {
-                bondTypes[child.key] = child.val();
-            });
-        }
-        let totalIncome = 0;
-        let totalExpense = 0;
-        if (bondsSnap.exists()) {
-            bondsSnap.forEach((child) => {
-                const bond = child.val();
-                if (bond.status!== 'verified') return;
-                const bondType = bondTypes[bond.typeId];
-                const amount = parseFloat(bond.amount);
-                if (bondType?.effect === 'positive' || bond.type === 'قبض') {
-                    totalIncome += amount;
-                } else if (bondType?.effect === 'negative' || bond.type === 'صرف') {
-                    totalExpense += amount;
-                }
-            });
-        }
-        const balance = totalIncome - totalExpense;
-        const incomeEl = document.getElementById('totalIncome');
-        const expenseEl = document.getElementById('totalExpense');
-        const balanceEl = document.getElementById('currentBalance');
-        if (incomeEl) incomeEl.textContent = totalIncome.toFixed(2) + ' ريال';
-        if (expenseEl) expenseEl.textContent = totalExpense.toFixed(2) + ' ريال';
-        if (balanceEl) {
-            balanceEl.textContent = balance.toFixed(2) + ' ريال';
-            balanceEl.className = balance < 0? 'text-4xl font-extrabold text-red-600' : 'text-4xl font-extrabold text-blue-600';
-        }
-    } catch (error) {
-        console.error('خطأ في تحميل حركة الصندوق:', error);
-    }
-}
+// طباعة السندات
+window.printBonds = function() {
+    window.print();
+};
 
-// ====== دوال ناقصة ======
-function loadDashboard() {
-    document.getElementById('totalProjects').textContent = '0';
-    document.getElementById('totalManagers').textContent = '0';
-    document.getElementById('totalBonds').textContent = '0';
-}
-function loadProjects() {}
-function loadManagers() {}
-function loadDelegates() {}
-function loadChatMessages() {}
-function viewBond(id) { console.log('View:', id); }
-function verifyBond(id) { console.log('Verify:', id); }
-function printBond(id) { console.log('Print:', id); }
+console.log('✅ تم تحميل النظام بنجاح');
 
 </script>
 </body>
