@@ -578,15 +578,40 @@
             </div>
         </div>
 <script>
-// ====== 1. قاموس الترجمة ======
-const translations = {
-    ar: { app_title: "السندات الذكية", app_subtitle: "نظام إدارة السندات السحابي", project_code: "كود المشروع", phone: "رقم الجوال", password: "كلمة المرور", login: "تسجيل الدخول", logout: "خروج", change_password: "تغيير كلمة السر", dashboard: "الرئيسية", projects: "المشاريع", managers: "المدراء", system_settings: "إعدادات النظام", add_project_pages: "إضافة صفحات للمشروع", project_settings: "إعدادات المشروع", bond_settings: "إعدادات السند", delegates: "المناديب", accountants: "المحاسبين", cash_flow: "حركة الصندوق", meeting_room: "قاعة الاجتماع", create_bond: "إنشاء سند", bonds: "السندات", name: "الاسم", permissions: "الصلاحيات", status: "الحالة", control: "تحكم", add_accountant: "إضافة محاسب", smart_sheet: "الجداول الذكية", new_sheet: "جدول جديد", save: "حفظ", export_excel: "تصدير اكسل", sheet_hint: "💡 تقدر تكتب معادلات مثل: =SUM(A1:A10) أو =A1*B1+C1", excel: "اكسل", pdf: "PDF", print: "طباعة", total_income: "إجمالي القبض", total_expense: "إجمالي الصرف", current_balance: "الرصيد الحالي", today_movement: "حركة اليوم", add_movement: "حركة جديدة", date: "التاريخ", type: "النوع", amount: "المبلغ", statement: "البيان", by: "بواسطة", balance: "الرصيد", all_messages: "كل الرسائل", public_messages: "العامة", private_messages: "الخاصة", public: "عامة للكل", private: "خاصة", select_receiver: "اختر المستلم", send: "إرسال", type_message: "اكتب رسالتك...", limits_alert: "تنبيه الصلاحيات", bond_type: "نوع السند", payment_method: "طريقة الدفع", select_bond_type: "اختر النوع", select_payment: "اختر الطريقة", client_name: "اسم العميل", client_phone: "جوال العميل", not_verified: "غير موثق", verify: "توثيق", supply: "توريد", bond_qr: "QR السند", qr_hint: "امسح الكود لعرض تفاصيل السند", create_bond_btn: "إنشاء السند", from_date: "من تاريخ", to_date: "إلى تاريخ", all: "الكل", verified: "موثق", pending: "بانتظار التوثيق", supplied: "مورد", not_supplied: "غير مورد", filter: "فلتر", total_bonds: "إجمالي السندات", positive_bonds: "سندات موجبة", negative_bonds: "سندات سالبة", pending_verify: "بانتظار توثيق", pending_supply: "بانتظار توريد", bond_number: "رقم", client: "العميل", payment: "الدفع", created_by: "المنشئ", actions: "إجراءات", superadmin_controls: "تحكم المدير العام", suspend_bond: "إيقاف سند", delete_bond: "حذف سند", edit_bond: "تعديل سند", approve_all: "توثيق الكل", whatsapp: "واتساب", qr: "QR", public_message: "رسالة عامة", private_message: "رسالة خاصة", select_user: "اختر المستخدم" },
-    en: { app_title: "Smart Bonds", app_subtitle: "Cloud Bond Management System", project_code: "Project Code", phone: "Phone Number", password: "Password", login: "Login", logout: "Logout", change_password: "Change Password", dashboard: "Dashboard", projects: "Projects", managers: "Managers", system_settings: "System Settings", add_project_pages: "Add Project Pages", project_settings: "Project Settings", bond_settings: "Bond Settings", delegates: "Delegates", accountants: "Accountants", cash_flow: "Cash Flow", meeting_room: "Meeting Room", create_bond: "Create Bond", bonds: "Bonds", name: "Name", permissions: "Permissions", status: "Status", control: "Control", add_accountant: "Add Accountant", smart_sheet: "Smart Sheets", new_sheet: "New Sheet", save: "Save", export_excel: "Export Excel", sheet_hint: "💡 You can write formulas like: =SUM(A1:A10) or =A1*B1+C1", excel: "Excel", pdf: "PDF", print: "Print", total_income: "Total Income", total_expense: "Total Expense", current_balance: "Current Balance", today_movement: "Today Movement", add_movement: "New Movement", date: "Date", type: "Type", amount: "Amount", statement: "Statement", by: "By", balance: "Balance", all_messages: "All Messages", public_messages: "Public", private_messages: "Private", public: "Public to All", private: "Private", select_receiver: "Select Receiver", send: "Send", type_message: "Type your message...", limits_alert: "Limits Alert", bond_type: "Bond Type", payment_method: "Payment Method", select_bond_type: "Select Type", select_payment: "Select Method", client_name: "Client Name", client_phone: "Client Phone", not_verified: "Not Verified", verify: "Verify", supply: "Supply", bond_qr: "Bond QR", qr_hint: "Scan code to view bond details", create_bond_btn: "Create Bond", from_date: "From Date", to_date: "To Date", all: "All", verified: "Verified", pending: "Pending", supplied: "Supplied", not_supplied: "Not Supplied", filter: "Filter", total_bonds: "Total Bonds", positive_bonds: "Positive Bonds", negative_bonds: "Negative Bonds", pending_verify: "Pending Verify", pending_supply: "Pending Supply", bond_number: "No.", client: "Client", payment: "Payment", created_by: "Created By", actions: "Actions", superadmin_controls: "Superadmin Controls", suspend_bond: "Suspend Bond", delete_bond: "Delete Bond", edit_bond: "Edit Bond", approve_all: "Approve All", whatsapp: "WhatsApp", qr: "QR", public_message: "Public Message", private_message: "Private Message", select_user: "Select User" }
-    // باقي اللغات de, fr, tr, ur, zh, fa تنضاف بنفس الطريقة
+<script type="module">
+// ====== Firebase حقك القديم - لا تغيره ======
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, set, get, push, onValue, update, remove, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+// ====== خلي إعداداتك زي ما هي ======
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY", // حط حقك
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
-// ====== 2. دالة الترجمة ======
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const storage = getStorage(app);
+
+// ====== متغيرات عامة ======
+let currentUser = null;
+let currentProject = null;
+let currentProjectId = null;
+let projectPages = [];
+let hotInstance = null;
 let currentLang = localStorage.getItem('app_lang') || 'ar';
+
+// ====== 1. الترجمة ======
+const translations = {
+    ar: { app_title: "السندات الذكية", login: "تسجيل الدخول", logout: "خروج", dashboard: "الرئيسية", projects: "المشاريع", managers: "المدراء", delegates: "المناديب", accountants: "المحاسبين", cash_flow: "حركة الصندوق", meeting_room: "قاعة الاجتماع", create_bond: "إنشاء سند", bonds: "السندات", excel: "اكسل", pdf: "PDF", print: "طباعة", whatsapp: "واتساب", qr: "QR", save: "حفظ", send: "إرسال", filter: "فلتر", verified: "موثق", pending: "بانتظار التوثيق", supplied: "مورد", not_supplied: "غير مورد", suspend_bond: "إيقاف سند", delete_bond: "حذف سند", edit_bond: "تعديل سند", approve_all: "توثيق الكل" },
+    en: { app_title: "Smart Bonds", login: "Login", logout: "Logout", dashboard: "Dashboard", projects: "Projects", managers: "Managers", delegates: "Delegates", accountants: "Accountants", cash_flow: "Cash Flow", meeting_room: "Meeting Room", create_bond: "Create Bond", bonds: "Bonds", excel: "Excel", pdf: "PDF", print: "Print", whatsapp: "WhatsApp", qr: "QR", save: "Save", send: "Send", filter: "Filter", verified: "Verified", pending: "Pending", supplied: "Supplied", not_supplied: "Not Supplied", suspend_bond: "Suspend Bond", delete_bond: "Delete Bond", edit_bond: "Edit Bond", approve_all: "Approve All" }
+};
 
 function translatePage(lang) {
     currentLang = lang;
@@ -609,529 +634,170 @@ function translatePage(lang) {
     });
 }
 
-// ====== 3. ربط أزرار اللغة ======
-document.getElementById('langSelect')?.addEventListener('change', (e) => translatePage(e.target.value));
-document.getElementById('innerLangSelect')?.addEventListener('change', (e) => translatePage(e.target.value));
-
-// ====== 4. تحميل الترجمة عند فتح الصفحة ======
+// ====== 2. إصلاح الخطأ: نتأكد العنصر موجود قبل ما نمسكه ======
 document.addEventListener('DOMContentLoaded', () => {
+    // زر اللغة - نتأكد إنه موجود
+    const langSelect = document.getElementById('langSelect');
+    if (langSelect) {
+        langSelect.value = currentLang;
+        langSelect.addEventListener('change', (e) => translatePage(e.target.value));
+    }
+
+    const innerLangSelect = document.getElementById('innerLangSelect');
+    if (innerLangSelect) {
+        innerLangSelect.value = currentLang;
+        innerLangSelect.addEventListener('change', (e) => translatePage(e.target.value));
+    }
+
     translatePage(currentLang);
-    document.getElementById('langSelect').value = currentLang;
-    document.getElementById('innerLangSelect').value = currentLang;
+
+    // زر تسجيل الدخول - نتأكد إنه موجود
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', handleLogin);
+    }
 });
 
-// ====== 5. إظهار الصفحات للمدير العام ======
-let projectPages = []; // مصفوفة الصفحات المفعلة
+// ====== 3. تسجيل الدخول - نفس كودك القديم ======
+async function handleLogin() {
+    const projectCode = document.getElementById('projectCode')?.value.trim();
+    const phone = document.getElementById('phone')?.value.trim();
+    const password = document.getElementById('password')?.value.trim();
 
-function showTab(tabName, btnElement) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (!projectCode ||!phone ||!password) {
+        Swal.fire('خطأ', 'املأ كل الحقول', 'error');
+        return;
+    }
 
-    document.getElementById(tabName)?.classList.remove('hidden');
-    btnElement?.classList.add('active');
-}
+    try {
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
 
-// ====== 6. زر إضافة صفحات للمشروع - للمدير العام ======
-document.getElementById('addProjectPagesBtn')?.addEventListener('click', () => {
-    const pages = [
-        { id: 'accountants', name: 'المحاسبين' },
-        { id: 'cashFlow', name: 'حركة الصندوق' },
-        { id: 'meetingRoom', name: 'قاعة الاجتماع' }
-    ];
-
-    let html = '<div class="space-y-3">';
-    pages.forEach(page => {
-        const checked = projectPages.includes(page.id)? 'checked' : '';
-        html += `
-            <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50">
-                <input type="checkbox" value="${page.id}" ${checked} class="project-page-checkbox w-5 h-5">
-                <span class="font-bold">${page.name}</span>
-            </label>
-        `;
-    });
-    html += '</div>';
-
-    showModal('إضافة صفحات للمشروع', html, () => {
-        projectPages = [];
-        document.querySelectorAll('.project-page-checkbox:checked').forEach(cb => {
-            projectPages.push(cb.value);
-        });
-
-        // إظهار/إخفاء التبويبات
-        document.querySelectorAll('.project-page').forEach(tab => {
-            const pageId = tab.getAttribute('data-page');
-            if (projectPages.includes(pageId)) {
-                tab.classList.remove('hidden');
-            } else {
-                tab.classList.add('hidden');
+        let foundUser = null;
+        snapshot.forEach((child) => {
+            const user = child.val();
+            if (user.phone === phone && user.password === password && user.projectCode === projectCode) {
+                foundUser = {...user, id: child.key };
             }
         });
 
-        // حفظ في قاعدة البيانات - تحتاج تكملها
-        showToast('تم تحديث صفحات المشروع بنجاح', 'success');
-    });
-});
+        if (foundUser) {
+            currentUser = foundUser;
+            currentProjectId = foundUser.projectId;
 
-// ====== 7. شيت الإكسل الذكي للمحاسبين ======
-let hotInstance = null;
-let sheetsData = { 'Sheet1': [] };
+            const projectSnap = await get(ref(db, `projects/${currentProjectId}`));
+            currentProject = projectSnap.val();
+            projectPages = currentProject.activePages || [];
 
-function initSmartSheet() {
-    const container = document.getElementById('smartSheetContainer');
-    if (!container || hotInstance) return;
+            // إخفاء شاشة الدخول
+            document.getElementById('loginScreen')?.classList.add('hidden');
+            document.getElementById('mainApp')?.classList.remove('hidden');
 
-    hotInstance = new Handsontable(container, {
-        data: sheetsData['Sheet1'],
-        rowHeaders: true,
-        colHeaders: true,
-        height: '100%',
-        licenseKey: 'non-commercial-and-evaluation',
-        contextMenu: true,
-        formulas: { engine: HyperFormula },
-        minSpareRows: 5,
-        minSpareCols: 3,
-        stretchH: 'all',
-        language: currentLang
-    });
+            // تحديث الهيدر
+            if (document.getElementById('currentUser')) document.getElementById('currentUser').textContent = currentUser.name;
+            if (document.getElementById('currentProjectName')) document.getElementById('currentProjectName').textContent = currentProject.name;
 
-    renderSheetsTabs();
-}
+            // إظهار التبويبات حسب الدور
+            if (currentUser.role === 'superadmin') {
+                document.getElementById('superadminTabs')?.classList.remove('hidden');
+            } else if (currentUser.role === 'manager') {
+                document.getElementById('managerTabs')?.classList.remove('hidden');
+                loadProjectPages();
+            } else if (currentUser.role === 'delegate') {
+                document.getElementById('delegateTabs')?.classList.remove('hidden');
+                loadDelegateLimits();
+            }
 
-function renderSheetsTabs() {
-    const tabBar = document.getElementById('sheetsTabBar');
-    if (!tabBar) return;
-
-    tabBar.innerHTML = '';
-    Object.keys(sheetsData).forEach(sheetName => {
-        const btn = document.createElement('button');
-        btn.className = 'px-4 py-2 bg-gray-200 rounded-lg text-sm font-bold hover:bg-gray-300';
-        btn.textContent = sheetName;
-        btn.onclick = () => loadSheet(sheetName);
-        tabBar.appendChild(btn);
-    });
-}
-
-function loadSheet(name) {
-    if (hotInstance && sheetsData[name]) {
-        hotInstance.loadData(sheetsData[name]);
-    }
-}
-
-document.getElementById('addSheetBtn')?.addEventListener('click', () => {
-    const name = prompt('اسم الجدول الجديد:');
-    if (name &&!sheetsData[name]) {
-        sheetsData[name] = [];
-        renderSheetsTabs();
-        loadSheet(name);
-    }
-});
-
-document.getElementById('saveSheetBtn')?.addEventListener('click', () => {
-    // حفظ في Firebase - تكملها
-    showToast('تم حفظ الجدول', 'success');
-});
-
-document.getElementById('exportSheetExcelBtn')?.addEventListener('click', () => {
-    const exportPlugin = hotInstance.getPlugin('exportFile');
-    exportPlugin.downloadFile('csv', { filename: 'جدول_المحاسب' });
-});
-
-// ====== 8. QR Code للسند ======
-document.getElementById('generateQrBtn')?.addEventListener('click', () => {
-    const bondData = getCurrentBondData(); // دالة تجيب بيانات السند
-    const qrContainer = document.getElementById('qrCodeCanvas');
-    qrContainer.innerHTML = '';
-
-    QRCode.toCanvas(JSON.stringify(bondData), { width: 200 }, (err, canvas) => {
-        if (err) return console.error(err);
-        qrContainer.appendChild(canvas);
-        document.getElementById('qrCodeContainer').classList.remove('hidden');
-    });
-});
-
-// ====== 9. طباعة احترافية ======
-document.getElementById('printBondBtn')?.addEventListener('click', () => {
-    const bondData = getCurrentBondData();
-    const printArea = document.getElementById('printArea');
-
-    printArea.innerHTML = `
-        <div class="bond-print">
-            <div class="print-header">
-                <h1>${bondData.projectName}</h1>
-                <h2>سند ${bondData.type}</h2>
-                <p>رقم: ${bondData.number}</p>
-            </div>
-            <div class="print-body">
-                <table>
-                    <tr><td>التاريخ:</td><td>${bondData.date}</td></tr>
-                    <tr><td>العميل:</td><td>${bondData.clientName}</td></tr>
-                    <tr><td>الجوال:</td><td>${bondData.clientPhone}</td></tr>
-                    <tr><td>المبلغ:</td><td>${bondData.amount} ريال</td></tr>
-                    <tr><td>البيان:</td><td>${bondData.statement}</td></tr>
-                    <tr><td>طريقة الدفع:</td><td>${bondData.paymentMethod}</td></tr>
-                </table>
-            </div>
-            <div class="print-footer">
-                <p>المنشئ: ${bondData.createdBy}</p>
-                <p>الحالة: ${bondData.status}</p>
-            </div>
-        </div>
-    `;
-
-    window.print();
-});
-
-// ====== 10. واتساب ======
-document.getElementById('shareWhatsappBtn')?.addEventListener('click', () => {
-    const bondData = getCurrentBondData();
-    const text = `*سند ${bondData.type}*\n\nرقم: ${bondData.number}\nالعميل: ${bondData.clientName}\nالمبلغ: ${bondData.amount} ريال\nالتاريخ: ${bondData.date}\n\n${bondData.projectName}`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-});
-
-// ====== 11. الدردشة ======
-let chatMessages = [];
-
-document.getElementById('chatTypeSelect')?.addEventListener('change', (e) => {
-    const userSelect = document.getElementById('chatUserSelect');
-    if (e.target.value === 'private') {
-        userSelect.classList.remove('hidden');
-        loadChatUsers(); // تحمل المستخدمين
-    } else {
-        userSelect.classList.add('hidden');
-    }
-});
-
-document.getElementById('sendMessageBtn')?.addEventListener('click', sendChatMessage);
-document.getElementById('chatMessageInput')?.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' &&!e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-    }
-});
-
-function sendChatMessage() {
-    const input = document.getElementById('chatMessageInput');
-    const message = input.value.trim();
-    if (!message) return;
-
-    const type = document.getElementById('chatTypeSelect').value;
-    const receiver = document.getElementById('chatUserSelect').value;
-    const fileInput = document.getElementById('chatFileInput');
-
-    const msgData = {
-        text: message,
-        type: type,
-        receiver: type === 'private'? receiver : 'all',
-        sender: currentUser.name,
-        senderPhone: currentUser.phone,
-        timestamp: new Date().toISOString(),
-        file: fileInput.files[0]? fileInput.files[0].name : null
-    };
-
-    // حفظ في Firebase + عرض
-    displayChatMessage(msgData);
-    input.value = '';
-    fileInput.value = '';
-}
-
-function displayChatMessage(msg) {
-    const container = document.getElementById('chatMessagesContainer');
-    const isMine = msg.senderPhone === currentUser.phone;
-    const bubbleClass = isMine? 'chat-sent' : 'chat-received';
-
-    const html = `
-        <div class="flex ${isMine? 'justify-end' : 'justify-start'}">
-            <div class="chat-bubble ${bubbleClass} max-w-md">
-                <p class="text-xs font-bold mb-1">${msg.sender}</p>
-                <p class="text-sm">${msg.text}</p>
-                ${msg.file? `<p class="text-xs mt-2 opacity-75">📎 ${msg.file}</p>` : ''}
-                <p class="text-xs mt-1 opacity-60">${new Date(msg.timestamp).toLocaleTimeString('ar')}</p>
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', html);
-    container.scrollTop = container.scrollHeight;
-}
-
-// ====== 12. صلاحيات المندوب + القفل التلقائي ======
-let delegateStats = { dailyCount: 0, dailyAmount: 0, limit: 0, maxAmount: 0 };
-
-function checkDelegateLimits() {
-    const alertDiv = document.getElementById('delegateLimitsAlert');
-    const infoDiv = document.getElementById('delegateLimitsInfo');
-    const submitBtn = document.getElementById('submitBondBtn');
-
-    if (currentUser.role === 'delegate') {
-        alertDiv.classList.remove('hidden');
-
-        if (delegateStats.dailyCount >= delegateStats.limit) {
-            infoDiv.innerHTML = `⚠️ وصلت للحد اليومي: ${delegateStats.dailyCount}/${delegateStats.limit} سند`;
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'تم الوصول للحد اليومي';
-            submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            Swal.fire('نجح', 'تم تسجيل الدخول', 'success');
+            initApp();
         } else {
-            infoDiv.innerHTML = `
-                ✅ المتبقي اليوم: ${delegateStats.limit - delegateStats.dailyCount} سند<br>
-                💰 الحد الأقصى للسند: ${delegateStats.maxAmount} ريال<br>
-                📊 سندات اليوم: ${delegateStats.dailyCount}
-            `;
-            submitBtn.disabled = false;
+            Swal.fire('خطأ', 'بيانات الدخول خاطئة', 'error');
         }
+    } catch (error) {
+        console.error(error);
+        Swal.fire('خطأ', 'مشكلة في الاتصال', 'error');
     }
 }
 
-// ====== 13. دوال مساعدة ======
-function showModal(title, content, onConfirm) {
-    // كود المودال - استخدم SweetAlert2 أو اعمل واحد بسيط
-    const result = confirm(title + '\n\n' + content);
-    if (result && onConfirm) onConfirm();
+// ====== 4. إظهار/إخفاء التبويبات ======
+function loadProjectPages() {
+    document.querySelectorAll('.project-page').forEach(tab => {
+        const pageId = tab.getAttribute('data-page');
+        if (projectPages.includes(pageId)) {
+            tab.classList.remove('hidden');
+        } else {
+            tab.classList.add('hidden');
+        }
+    });
 }
 
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
+// ====== 5. صلاحيات المندوب + الحد اليومي ======
+let delegateLimits = { dailyLimit: 0, maxAmount: 0, dailyCount: 0 };
 
-function getCurrentBondData() {
-    // ترجع بيانات السند الحالي
-    return {
-        number: document.getElementById('bondNumber')?.value || 'AUTO',
-        type: document.getElementById('bondType')?.value,
-        date: new Date().toLocaleDateString('ar'),
-        clientName: document.getElementById('clientName')?.value,
-        clientPhone: document.getElementById('clientPhone')?.value,
-        amount: document.getElementById('bondAmount')?.value,
-        statement: document.getElementById('bondStatement')?.value,
-        paymentMethod: document.getElementById('paymentMethod')?.value,
-        createdBy: currentUser.name,
-        status: 'pending',
-        projectName: currentProject.name
-    };
-}
+async function loadDelegateLimits() {
+    if (currentUser.role!== 'delegate') return;
 
-function loadChatUsers() {
-    // تحمل المستخدمين من Firebase
-    const select = document.getElementById('chatUserSelect');
-    select.innerHTML = '<option value="">اختر المستخدم</option>';
-    // تملاها من قاعدة البيانات
-}
-
-// ====== 14. تشغيل عند تحميل الصفحة ======
-document.addEventListener('DOMContentLoaded', () => {
-    initSmartSheet();
-    checkDelegateLimits();
-});
-</script>
-<script>
-// ====== 12. تحديث صلاحيات المناديب + الحد اليومي ======
-let delegateLimits = { dailyLimit: 0, maxAmount: 0, dailyCount: 0, dailyTotal: 0 };
-
-// دالة تحميل صلاحيات المندوب من Firebase
-async function loadDelegatePermissions() {
-    if (currentUser.role !== 'delegate') return;
-
-    const userRef = ref(db, `users/${currentUser.id}`);
-    const snapshot = await get(userRef);
-    const userData = snapshot.val();
-
-    delegateLimits.dailyLimit = userData.dailyBondLimit || 0;
-    delegateLimits.maxAmount = userData.maxBondAmount || 0;
-    delegateLimits.allowedBondTypes = userData.allowedBondTypes || [];
-    delegateLimits.allowedPayments = userData.allowedPayments || [];
+    delegateLimits.dailyLimit = currentUser.dailyBondLimit || 0;
+    delegateLimits.maxAmount = currentUser.maxBondAmount || 0;
 
     // حساب سندات اليوم
-    await calculateTodayBonds();
-    updateDelegateAlert();
-}
-
-// حساب سندات اليوم للمندوب
-async function calculateTodayBonds() {
     const today = new Date().toISOString().split('T')[0];
     const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
     const snapshot = await get(query(bondsRef, orderByChild('createdBy'), equalTo(currentUser.id)));
 
     delegateLimits.dailyCount = 0;
-    delegateLimits.dailyTotal = 0;
-
     snapshot.forEach((child) => {
-        const bond = child.val();
-        if (bond.createdAt.startsWith(today)) {
-            delegateLimits.dailyCount++;
-            delegateLimits.dailyTotal += Math.abs(bond.amount);
-        }
+        if (child.val().createdAt.startsWith(today)) delegateLimits.dailyCount++;
     });
+
+    updateDelegateAlert();
 }
 
-// تحديث تنبيه الصلاحيات للمندوب
 function updateDelegateAlert() {
     const alertDiv = document.getElementById('delegateLimitsAlert');
     const infoDiv = document.getElementById('delegateLimitsInfo');
     const submitBtn = document.getElementById('submitBondBtn');
-    const amountInput = document.getElementById('bondAmount');
-
-    if (currentUser.role !== 'delegate') {
-        alertDiv?.classList.add('hidden');
-        return;
-    }
+    if (!alertDiv ||!infoDiv ||!submitBtn) return;
 
     alertDiv.classList.remove('hidden');
     const remaining = delegateLimits.dailyLimit - delegateLimits.dailyCount;
 
     if (remaining <= 0) {
-        // قفل كامل - وصل الحد
-        infoDiv.innerHTML = `
-            <div class="font-bold text-red-700">⛔ تم الوصول للحد اليومي</div>
-            <div class="text-xs mt-1">أنشأت ${delegateLimits.dailyCount}/${delegateLimits.dailyLimit} سند اليوم</div>
-            <div class="text-xs">حاول مرة ثانية بكرة</div>
-        `;
+        infoDiv.innerHTML = `<div class="font-bold text-red-700">⛔ تم الوصول للحد اليومي ${delegateLimits.dailyCount}/${delegateLimits.dailyLimit}</div>`;
         submitBtn.disabled = true;
-        submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.remove('from-blue-600', 'to-purple-600');
-        submitBtn.textContent = 'مقفل - تم الوصول للحد اليومي';
-        amountInput.disabled = true;
+        submitBtn.textContent = 'مقفل - تم الوصول للحد';
+        submitBtn.classList.add('bg-gray-400');
     } else {
-        // شغال
-        infoDiv.innerHTML = `
-            <div class="grid grid-cols-3 gap-2 text-center">
-                <div><div class="font-extrabold text-amber-800">${remaining}</div><div class="text-xs">متبقي اليوم</div></div>
-                <div><div class="font-extrabold text-amber-800">${delegateLimits.maxAmount}</div><div class="text-xs">سقف السند</div></div>
-                <div><div class="font-extrabold text-amber-800">${delegateLimits.dailyCount}</div><div class="text-xs">سندات اليوم</div></div>
-            </div>
-        `;
+        infoDiv.innerHTML = `المتبقي اليوم: ${remaining} سند | سقف السند: ${delegateLimits.maxAmount} ريال`;
         submitBtn.disabled = false;
-        submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.add('from-blue-600', 'to-purple-600');
-        submitBtn.textContent = 'إنشاء السند';
-        amountInput.disabled = false;
-        amountInput.max = delegateLimits.maxAmount;
-
-        // تنبيه سقف المبلغ
-        document.getElementById('amountLimitHint').classList.remove('hidden');
-        document.getElementById('amountLimitHint').textContent = `الحد الأقصى للسند: ${delegateLimits.maxAmount} ريال`;
     }
 }
 
-// فلترة أنواع السندات حسب صلاحيات المندوب
-function filterBondTypesForDelegate() {
-    if (currentUser.role !== 'delegate') return;
+// ====== 6. إصلاح Handsontable - اللغة ======
+function initSmartSheet() {
+    const container = document.getElementById('smartSheetContainer');
+    if (!container || hotInstance) return;
 
-    const bondTypeSelect = document.getElementById('bondType');
-    const paymentSelect = document.getElementById('paymentMethod');
-
-    // إخفاء الأنواع غير المسموحة
-    Array.from(bondTypeSelect.options).forEach(opt => {
-        if (opt.value && !delegateLimits.allowedBondTypes.includes(opt.value)) {
-            opt.style.display = 'none';
-        }
-    });
-
-    Array.from(paymentSelect.options).forEach(opt => {
-        if (opt.value && !delegateLimits.allowedPayments.includes(opt.value)) {
-            opt.style.display = 'none';
-        }
+    hotInstance = new Handsontable(container, {
+        data: [],
+        rowHeaders: true,
+        colHeaders: true,
+        height: '100%',
+        licenseKey: 'non-commercial-and-evaluation',
+        contextMenu: true,
+        // شلنا language: 'ar' لأنها تسبب خطأ
+        minSpareRows: 5,
+        stretchH: 'all'
     });
 }
 
-// التحقق من المبلغ قبل الإرسال
-document.getElementById('bondAmount')?.addEventListener('input', (e) => {
-    if (currentUser.role !== 'delegate') return;
-
-    const amount = parseFloat(e.target.value);
-    const submitBtn = document.getElementById('submitBondBtn');
-
-    if (amount > delegateLimits.maxAmount) {
-        e.target.classList.add('border-red-500');
-        submitBtn.disabled = true;
-        showToast(`المبلغ يتجاوز السقف: ${delegateLimits.maxAmount} ريال`, 'error');
-    } else {
-        e.target.classList.remove('border-red-500');
-        if (delegateLimits.dailyCount < delegateLimits.dailyLimit) {
-            submitBtn.disabled = false;
-        }
-    }
-});
-
-// ====== 13. تحديث حالة السند عند المدير والمندوب ======
-function updateBondStatusUI(bondId, status, by) {
-    const statusText = {
-        'pending': 'بانتظار التوثيق',
-        'verified': 'موثق',
-        'not_supplied': 'بانتظار التوريد',
-        'supplied': 'مورد'
-    };
-
-    const statusIcon = {
-        'pending': '⏳',
-        'verified': '✅',
-        'not_supplied': '📤',
-        'supplied': '✅'
-    };
-
-    document.getElementById('bondStatusIcon').textContent = statusIcon[status];
-    document.getElementById('bondStatusText').textContent = statusText[status];
-    document.getElementById('bondStatusDesc').textContent = `بواسطة: ${by}`;
-
-    // إظهار/إخفاء أزرار المدير
-    if (currentUser.role === 'manager' || currentUser.role === 'superadmin') {
-        document.getElementById('managerActions').classList.remove('hidden');
-    }
+// ====== 7. تهيئة التطبيق ======
+function initApp() {
+    if (currentUser.role === 'delegate') loadDelegateLimits();
+    if (document.getElementById('smartSheetContainer')) initSmartSheet();
 }
 
-// ====== 14. تحميل كل شي عند الدخول ======
-async function initApp() {
-    if (!currentUser || !currentProjectId) return;
-
-    // تحميل الصلاحيات
-    if (currentUser.role === 'delegate') {
-        await loadDelegatePermissions();
-        filterBondTypesForDelegate();
-    }
-
-    // تحميل إعدادات السند
-    await loadBondSettings();
-
-    // تشغيل المستمعين
-    startRealtimeListeners();
-
-    // تحميل المحاسبين لو الصفحة موجودة
-    if (projectPages.includes('accountants')) {
-        loadAccountants();
-    }
-}
-
-// ====== 15. تسجيل الخروج ======
-document.getElementById('logoutBtn')?.addEventListener('click', () => {
-    currentUser = null;
-    currentProject = null;
-    currentProjectId = null;
-    localStorage.clear();
-    location.reload();
-});
-
-// ====== 16. دوال مساعدة للتوست ======
-function showToast(message, type = 'info') {
-    Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: type,
-        title: message,
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-    });
-}
-
-// ====== 17. تشغيل التطبيق ======
-// الكود هذا يشتغل بعد تسجيل الدخول
-window.addEventListener('userLoggedIn', () => {
-    initApp();
-});
-
-console.log('✅ Smart Bonds V9.0 - جميع البلكات محملة');
+console.log('✅ Smart Bonds V9.0 - جاهز');
 </script>
 </body>
 </html>
