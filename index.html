@@ -410,13 +410,37 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const storage = getStorage(app);
 
+<script type="module">
+// ====== المكتبات ======
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, set, get, push, onValue, update, remove, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+// ====== ✅ إعدادات Firebase حقك - جاهزة 100% ======
+const firebaseConfig = {
+    apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+    authDomain: "sanadat-pro.firebaseapp.com",
+    databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "sanadat-pro",
+    storageBucket: "sanadat-pro.appspot.com",
+    messagingSenderId: "1039476751095",
+    appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const storage = getStorage(app);
+
 // ====== المتغيرات العامة ======
 let currentUser = null;
 let currentProject = null;
 let currentProjectId = null;
+let projectData = {};
 let projectPages = [];
 let hotInstance = null;
 let currentLang = localStorage.getItem('app_lang') || 'ar';
+let currentRole = null;
+let userPermissions = [];
 let delegateLimits = { dailyLimit: 0, maxAmount: 0, dailyCount: 0, allowedBondTypes: [], allowedPayments: [] };
 let allBonds = [];
 let allUsers = [];
@@ -462,26 +486,17 @@ function translatePage(lang) {
 
 // ====== دالة التبديل بين التبويبات ======
 function showTab(tabId, btnElement) {
-    // إخفاء كل التبويبات
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-
-    // إزالة active من كل الأزرار
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
         btn.classList.add('bg-gray-100');
     });
-
-    // إظهار التبويب المطلوب
     const targetTab = document.getElementById(tabId);
     if (targetTab) targetTab.classList.remove('hidden');
-
-    // تفعيل الزر
     if (btnElement) {
         btnElement.classList.add('active');
         btnElement.classList.remove('bg-gray-100');
     }
-
-    // تحميل البيانات حسب التبويب
     if (tabId === 'dashboard') loadDashboard();
     if (tabId === 'projects') loadProjects();
     if (tabId === 'managers') loadManagers();
@@ -508,39 +523,32 @@ function closeBondModal() {
     document.getElementById('bondModal').classList.add('hidden');
 }
 window.closeBondModal = closeBondModal;
-    // ====== تسجيل الدخول - محدث ======
+
+// ====== تسجيل الدخول - محدث ======
 async function handleLogin() {
     const projectCode = document.getElementById('projectCode')?.value.trim();
     const phone = document.getElementById('phone')?.value.trim();
     const password = document.getElementById('password')?.value.trim();
 
-    if (!phone || !password) {
+    if (!phone ||!password) {
         Swal.fire('تنبيه', 'املأ الجوال وكلمة المرور', 'warning');
         return;
     }
 
-    // ====== المدير العام - دخول مباشر بدون كود ======
     if (phone === '0597087767' && password === '500600') {
         showToast('جاري تسجيل الدخول...', 'info');
-        currentUser = { 
-            phone: '0597087767', 
-            password: '500600', 
-            name: 'المدير العام',
-            role: 'superadmin', 
-            active: true 
-        };
+        currentUser = { phone: '0597087767', password: '500600', name: 'المدير العام', role: 'superadmin', active: true };
         currentProject = 'SUPERADMIN';
+        currentProjectId = 'SUPERADMIN';
         currentRole = 'superadmin';
         projectData = { name: 'الإدارة العامة', code: 'SUPERADMIN', active: true };
-        
         localStorage.setItem('phone', phone);
         localStorage.setItem('password', password);
-        localStorage.removeItem('projectCode'); // نمسح الكود
+        localStorage.removeItem('projectCode');
         showMainApp();
         return;
     }
 
-    // ====== المدراء والمناديب - لازم كود مشروع ======
     if (!projectCode) {
         Swal.fire('تنبيه', 'ادخل كود المشروع', 'warning');
         return;
@@ -553,9 +561,8 @@ async function handleLogin() {
             Swal.fire('خطأ', 'المستخدم غير موجود في هذا المشروع', 'error');
             return;
         }
-
         const user = snapshot.val();
-        if (user.password !== password) {
+        if (user.password!== password) {
             Swal.fire('خطأ', 'كلمة السر غلط', 'error');
             return;
         }
@@ -563,19 +570,17 @@ async function handleLogin() {
             Swal.fire('خطأ', 'حسابك موقوف', 'error');
             return;
         }
-
         const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
         projectData = projectSnap.val();
         if (!projectData.active) {
             Swal.fire('خطأ', 'المشروع موقوف', 'error');
             return;
         }
-
         userPermissions = user.permissions || [];
         currentUser = user;
         currentProject = projectCode;
+        currentProjectId = projectCode;
         currentRole = user.role;
-
         localStorage.setItem('projectCode', projectCode);
         localStorage.setItem('phone', phone);
         localStorage.setItem('password', password);
@@ -586,11 +591,19 @@ async function handleLogin() {
     }
 }
 
-// ====== إخفاء/إظهار حقل كود المشروع حسب الرقم ======
+// ====== إظهار التطبيق الرئيسي ======
+function showMainApp() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    translatePage(currentLang);
+    loadDashboard();
+    if (currentUser.role === 'delegate') loadDelegateLimits();
+}
+
+// ====== إخفاء/إظهار حقل كود المشروع ======
 document.addEventListener('DOMContentLoaded', () => {
     const phoneInput = document.getElementById('phone');
     const projectField = document.getElementById('projectCodeField');
-    
     if (phoneInput && projectField) {
         phoneInput.addEventListener('input', (e) => {
             if (e.target.value === '0597087767') {
@@ -601,8 +614,252 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    document.getElementById('loginBtn')?.addEventListener('click', handleLogin);
+    document.getElementById('createBondForm')?.addEventListener('submit', handleCreateBond);
+    document.getElementById('filterDelegate')?.addEventListener('input', filterBonds);
+    document.getElementById('filterFromDate')?.addEventListener('change', filterBonds);
+    document.getElementById('filterToDate')?.addEventListener('change', filterBonds);
+    document.getElementById('filterStatus')?.addEventListener('change', filterBonds);
 });
-    async function addBondType() {
+
+// ====== تحميل صلاحيات المندوب ======
+async function loadDelegateLimits() {
+    if (currentUser.role!== 'delegate') return;
+    delegateLimits.dailyLimit = currentUser.dailyBondLimit || 0;
+    delegateLimits.maxAmount = currentUser.maxBondAmount || 0;
+    delegateLimits.allowedBondTypes = currentUser.allowedBondTypes || ['قبض', 'صرف'];
+    delegateLimits.allowedPayments = currentUser.allowedPayments || ['كاش', 'تحويل', 'شبكة'];
+    const today = new Date().toISOString().split('T')[0];
+    const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
+    const snapshot = await get(query(bondsRef, orderByChild('createdBy'), equalTo(currentUser.id)));
+    delegateLimits.dailyCount = 0;
+    snapshot.forEach((child) => {
+        if (child.val().createdAt.startsWith(today)) delegateLimits.dailyCount++;
+    });
+    updateDelegateAlert();
+}
+
+// ====== تحديث تنبيه صلاحيات المندوب ======
+function updateDelegateAlert() {
+    const alertDiv = document.getElementById('delegateLimitsAlert');
+    const infoDiv = document.getElementById('delegateLimitsInfo');
+    const submitBtn = document.getElementById('submitBondBtn');
+    const amountHint = document.getElementById('amountLimitHint');
+    if (!alertDiv ||!infoDiv ||!submitBtn) return;
+    alertDiv.classList.remove('hidden');
+    const remaining = delegateLimits.dailyLimit - delegateLimits.dailyCount;
+    if (remaining <= 0) {
+        infoDiv.innerHTML = `<div class="font-bold text-red-700">⛔ تم الوصول للحد اليومي ${delegateLimits.dailyCount}/${delegateLimits.dailyLimit}</div>`;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'مقفل - تم الوصول للحد';
+        submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        submitBtn.classList.remove('from-blue-600', 'to-purple-600');
+    } else {
+        infoDiv.innerHTML = `المتبقي: <span class="font-bold">${remaining}</span> سند من ${delegateLimits.dailyLimit} | سقف السند: <span class="font-bold">${delegateLimits.maxAmount}</span> ريال`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'إنشاء السند';
+        submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitBtn.classList.add('from-blue-600', 'to-purple-600');
+    }
+    const bondTypeSelect = document.getElementById('bondType');
+    if (bondTypeSelect) {
+        bondTypeSelect.innerHTML = '<option value="">اختر النوع</option>';
+        delegateLimits.allowedBondTypes.forEach(type => {
+            bondTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
+        });
+    }
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    if (paymentMethodSelect) {
+        paymentMethodSelect.innerHTML = '<option value="">اختر الطريقة</option>';
+        delegateLimits.allowedPayments.forEach(method => {
+            paymentMethodSelect.innerHTML += `<option value="${method}">${method}</option>`;
+        });
+    }
+    if (amountHint) {
+        amountHint.textContent = `الحد الأقصى: ${delegateLimits.maxAmount} ريال`;
+        amountHint.classList.remove('hidden');
+    }
+}
+
+// ====== إنشاء سند جديد ======
+async function handleCreateBond(e) {
+    e.preventDefault();
+    const bondType = document.getElementById('bondType').value;
+    const bondAmount = parseFloat(document.getElementById('bondAmount').value);
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const bondDate = document.getElementById('bondDate').value;
+    const bondDescription = document.getElementById('bondDescription').value.trim();
+    if (!bondType ||!bondAmount ||!paymentMethod ||!bondDate ||!bondDescription) {
+        showToast('املأ كل الحقول', 'error');
+        return;
+    }
+    if (currentUser.role === 'delegate') {
+        const remaining = delegateLimits.dailyLimit - delegateLimits.dailyCount;
+        if (remaining <= 0) {
+            Swal.fire('مرفوض', 'تم الوصول للحد اليومي', 'error');
+            return;
+        }
+        if (bondAmount > delegateLimits.maxAmount) {
+            Swal.fire('مرفوض', `المبلغ يتجاوز السقف المسموح ${delegateLimits.maxAmount} ريال`, 'error');
+            return;
+        }
+        if (!delegateLimits.allowedBondTypes.includes(bondType)) {
+            Swal.fire('مرفوض', 'نوع السند غير مسموح لك', 'error');
+            return;
+        }
+        if (!delegateLimits.allowedPayments.includes(paymentMethod)) {
+            Swal.fire('مرفوض', 'طريقة الدفع غير مسموحة لك', 'error');
+            return;
+        }
+    }
+    try {
+        showToast('جاري إنشاء السند...', 'info');
+        const bondsSnap = await get(ref(db, `projects/${currentProjectId}/bonds`));
+        const bondNumber = (bondsSnap.size || 0) + 1;
+        const newBond = {
+            bondNumber: bondNumber,
+            type: bondType,
+            amount: bondAmount,
+            paymentMethod: paymentMethod,
+            date: bondDate,
+            description: bondDescription,
+            createdBy: currentUser.id,
+            createdByName: currentUser.name,
+            createdAt: new Date().toISOString(),
+            status: currentUser.role === 'delegate'? 'pending' : 'verified',
+            supplied: false
+        };
+        const newBondRef = push(ref(db, `projects/${currentProjectId}/bonds`));
+        await set(newBondRef, newBond);
+        if (currentUser.role === 'delegate') {
+            delegateLimits.dailyCount++;
+            updateDelegateAlert();
+        }
+        showToast('تم إنشاء السند بنجاح', 'success');
+        document.getElementById('createBondForm').reset();
+        document.getElementById('bondDate').valueAsDate = new Date();
+        loadBonds();
+        loadMyBonds();
+    } catch (error) {
+        console.error(error);
+        showToast('فشل إنشاء السند', 'error');
+    }
+}
+
+// ====== تحميل السندات ======
+async function loadBonds() {
+    try {
+        const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
+        const snapshot = await get(bondsRef);
+        const tbody = document.getElementById('bondsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        allBonds = [];
+        snapshot.forEach((child) => {
+            const bond = {...child.val(), id: child.key };
+            allBonds.push(bond);
+        });
+        allBonds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        renderBonds(allBonds);
+    } catch (error) {
+        console.error('خطأ في تحميل السندات:', error);
+        showToast('فشل تحميل السندات', 'error');
+    }
+}
+
+// ====== عرض السندات ======
+function renderBonds(bonds) {
+    const tbody = document.getElementById('bondsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    bonds.forEach(bond => {
+        const row = document.createElement('tr');
+        row.className = 'border-b hover:bg-gray-50';
+        let statusBadge = '';
+        if (bond.status === 'verified') {
+            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">موثق</span>';
+        } else if (bond.status === 'pending') {
+            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">بانتظار التوثيق</span>';
+        } else if (bond.status === 'suspended') {
+            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">موقوف</span>';
+        } else {
+            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">مرفوض</span>';
+        }
+        let suppliedBadge = bond.supplied? '<span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">مورد</span>' : '<span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">غير مورد</span>';
+        row.innerHTML = `
+            <td class="p-3 text-sm font-bold">${bond.bondNumber}</td>
+            <td class="p-3 text-sm">${bond.type}</td>
+            <td class="p-3 text-sm font-bold">${bond.amount.toFixed(2)} ريال</td>
+            <td class="p-3 text-sm">${bond.createdByName}</td>
+            <td class="p-3 text-sm">${bond.date}</td>
+            <td class="p-3">${statusBadge} ${suppliedBadge}</td>
+            <td class="p-3">
+                <button onclick="viewBond('${bond.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-bold mx-1">عرض</button>
+                ${currentUser.role === 'manager' && bond.status === 'pending'? `<button onclick="verifyBond('${bond.id}')" class="text-green-600 hover:text-green-800 text-sm font-bold mx-1">توثيق</button>` : ''}
+                <button onclick="printBond('${bond.id}')" class="text-gray-600 hover:text-gray-800 text-sm font-bold mx-1">طباعة</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// ====== فلترة السندات ======
+function filterBonds() {
+    const delegateFilter = document.getElementById('filterDelegate').value.toLowerCase();
+    const fromDate = document.getElementById('filterFromDate').value;
+    const toDate = document.getElementById('filterToDate').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    let filtered = allBonds.filter(bond => {
+        if (delegateFilter &&!bond.createdByName.toLowerCase().includes(delegateFilter)) return false;
+        if (fromDate && bond.date < fromDate) return false;
+        if (toDate && bond.date > toDate) return false;
+        if (statusFilter && bond.status!== statusFilter) return false;
+        return true;
+    });
+    renderBonds(filtered);
+}
+
+// ====== تحميل سنداتي ======
+async function loadMyBonds() {
+    if (currentUser.role!== 'delegate') return;
+    try {
+        const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
+        const snapshot = await get(query(bondsRef, orderByChild('createdBy'), equalTo(currentUser.id)));
+        const listDiv = document.getElementById('myBondsList');
+        if (!listDiv) return;
+        listDiv.innerHTML = '';
+        const myBonds = [];
+        snapshot.forEach((child) => {
+            myBonds.push({...child.val(), id: child.key });
+        });
+        myBonds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        myBonds.forEach(bond => {
+            const card = document.createElement('div');
+            card.className = 'border-2 border-gray-200 rounded-xl p-4 hover:shadow-md transition';
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <div class="font-bold text-lg">سند #${bond.bondNumber}</div>
+                        <div class="text-sm text-gray-600">${bond.type} - ${bond.amount.toFixed(2)} ريال</div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${bond.status === 'verified'? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                        ${bond.status === 'verified'? 'موثق' : 'بانتظار التوثيق'}
+                    </span>
+                </div>
+                <div class="text-sm text-gray-600 mb-3">${bond.description}</div>
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                    <span>${bond.date}</span>
+                    <button onclick="viewBond('${bond.id}')" class="text-blue-600 hover:text-blue-800 font-bold">عرض التفاصيل</button>
+                </div>
+            `;
+            listDiv.appendChild(card);
+        });
+    } catch (error) {
+        console.error('خطأ في تحميل سنداتي:', error);
+    }
+}
+
+async function addBondType() {
     const { value: formValues } = await Swal.fire({
         title: 'نوع سند جديد',
         html: `
@@ -630,308 +887,18 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     });
     if (!formValues) return;
-    if (!formValues.name || !formValues.prefix || !formValues.start || !formValues.end) {
+    if (!formValues.name ||!formValues.prefix ||!formValues.start ||!formValues.end) {
         return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
     }
-    
     const id = Date.now().toString();
-    await set(ref(db, `projects/${currentProject}/bondTypes/${id}`), {
-        ...formValues, 
-        current: formValues.start
-    });
+    await set(ref(db, `projects/${currentProject}/bondTypes/${id}`), {...formValues, current: formValues.start});
     Swal.fire('تم', 'انضاف النوع', 'success');
-}
-    <script>
-// ====== تحميل صلاحيات المندوب ======
-async function loadDelegateLimits() {
-    if (currentUser.role!== 'delegate') return;
-
-    delegateLimits.dailyLimit = currentUser.dailyBondLimit || 0;
-    delegateLimits.maxAmount = currentUser.maxBondAmount || 0;
-    delegateLimits.allowedBondTypes = currentUser.allowedBondTypes || ['قبض', 'صرف'];
-    delegateLimits.allowedPayments = currentUser.allowedPayments || ['كاش', 'تحويل', 'شبكة'];
-
-    // حساب السندات اليوم
-    const today = new Date().toISOString().split('T')[0];
-    const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
-    const snapshot = await get(query(bondsRef, orderByChild('createdBy'), equalTo(currentUser.id)));
-
-    delegateLimits.dailyCount = 0;
-    snapshot.forEach((child) => {
-        if (child.val().createdAt.startsWith(today)) delegateLimits.dailyCount++;
-    });
-
-    updateDelegateAlert();
-}
-
-// ====== تحديث تنبيه صلاحيات المندوب ======
-function updateDelegateAlert() {
-    const alertDiv = document.getElementById('delegateLimitsAlert');
-    const infoDiv = document.getElementById('delegateLimitsInfo');
-    const submitBtn = document.getElementById('submitBondBtn');
-    const amountHint = document.getElementById('amountLimitHint');
-    if (!alertDiv ||!infoDiv ||!submitBtn) return;
-
-    alertDiv.classList.remove('hidden');
-    const remaining = delegateLimits.dailyLimit - delegateLimits.dailyCount;
-
-    if (remaining <= 0) {
-        infoDiv.innerHTML = `<div class="font-bold text-red-700">⛔ تم الوصول للحد اليومي ${delegateLimits.dailyCount}/${delegateLimits.dailyLimit}</div>`;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'مقفل - تم الوصول للحد';
-        submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.remove('from-blue-600', 'to-purple-600');
-    } else {
-        infoDiv.innerHTML = `المتبقي: <span class="font-bold">${remaining}</span> سند من ${delegateLimits.dailyLimit} | سقف السند: <span class="font-bold">${delegateLimits.maxAmount}</span> ريال`;
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'إنشاء السند';
-        submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-        submitBtn.classList.add('from-blue-600', 'to-purple-600');
-    }
-
-    // تحديث خيارات نوع السند
-    const bondTypeSelect = document.getElementById('bondType');
-    if (bondTypeSelect) {
-        bondTypeSelect.innerHTML = '<option value="">اختر النوع</option>';
-        delegateLimits.allowedBondTypes.forEach(type => {
-            bondTypeSelect.innerHTML += `<option value="${type}">${type}</option>`;
-        });
-    }
-
-    // تحديث خيارات طريقة الدفع
-    const paymentMethodSelect = document.getElementById('paymentMethod');
-    if (paymentMethodSelect) {
-        paymentMethodSelect.innerHTML = '<option value="">اختر الطريقة</option>';
-        delegateLimits.allowedPayments.forEach(method => {
-            paymentMethodSelect.innerHTML += `<option value="${method}">${method}</option>`;
-        });
-    }
-
-    // تلميح السقف
-    if (amountHint) {
-        amountHint.textContent = `الحد الأقصى: ${delegateLimits.maxAmount} ريال`;
-        amountHint.classList.remove('hidden');
-    }
-}
-
-// ====== إنشاء سند جديد ======
-async function handleCreateBond(e) {
-    e.preventDefault();
-
-    const bondType = document.getElementById('bondType').value;
-    const bondAmount = parseFloat(document.getElementById('bondAmount').value);
-    const paymentMethod = document.getElementById('paymentMethod').value;
-    const bondDate = document.getElementById('bondDate').value;
-    const bondDescription = document.getElementById('bondDescription').value.trim();
-
-    // التحقق من الحقول
-    if (!bondType ||!bondAmount ||!paymentMethod ||!bondDate ||!bondDescription) {
-        showToast('املأ كل الحقول', 'error');
-        return;
-    }
-
-    // التحقق من صلاحيات المندوب
-    if (currentUser.role === 'delegate') {
-        const remaining = delegateLimits.dailyLimit - delegateLimits.dailyCount;
-        if (remaining <= 0) {
-            Swal.fire('مرفوض', 'تم الوصول للحد اليومي', 'error');
-            return;
-        }
-        if (bondAmount > delegateLimits.maxAmount) {
-            Swal.fire('مرفوض', `المبلغ يتجاوز السقف المسموح ${delegateLimits.maxAmount} ريال`, 'error');
-            return;
-        }
-        if (!delegateLimits.allowedBondTypes.includes(bondType)) {
-            Swal.fire('مرفوض', 'نوع السند غير مسموح لك', 'error');
-            return;
-        }
-        if (!delegateLimits.allowedPayments.includes(paymentMethod)) {
-            Swal.fire('مرفوض', 'طريقة الدفع غير مسموحة لك', 'error');
-            return;
-        }
-    }
-
-    try {
-        showToast('جاري إنشاء السند...', 'info');
-
-        // رقم السند التلقائي
-        const bondsSnap = await get(ref(db, `projects/${currentProjectId}/bonds`));
-        const bondNumber = (bondsSnap.size || 0) + 1;
-
-        const newBond = {
-            bondNumber: bondNumber,
-            type: bondType,
-            amount: bondAmount,
-            paymentMethod: paymentMethod,
-            date: bondDate,
-            description: bondDescription,
-            createdBy: currentUser.id,
-            createdByName: currentUser.name,
-            createdAt: new Date().toISOString(),
-            status: currentUser.role === 'delegate'? 'pending' : 'verified',
-            supplied: false
-        };
-
-        const newBondRef = push(ref(db, `projects/${currentProjectId}/bonds`));
-        await set(newBondRef, newBond);
-
-        // تحديث عداد المندوب
-        if (currentUser.role === 'delegate') {
-            delegateLimits.dailyCount++;
-            updateDelegateAlert();
-        }
-
-        showToast('تم إنشاء السند بنجاح', 'success');
-        document.getElementById('createBondForm').reset();
-        document.getElementById('bondDate').valueAsDate = new Date();
-
-        // تحديث قائمة السندات
-        loadBonds();
-        loadMyBonds();
-    } catch (error) {
-        console.error(error);
-        showToast('فشل إنشاء السند', 'error');
-    }
-}
-
-// ====== تحميل السندات ======
-async function loadBonds() {
-    try {
-        const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
-        const snapshot = await get(bondsRef);
-        const tbody = document.getElementById('bondsTableBody');
-        if (!tbody) return;
-
-        tbody.innerHTML = '';
-        allBonds = [];
-
-        snapshot.forEach((child) => {
-            const bond = {...child.val(), id: child.key };
-            allBonds.push(bond);
-        });
-
-        // ترتيب من الأحدث للأقدم
-        allBonds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        renderBonds(allBonds);
-    } catch (error) {
-        console.error('خطأ في تحميل السندات:', error);
-        showToast('فشل تحميل السندات', 'error');
-    }
-}
-
-// ====== عرض السندات ======
-function renderBonds(bonds) {
-    const tbody = document.getElementById('bondsTableBody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-    bonds.forEach(bond => {
-        const row = document.createElement('tr');
-        row.className = 'border-b hover:bg-gray-50';
-
-        let statusBadge = '';
-        if (bond.status === 'verified') {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">موثق</span>';
-        } else if (bond.status === 'pending') {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">بانتظار التوثيق</span>';
-        } else if (bond.status === 'suspended') {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">موقوف</span>';
-        } else {
-            statusBadge = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">مرفوض</span>';
-        }
-
-        let suppliedBadge = bond.supplied?
-            '<span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">مورد</span>' :
-            '<span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">غير مورد</span>';
-
-        row.innerHTML = `
-            <td class="p-3 text-sm font-bold">${bond.bondNumber}</td>
-            <td class="p-3 text-sm">${bond.type}</td>
-            <td class="p-3 text-sm font-bold">${bond.amount.toFixed(2)} ريال</td>
-            <td class="p-3 text-sm">${bond.createdByName}</td>
-            <td class="p-3 text-sm">${bond.date}</td>
-            <td class="p-3">${statusBadge} ${suppliedBadge}</td>
-            <td class="p-3">
-                <button onclick="viewBond('${bond.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-bold mx-1">عرض</button>
-                ${currentUser.role === 'manager' && bond.status === 'pending'?
-                    `<button onclick="verifyBond('${bond.id}')" class="text-green-600 hover:text-green-800 text-sm font-bold mx-1">توثيق</button>` : ''}
-                <button onclick="printBond('${bond.id}')" class="text-gray-600 hover:text-gray-800 text-sm font-bold mx-1">طباعة</button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-// ====== فلترة السندات ======
-function filterBonds() {
-    const delegateFilter = document.getElementById('filterDelegate').value.toLowerCase();
-    const fromDate = document.getElementById('filterFromDate').value;
-    const toDate = document.getElementById('filterToDate').value;
-    const statusFilter = document.getElementById('filterStatus').value;
-
-    let filtered = allBonds.filter(bond => {
-        if (delegateFilter &&!bond.createdByName.toLowerCase().includes(delegateFilter)) return false;
-        if (fromDate && bond.date < fromDate) return false;
-        if (toDate && bond.date > toDate) return false;
-        if (statusFilter && bond.status!== statusFilter) return false;
-        return true;
-    });
-
-    renderBonds(filtered);
-}
-
-// ====== تحميل سنداتي ======
-async function loadMyBonds() {
-    if (currentUser.role!== 'delegate') return;
-
-    try {
-        const bondsRef = ref(db, `projects/${currentProjectId}/bonds`);
-        const snapshot = await get(query(bondsRef, orderByChild('createdBy'), equalTo(currentUser.id)));
-        const listDiv = document.getElementById('myBondsList');
-        if (!listDiv) return;
-
-        listDiv.innerHTML = '';
-        const myBonds = [];
-
-        snapshot.forEach((child) => {
-            myBonds.push({...child.val(), id: child.key });
-        });
-
-        myBonds.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        myBonds.forEach(bond => {
-            const card = document.createElement('div');
-            card.className = 'border-2 border-gray-200 rounded-xl p-4 hover:shadow-md transition';
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <div class="font-bold text-lg">سند #${bond.bondNumber}</div>
-                        <div class="text-sm text-gray-600">${bond.type} - ${bond.amount.toFixed(2)} ريال</div>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold ${bond.status === 'verified'? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                        ${bond.status === 'verified'? 'موثق' : 'بانتظار التوثيق'}
-                    </span>
-                </div>
-                <div class="text-sm text-gray-600 mb-3">${bond.description}</div>
-                <div class="flex justify-between items-center text-xs text-gray-500">
-                    <span>${bond.date}</span>
-                    <button onclick="viewBond('${bond.id}')" class="text-blue-600 hover:text-blue-800 font-bold">عرض التفاصيل</button>
-                </div>
-            `;
-            listDiv.appendChild(card);
-        });
-    } catch (error) {
-        console.error('خطأ في تحميل سنداتي:', error);
-    }
 }
 
 // ====== Handsontable للشيت الذكي ======
 function initSmartSheet() {
     const container = document.getElementById('smartSheetContainer');
     if (!container || hotInstance) return;
-
-    // بيانات افتراضية
     const defaultData = [
         ['', 'البيان', 'مدين', 'دائن', 'الرصيد'],
         ['', 'رصيد افتتاحي', 0, 0, 0],
@@ -939,7 +906,6 @@ function initSmartSheet() {
         ['', '', '', '', ''],
         ['', '', '', '', ''],
     ];
-
     hotInstance = new Handsontable(container, {
         data: defaultData,
         rowHeaders: true,
@@ -950,9 +916,7 @@ function initSmartSheet() {
         contextMenu: true,
         minSpareRows: 5,
         stretchH: 'all',
-        formulas: {
-            engine: HyperFormula
-        },
+        formulas: { engine: HyperFormula },
         columns: [
             { type: 'text', readOnly: true },
             { type: 'text' },
@@ -961,7 +925,6 @@ function initSmartSheet() {
             { type: 'numeric', readOnly: true, numericFormat: { pattern: '0,0.00' } }
         ]
     });
-
     console.log('✅ Handsontable جاهز');
 }
 
@@ -986,8 +949,7 @@ async function saveSmartSheet() {
 async function sendSheetToDelegates() {
     showToast('تم إرسال الشيت للمناديب', 'success');
 }
-</script>
-<script>
+
 // ====== تحميل حركة الصندوق - مع الأثر المحاسبي ======
 async function loadCashFlow() {
     try {
@@ -995,53 +957,56 @@ async function loadCashFlow() {
             get(ref(db, `projects/${currentProjectId}/bonds`)),
             get(ref(db, `projects/${currentProjectId}/bondTypes`))
         ]);
-        
         const bondTypes = {};
         if (typesSnap.exists()) {
             typesSnap.forEach(child => {
                 bondTypes[child.key] = child.val();
             });
         }
-
         let totalIncome = 0;
         let totalExpense = 0;
-
         if (bondsSnap.exists()) {
             bondsSnap.forEach((child) => {
                 const bond = child.val();
-                if (bond.status !== 'verified') return;
-                
+                if (bond.status!== 'verified') return;
                 const bondType = bondTypes[bond.typeId];
                 const amount = parseFloat(bond.amount);
-                
-                // الأثر المحاسبي
                 if (bondType?.effect === 'positive' || bond.type === 'قبض') {
                     totalIncome += amount;
                 } else if (bondType?.effect === 'negative' || bond.type === 'صرف') {
                     totalExpense += amount;
                 }
-                // neutral ما يأثر على الرصيد
             });
         }
-
         const balance = totalIncome - totalExpense;
         const incomeEl = document.getElementById('totalIncome');
         const expenseEl = document.getElementById('totalExpense');
         const balanceEl = document.getElementById('currentBalance');
-        
         if (incomeEl) incomeEl.textContent = totalIncome.toFixed(2) + ' ريال';
         if (expenseEl) expenseEl.textContent = totalExpense.toFixed(2) + ' ريال';
         if (balanceEl) {
             balanceEl.textContent = balance.toFixed(2) + ' ريال';
-            // لو سالب أحمر، لو موجب أخضر
-            balanceEl.className = balance < 0 ? 
-                'text-4xl font-extrabold text-red-600' : 
-                'text-4xl font-extrabold text-blue-600';
+            balanceEl.className = balance < 0? 'text-4xl font-extrabold text-red-600' : 'text-4xl font-extrabold text-blue-600';
         }
     } catch (error) {
         console.error('خطأ في تحميل حركة الصندوق:', error);
     }
 }
+
+// ====== دوال ناقصة ======
+function loadDashboard() {
+    document.getElementById('totalProjects').textContent = '0';
+    document.getElementById('totalManagers').textContent = '0';
+    document.getElementById('totalBonds').textContent = '0';
+}
+function loadProjects() {}
+function loadManagers() {}
+function loadDelegates() {}
+function loadChatMessages() {}
+function viewBond(id) { console.log('View:', id); }
+function verifyBond(id) { console.log('Verify:', id); }
+function printBond(id) { console.log('Print:', id); }
+
 </script>
 </body>
 </html>
