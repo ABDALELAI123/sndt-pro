@@ -82,10 +82,7 @@
     import { ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     // إذا ما اختار لغة من قبل، نظهر النافذة
-    if (!localStorage.getItem('language')) {
-        document.getElementById('languageModal').classList.remove('hidden');
-    }
-
+    
     document.getElementById('loginBtn').addEventListener('click', login);
     
     async function login() {
