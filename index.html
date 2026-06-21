@@ -3,126 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية V8.5 - تسجيل الدخول</title>
+    <title>السندات الذكية - تسجيل الدخول</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- استدعاء ملف اللغات -->
+    <script type="module">
+        import { setLanguage, applyLanguage, t } from './lang.js';
+        window.setLanguage = setLanguage;
+        window.t = t;
+        applyLanguage();
+
+        // إذا ما اختار لغة من قبل، نظهر النافذة
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('language')) {
+                document.getElementById('languageModal').classList.remove('hidden');
+            }
+        });
+    </script>
+
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+       .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
     </style>
-    <script type="module">
-        import { setLanguage, applyLanguage } from './lang.js';
-        window.setLanguage = setLanguage;
-        applyLanguage();
-    </script>
 </head>
-<body class="bg-gray-50">
-<!-- نافذة اختيار اللغة -->
-<div id="languageModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
-        <div class="text-5xl mb-4">🌍</div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">اختر اللغة | Select Language</h2>
-        <p class="text-gray-600 mb-6">Choose your preferred language</p>
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="setLanguage('ar')" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
-                العربية
-            </button>
-            <button onclick="setLanguage('en')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
-                English
-            </button>
+<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 min-h-screen flex items-center justify-center p-4">
+
+    <!-- نافذة اختيار اللغة -->
+    <div id="languageModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="glass rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+            <div class="text-6xl mb-4">🌍</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">اختر اللغة | Select Language</h2>
+            <p class="text-gray-600 mb-6">Choose your preferred language</p>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="setLanguage('ar')" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg">
+                    العربية
+                </button>
+                <button onclick="setLanguage('en')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg">
+                    English
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="loginScreen" class="min-h-screen login-bg flex items-center justify-center p-4">
-    <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
+    <!-- شاشة تسجيل الدخول -->
+    <div class="glass rounded-3xl shadow-2xl p-8 w-full max-w-md relative">
+
+        <!-- زر تغيير اللغة -->
+        <button onclick="document.getElementById('languageModal').classList.remove('hidden')"
+                class="absolute top-4 left-4 text-gray-600 hover:text-blue-600 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+            </svg>
+        </button>
+
         <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <span class="text-4xl">📝</span>
-                </div>
-            </div>
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-2" data-i18n="appName">السندات الذكية</h1>
-            <p class="text-gray-500" data-i18n="loginSubtitle">نظام إدارة السندات السحابي</p>
+            <div class="text-7xl mb-4">📝</div>
+            <h1 class="text-3xl font-extrabold text-gray-800 mb-2" data-i18n="appName">السندات الذكية</h1>
+            <p class="text-gray-600" data-i18n="login">تسجيل الدخول</p>
         </div>
-        <div class="space-y-5">
+
+        <form id="loginForm" class="space-y-5">
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="projectCodeLabel">كود المشروع</label>
-                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" data-i18n-placeholder="projectCodePlaceholder" placeholder="ادخل كود مشروعك">
+                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="phone">رقم الجوال</label>
+                <input type="tel" id="phone" data-i18n-placeholder="phone" placeholder="رقم الجوال"
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-center text-lg font-bold"
+                       dir="ltr" required>
             </div>
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="phoneLabel">رقم الجوال</label>
-                <input id="phone" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="05xxxxxxxx">
+                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="password">كلمة السر</label>
+                <input type="password" id="password" data-i18n-placeholder="password" placeholder="كلمة السر"
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-center text-lg"
+                       required>
             </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="passwordLabel">كلمة المرور</label>
-                <input id="password" type="password" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="••••">
-            </div>
-            <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition" data-i18n="loginBtn">تسجيل الدخول</button>
-        </div>
+            <button type="submit"
+                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg"
+                    data-i18n="login">
+                تسجيل الدخول
+            </button>
+        </form>
     </div>
-</div>
 
-<script type="module">
-    import { db, SUPERADMIN } from './firebase.js';
-    import { ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { t, applyLanguage } from './lang.js';
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // إذا ما اختار لغة من قبل، نظهر النافذة
-    if (!localStorage.getItem('language')) {
-        document.getElementById('languageModal').classList.remove('hidden');
-    }
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+            authDomain: "smart-bonds-project.firebaseapp.com",
+            databaseURL: "https://smart-bonds-project-default-rtdb.firebaseio.com",
+            projectId: "smart-bonds-project",
+            storageBucket: "smart-bonds-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
 
-    // طبق الترجمة على الصفحة
-    applyLanguage();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
 
-    async function login() {
-        const projectCode = document.getElementById('projectCode').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const password = document.getElementById('password').value;
-
-        if (!phone || !password) return Swal.fire(t('error'), t('fillAllFields'), 'error');
-
-        if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
-            localStorage.setItem('projectCode', 'SUPERADMIN');
-            localStorage.setItem('phone', phone);
-            localStorage.setItem('password', password);
-            localStorage.setItem('role', 'superadmin');
-            window.location.href = 'superadmin.html';
-            return;
-        }
-
-        if (!projectCode) return Swal.fire(t('error'), t('enterProjectCode'), 'error');
-
-        try {
-            const snapshot = await get(ref(db, `projects/${projectCode}/users/${phone}`));
-            if (!snapshot.exists()) return Swal.fire(t('error'), t('userNotFound'), 'error');
-
-            const user = snapshot.val();
-            if (user.password !== password) return Swal.fire(t('error'), t('wrongPassword'), 'error');
-            if (!user.active) return Swal.fire(t('error'), t('accountSuspended'), 'error');
-
-            const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
-            if (!projectSnap.val().active) return Swal.fire(t('error'), t('projectSuspended'), 'error');
-
-            localStorage.setItem('projectCode', projectCode);
-            localStorage.setItem('phone', phone);
-            localStorage.setItem('password', password);
-            localStorage.setItem('role', user.role);
-
-            if (user.role === 'manager') {
-                window.location.href = 'manager.html';
-            } else if (user.role === 'delegate') {
-                window.location.href = 'delegate.html';
+            if (!phone ||!password) {
+                return Swal.fire(t('error'), t('fillAllFields'), 'error');
             }
-        } catch (e) {
-            console.error(e);
-            Swal.fire(t('error'), t('checkData'), 'error');
-        }
-    }
-</script>
+
+            try {
+                // نبحث في كل المشاريع عن اليوزر
+                const projectsSnap = await get(ref(db, 'projects'));
+                if (!projectsSnap.exists()) {
+                    return Swal.fire(t('error'), 'لا توجد مشاريع', 'error');
+                }
+
+                let userFound = null;
+                let projectId = null;
+
+                projectsSnap.forEach(project => {
+                    const users = project.val().users;
+                    if (users && users[phone]) {
+                        userFound = users[phone];
+                        projectId = project.key;
+                    }
+                });
+
+                if (!userFound) {
+                    return Swal.fire(t('error'), 'رقم الجوال غير مسجل', 'error');
+                }
+
+                if (userFound.password!== password) {
+                    return Swal.fire(t('error'), 'كلمة السر غير صحيحة', 'error');
+                }
+
+                // حفظ بيانات المستخدم
+                localStorage.setItem('currentUser', JSON.stringify(userFound));
+                localStorage.setItem('currentProject', projectId);
+
+                // التوجيه حسب الدور
+                if (userFound.role === 'superadmin') {
+                    window.location.href = 'superadmin.html';
+                } else if (userFound.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'delegate.html';
+                }
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire(t('error'), 'حدث خطأ في الاتصال', 'error');
+            }
+        });
+    </script>
 </body>
 </html>
