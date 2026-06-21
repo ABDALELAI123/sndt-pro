@@ -97,6 +97,11 @@
                             <label class="block mb-2 font-bold text-gray-700">اسم العميل</label>
                             <input id="bondClient" type="text" class="w-full p-3 border-2 rounded-lg" placeholder="اسم العميل أو الجهة">
                         </div>
+                        <div id="clientPhoneField" class="hidden">
+                            <label class="block mb-2 font-bold text-gray-700">جوال العميل <span class="text-red-500">*</span></label>
+                            <input id="bondClientPhone" type="tel" class="w-full p-3 border-2 rounded-lg" placeholder="05xxxxxxxx" dir="ltr">
+                            <p class="text-xs text-gray-500 mt-1">مطلوب لسندات القبض فقط</p>
+                        </div>
                         <div>
                             <label class="block mb-2 font-bold text-gray-700">طريقة الدفع</label>
                             <select id="bondPaymentMethod" class="w-full p-3 border-2 rounded-lg">
@@ -143,12 +148,15 @@
                 </div>
                 <div id="printPreviewArea" class="hidden">
                     <div id="bondPreviewContent" class="border-2 border-gray-300 p-8 rounded-xl bg-white max-w-2xl mx-auto shadow-xl"></div>
-                    <div class="flex gap-3 justify-center mt-6 no-print">
+                    <div class="flex gap-3 justify-center mt-6 no-print flex-wrap">
                         <button id="printBondBtn" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
                             <i class="fas fa-print ml-2"></i>طباعة
                         </button>
                         <button id="whatsappBondBtn" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition">
                             <i class="fab fa-whatsapp ml-2"></i>إرسال واتساب
+                        </button>
+                        <button id="whatsappClientBtn" class="bg-green-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-600 transition hidden">
+                            <i class="fab fa-whatsapp ml-2"></i>إرسال للعميل
                         </button>
                         <button id="downloadPdfBtn" class="bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition">
                             <i class="fas fa-file-pdf ml-2"></i>تحميل PDF
@@ -166,7 +174,6 @@
                         <input id="searchSheet" type="text" placeholder="بحث..." class="p-2 border-2 rounded-lg">
                         <button id="exportSheetBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">تصدير Excel</button>
                     </div>
-                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full excel-table" id="smartSheetTable">
                         <thead class="bg-gray-100"><tr>
@@ -205,7 +212,7 @@
         window.location.href = 'index.html';
     }
 
-    let currentUser = null, projectData = null, userPermissions = [], selectedBondForPrint = null, allPaymentMethods = [];
+    let currentUser = null, projectData = null, userPermissions = [], selectedBondForPrint = null, allPaymentMethods = [], currentBondType = null;
 
     // تحميل بيانات المستخدم
     const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
@@ -228,9 +235,13 @@
     document.getElementById('saveBondBtn').addEventListener('click', saveBond);
     document.getElementById('printBondBtn')?.addEventListener('click', () => window.print());
     document.getElementById('whatsappBondBtn')?.addEventListener('click', sendWhatsApp);
+    document.getElementById('whatsappClientBtn')?.addEventListener('click', sendWhatsAppToClient);
     document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
     document.getElementById('searchSheet')?.addEventListener('input', filterSheet);
     document.getElementById('exportSheetBtn')?.addEventListener('click', exportSheet);
+    
+    // إظهار/إخفاء حقل الجوال حسب نوع السند
+    document.getElementById('bondTypeSelect').addEventListener('change', handleBondTypeChange);
 
     // تبويبات
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -247,6 +258,22 @@
     loadPaymentMethods();
     loadSmartSheet();
     checkPermissions();
+
+    async function handleBondTypeChange(e) {
+        if (!e.target.value) {
+            document.getElementById('clientPhoneField').classList.add('hidden');
+            return;
+        }
+        const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${e.target.value}`));
+        if (typeSnap.exists()) {
+            currentBondType = typeSnap.val();
+            if (currentBondType.type === 'قبض') {
+                document.getElementById('clientPhoneField').classList.remove('hidden');
+            } else {
+                document.getElementById('clientPhoneField').classList.add('hidden');
+            }
+        }
+    }
 
     function checkPermissions() {
         if (userPermissions.length === 0) {
@@ -347,8 +374,7 @@
             });
         });
     }
-
-    function loadSmartSheet() {
+           function loadSmartSheet() {
         onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
             const tbody = document.getElementById('smartSheetBody');
             if (!tbody) return;
@@ -392,6 +418,7 @@
         const amount = parseFloat(document.getElementById('bondAmount').value);
         const date = document.getElementById('bondDate').value;
         const client = document.getElementById('bondClient').value;
+        const clientPhone = document.getElementById('bondClientPhone').value;
         const description = document.getElementById('bondDescription').value;
         const paymentMethod = document.getElementById('bondPaymentMethod').value;
 
@@ -399,6 +426,16 @@
 
         const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
         const typeData = typeSnap.val();
+
+        // تحقق من جوال العميل لسندات القبض
+        if (typeData.type === 'قبض' && !clientPhone) {
+            return Swal.fire('خطأ', 'جوال العميل مطلوب لسندات القبض', 'error');
+        }
+
+        // تحقق من صيغة الجوال
+        if (clientPhone && !/^05\d{8}$/.test(clientPhone)) {
+            return Swal.fire('خطأ', 'رقم الجوال لازم يبدأ بـ 05 ويكون 10 أرقام', 'error');
+        }
 
         // 1. تحقق من الصلاحية
         if (!userPermissions.includes(typeData.type) &&!userPermissions.includes('all')) {
@@ -443,7 +480,7 @@
 
         await set(ref(db, `projects/${currentProject}/bonds/${bondId}`), {
             id: bondId, number: bondNumber, typeId, typeName: typeData.name, type: typeData.type,
-            amount, date, client, description, paymentMethod,
+            amount, date, client, clientPhone: clientPhone || '', description, paymentMethod,
             createdBy: currentUser.phone, createdByName: currentUser.name, createdAt: Date.now()
         });
 
@@ -452,7 +489,9 @@
         Swal.fire('تم', `انحفظ السند رقم ${bondNumber}`, 'success');
         document.getElementById('bondAmount').value = '';
         document.getElementById('bondClient').value = '';
+        document.getElementById('bondClientPhone').value = '';
         document.getElementById('bondDescription').value = '';
+        document.getElementById('clientPhoneField').classList.add('hidden');
     }
 
     async function previewBond(bondId) {
@@ -462,6 +501,13 @@
         
         document.getElementById('noBondSelected').classList.add('hidden');
         document.getElementById('printPreviewArea').classList.remove('hidden');
+        
+        // إظهار زر إرسال للعميل لو فيه جوال
+        if (bond.clientPhone && bond.type === 'قبض') {
+            document.getElementById('whatsappClientBtn').classList.remove('hidden');
+        } else {
+            document.getElementById('whatsappClientBtn').classList.add('hidden');
+        }
         
         const previewHTML = `
             <div style="text-align:center;margin-bottom:20px">
@@ -475,6 +521,7 @@
                     <tr><td style="padding:8px;font-weight:700;width:30%">رقم السند:</td><td style="font-weight:800;color:#2563eb">${bond.number}</td></tr>
                     <tr><td style="padding:8px;font-weight:700">التاريخ:</td><td>${bond.date}</td></tr>
                     <tr><td style="padding:8px;font-weight:700">العميل:</td><td>${bond.client}</td></tr>
+                    ${bond.clientPhone? `<tr><td style="padding:8px;font-weight:700">جوال العميل:</td><td dir="ltr">${bond.clientPhone}</td></tr>` : ''}
                     <tr><td style="padding:8px;font-weight:700">المبلغ:</td><td style="font-size:20px;font-weight:800;color:${bond.type === 'قبض'? '#16a34a' : '#dc2626'}">${parseFloat(bond.amount).toFixed(2)} ريال سعودي</td></tr>
                     <tr><td style="padding:8px;font-weight:700">طريقة الدفع:</td><td>${bond.paymentMethod || '-'}</td></tr>
                     <tr><td style="padding:8px;font-weight:700">البيان:</td><td>${bond.description || '-'}</td></tr>
@@ -518,6 +565,16 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
+    function sendWhatsAppToClient() {
+        if (!selectedBondForPrint || !selectedBondForPrint.clientPhone) {
+            return Swal.fire('تنبيه', 'لا يوجد رقم جوال للعميل', 'warning');
+        }
+        const bond = selectedBondForPrint;
+        const msg = `*${projectData.companyName}*\n\nعزيزي ${bond.client}\nتم استلام مبلغ *${parseFloat(bond.amount).toFixed(2)} ريال سعودي*\n\n*تفاصيل السند:*\nرقم السند: ${bond.number}\nالتاريخ: ${bond.date}\nطريقة الدفع: ${bond.paymentMethod || '-'}\n${bond.description? `البيان: ${bond.description}\n` : ''}\nشكراً لتعاملكم معنا 🙏`;
+        const phone = selectedBondForPrint.clientPhone.replace(/^0/, '966');
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
     async function downloadPDF() {
         const { jsPDF } = window.jspdf;
         const element = document.getElementById('bondPreviewContent');
@@ -548,4 +605,4 @@
     }
 </script>
 </body>
-</html>
+</html> 
