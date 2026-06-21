@@ -22,7 +22,6 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- الهيدر العلوي -->
     <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg no-print">
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-4">
@@ -39,7 +38,6 @@
         </div>
     </div>
 
-    <!-- تبويبات مدير المشروع -->
     <div class="bg-white shadow-md border-b no-print">
         <div class="flex overflow-x-auto">
             <button data-tab="dashboard" class="tab-btn px-8 py-4 active">الرئيسية</button>
@@ -52,7 +50,6 @@
     </div>
 
     <div class="p-6">
-        <!-- لوحة التحكم -->
         <div id="dashboard" class="tab-content">
             <h2 class="text-3xl font-extrabold mb-6 text-gray-800">لوحة التحكم</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
@@ -71,6 +68,7 @@
                     <p id="totalBalance" class="text-4xl font-extrabold mt-2">0.00</p>
                     <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
                 </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-green-500"><p class="text-gray-500 text-sm">إجمالي السندات</p><p id="totalBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-yellow-500"><p class="text-gray-500 text-sm">سندات اليوم</p><p id="todayBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
@@ -79,7 +77,6 @@
             </div>
         </div>
 
-        <!-- إعدادات المشروع -->
         <div id="projectSettings" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-4xl">
                 <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إعدادات المشروع</h2>
@@ -107,7 +104,6 @@
                 </div>
             </div>
         </div>
-        <!-- إعدادات أنواع السندات -->
         <div id="bondSettings" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -127,7 +123,6 @@
             </div>
         </div>
 
-        <!-- المناديب -->
         <div id="delegates" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -149,7 +144,6 @@
             </div>
         </div>
 
-        <!-- إنشاء سند -->
         <div id="createBond" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-3xl">
                 <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إنشاء سند جديد</h2>
@@ -183,7 +177,6 @@
             </div>
         </div>
 
-        <!-- السندات -->
         <div id="bondsList" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
@@ -209,26 +202,24 @@
     </div>
 
     <div id="printArea" class="print-area"></div>
-
-<script type="module">
+    <script type="module">
     import { db } from './firebase.js';
     import { ref, get, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const role = localStorage.getItem('role');
     const phone = localStorage.getItem('phone');
     const currentProject = localStorage.getItem('projectCode');
-
+    
     if (role!== 'manager' ||!currentProject || currentProject === 'SUPERADMIN') {
         window.location.href = 'index.html';
     }
 
-    let currentUser = null, projectData = null, userPermissions = [];
+    let currentUser = null, projectData = null;
 
     // تحميل بيانات المستخدم
     const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
     currentUser = userSnap.val();
     document.getElementById('currentUser').textContent = currentUser.name;
-    userPermissions = currentUser.permissions || [];
 
     // تحميل بيانات المشروع
     const projectSnap = await get(ref(db, `projects/${currentProject}/info`));
@@ -239,7 +230,7 @@
         document.getElementById('headerLogo').classList.remove('hidden');
     }
 
-    // ربط الأحداث
+    // ربط الأحداث - الطريقة الصحيحة بدل onclick
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
     document.getElementById('saveProjectSettingsBtn').addEventListener('click', saveProjectSettings);
@@ -256,6 +247,7 @@
     if(document.getElementById('bondDate')) {
         document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
     }
+
     document.getElementById('set_logo').addEventListener('change', async (e) => {
         if (e.target.files[0]) {
             const base64 = await toBase64(e.target.files[0]);
@@ -319,6 +311,16 @@
         onValue(ref(db, `projects/${currentProject}/bondTypes`), (snap) => {
             document.getElementById('totalBondTypes').textContent = snap.exists()? Object.keys(snap.val()).length : 0;
         });
+
+        onValue(ref(db, `projects/${currentProject}/users`), (snap) => {
+            let count = 0;
+            if (snap.exists()) {
+                Object.values(snap.val()).forEach(user => {
+                    if (user.role === 'delegate') count++;
+                });
+            }
+            document.getElementById('totalUsers').textContent = count;
+        });
     }
 
     function loadProjectSettings() {
@@ -370,11 +372,15 @@
                             <td class="p-4">${type.end}</td>
                             <td class="p-4">${type.current || type.start}</td>
                             <td class="p-4 no-print">
-                                <button onclick="deleteBondType('${id}')" class="text-red-600 hover:underline">حذف</button>
+                                <button data-action="delete-bond-type" data-id="${id}" class="text-red-600 hover:underline">حذف</button>
                             </td>
                         </tr>`;
                 });
             }
+            // ربط أحداث الحذف - بدل onclick
+            document.querySelectorAll('[data-action="delete-bond-type"]').forEach(btn => {
+                btn.addEventListener('click', () => deleteBondType(btn.dataset.id));
+            });
         });
     }
 
@@ -414,11 +420,9 @@
         onValue(ref(db, `projects/${currentProject}/users`), (snap) => {
             const tbody = document.getElementById('delegatesTableBody');
             tbody.innerHTML = '';
-            let count = 0;
             if (snap.exists()) {
                 Object.values(snap.val()).forEach(user => {
                     if (user.role === 'delegate') {
-                        count++;
                         tbody.innerHTML += `
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="p-4">${user.name}</td>
@@ -426,14 +430,20 @@
                                 <td class="p-4">${user.permissions?.join(', ') || 'قبض وصرف'}</td>
                                 <td class="p-4">${user.active? '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">نشط</span>' : '<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">موقوف</span>'}</td>
                                 <td class="p-4 no-print">
-                                    <button onclick="toggleUser('${user.phone}', ${!user.active})" class="text-blue-600 hover:underline ml-2">${user.active? 'إيقاف' : 'تفعيل'}</button>
-                                    <button onclick="deleteUser('${user.phone}')" class="text-red-600 hover:underline">حذف</button>
+                                    <button data-action="toggle-user" data-phone="${user.phone}" data-status="${!user.active}" class="text-blue-600 hover:underline ml-2">${user.active? 'إيقاف' : 'تفعيل'}</button>
+                                    <button data-action="delete-user" data-phone="${user.phone}" class="text-red-600 hover:underline">حذف</button>
                                 </td>
                             </tr>`;
                     }
                 });
             }
-            document.getElementById('totalUsers').textContent = count;
+            // ربط الأحداث - بدل onclick
+            document.querySelectorAll('[data-action="toggle-user"]').forEach(btn => {
+                btn.addEventListener('click', () => toggleUser(btn.dataset.phone, btn.dataset.status === 'true'));
+            });
+            document.querySelectorAll('[data-action="delete-user"]').forEach(btn => {
+                btn.addEventListener('click', () => deleteUser(btn.dataset.phone));
+            });
         });
     }
 
@@ -499,11 +509,15 @@
                             <td class="p-4">${bond.date}</td>
                             <td class="p-4">${bond.createdByName}</td>
                             <td class="p-4 no-print">
-                                <button onclick="printBond('${id}')" class="text-blue-600 hover:underline">طباعة</button>
+                                <button data-action="print-bond" data-id="${id}" class="text-blue-600 hover:underline">طباعة</button>
                             </td>
                         </tr>`;
                 });
             }
+            // ربط أحداث الطباعة - بدل onclick
+            document.querySelectorAll('[data-action="print-bond"]').forEach(btn => {
+                btn.addEventListener('click', () => printBond(btn.dataset.id));
+            });
         });
     }
 
@@ -598,14 +612,6 @@
         const wb = XLSX.utils.table_to_book(document.getElementById(tableId));
         XLSX.writeFile(wb, `${filename}.xlsx`);
     }
-
-    // ===== تصليح الأزرار - مهم جداً =====
-    window.showTab = showTab;
-    window.toggleUser = toggleUser;
-    window.deleteUser = deleteUser;
-    window.deleteBondType = deleteBondType;
-    window.printBond = printBond;
-    window.exportTableToExcel = exportTableToExcel;
 </script>
 </body>
 </html>
