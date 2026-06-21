@@ -1,36 +1,3 @@
-// ===== firebase.js =====
-// ملف إعدادات الفايربيس المشترك لكل الصفحات
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-// هذا الكونفق حقك من الكود القديم - ما تغير شي
-const firebaseConfig = {
-    apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
-    authDomain: "sanadat-pro.firebaseapp.com",
-    databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "sanadat-pro",
-    storageBucket: "sanadat-pro.firebasestorage.app",
-    messagingSenderId: "1039476751095",
-    appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// نصدرهم عشان كل الصفحات تستخدمهم
-export { app, db };
-export const SUPERADMIN = { phone: "0597087767", password: "500600", name: "المدير العام" };
-```
-
-#### **الخطوة 2: احذف كل محتوى `index.html` القديم**
-
-افتح `index.html` امسح كل شي فيه من أول سطر لآخر سطر.
-
-#### **الخطوة 3: الصق هذا الكود الجديد في `index.html`**
-
-هذا بيصير ملف الدخول فقط + الراوتر. انسخ والصق:
-
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -46,7 +13,6 @@ export const SUPERADMIN = { phone: "0597087767", password: "500600", name: "ال
     </style>
 </head>
 <body class="bg-gray-50">
-<!-- شاشة تسجيل الدخول فقط -->
 <div id="loginScreen" class="min-h-screen login-bg flex items-center justify-center p-4">
     <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
         <div class="text-center mb-8">
@@ -82,7 +48,6 @@ export const SUPERADMIN = { phone: "0597087767", password: "500600", name: "ال
 
     document.getElementById('loginBtn').addEventListener('click', login);
 
-    // تعبئة تلقائية لو مسجل قبل
     const p = localStorage.getItem('projectCode'), ph = localStorage.getItem('phone'), pass = localStorage.getItem('password');
     if (p && ph && pass) {
         document.getElementById('projectCode').value = p;
@@ -98,7 +63,6 @@ export const SUPERADMIN = { phone: "0597087767", password: "500600", name: "ال
 
         if (!phone || !password) return Swal.fire('خطأ', 'عبي الجوال وكلمة السر', 'error');
 
-        // مدير عام
         if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
             localStorage.setItem('projectCode', 'SUPERADMIN');
             localStorage.setItem('phone', phone);
@@ -121,7 +85,6 @@ export const SUPERADMIN = { phone: "0597087767", password: "500600", name: "ال
             const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
             if (!projectSnap.val().active) return Swal.fire('خطأ', 'المشروع موقوف', 'error');
 
-            // حفظ البيانات والتوجيه
             localStorage.setItem('projectCode', projectCode);
             localStorage.setItem('phone', phone);
             localStorage.setItem('password', password);
