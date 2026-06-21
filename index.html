@@ -11,8 +11,30 @@
         body { font-family: 'Cairo', sans-serif; }
         .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
     </style>
+    <script type="module">
+        import { setLanguage, applyLanguage } from './lang.js';
+        window.setLanguage = setLanguage;
+        applyLanguage();
+    </script>
 </head>
 <body class="bg-gray-50">
+<!-- نافذة اختيار اللغة -->
+<div id="languageModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
+        <div class="text-5xl mb-4">🌍</div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">اختر اللغة | Select Language</h2>
+        <p class="text-gray-600 mb-6">Choose your preferred language</p>
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="setLanguage('ar')" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
+                العربية
+            </button>
+            <button onclick="setLanguage('en')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
+                English
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="loginScreen" class="min-h-screen login-bg flex items-center justify-center p-4">
     <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
         <div class="text-center mb-8">
@@ -21,23 +43,23 @@
                     <span class="text-4xl">📝</span>
                 </div>
             </div>
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">السندات الذكية</h1>
-            <p class="text-gray-500">نظام إدارة السندات السحابي</p>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2" data-i18n="appName">السندات الذكية</h1>
+            <p class="text-gray-500" data-i18n="loginSubtitle">نظام إدارة السندات السحابي</p>
         </div>
         <div class="space-y-5">
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">كود المشروع</label>
-                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="ادخل كود مشروعك">
+                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="projectCodeLabel">كود المشروع</label>
+                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" data-i18n-placeholder="projectCodePlaceholder" placeholder="ادخل كود مشروعك">
             </div>
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">رقم الجوال</label>
+                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="phoneLabel">رقم الجوال</label>
                 <input id="phone" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="05xxxxxxxx">
             </div>
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">كلمة المرور</label>
+                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="passwordLabel">كلمة المرور</label>
                 <input id="password" type="password" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" placeholder="••••">
             </div>
-            <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">تسجيل الدخول</button>
+            <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition" data-i18n="loginBtn">تسجيل الدخول</button>
         </div>
     </div>
 </div>
@@ -45,16 +67,24 @@
 <script type="module">
     import { db, SUPERADMIN } from './firebase.js';
     import { ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { t, applyLanguage } from './lang.js';
+
+    // إذا ما اختار لغة من قبل، نظهر النافذة
+    if (!localStorage.getItem('language')) {
+        document.getElementById('languageModal').classList.remove('hidden');
+    }
+
+    // طبق الترجمة على الصفحة
+    applyLanguage();
 
     document.getElementById('loginBtn').addEventListener('click', login);
 
-    
     async function login() {
         const projectCode = document.getElementById('projectCode').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const password = document.getElementById('password').value;
 
-        if (!phone || !password) return Swal.fire('خطأ', 'عبي الجوال وكلمة السر', 'error');
+        if (!phone || !password) return Swal.fire(t('error'), t('fillAllFields'), 'error');
 
         if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
             localStorage.setItem('projectCode', 'SUPERADMIN');
@@ -65,18 +95,18 @@
             return;
         }
 
-        if (!projectCode) return Swal.fire('خطأ', 'ادخل كود المشروع', 'error');
+        if (!projectCode) return Swal.fire(t('error'), t('enterProjectCode'), 'error');
 
         try {
             const snapshot = await get(ref(db, `projects/${projectCode}/users/${phone}`));
-            if (!snapshot.exists()) return Swal.fire('خطأ', 'المستخدم غير موجود', 'error');
+            if (!snapshot.exists()) return Swal.fire(t('error'), t('userNotFound'), 'error');
 
             const user = snapshot.val();
-            if (user.password !== password) return Swal.fire('خطأ', 'كلمة السر غلط', 'error');
-            if (!user.active) return Swal.fire('خطأ', 'حسابك موقوف', 'error');
+            if (user.password !== password) return Swal.fire(t('error'), t('wrongPassword'), 'error');
+            if (!user.active) return Swal.fire(t('error'), t('accountSuspended'), 'error');
 
             const projectSnap = await get(ref(db, `projects/${projectCode}/info`));
-            if (!projectSnap.val().active) return Swal.fire('خطأ', 'المشروع موقوف', 'error');
+            if (!projectSnap.val().active) return Swal.fire(t('error'), t('projectSuspended'), 'error');
 
             localStorage.setItem('projectCode', projectCode);
             localStorage.setItem('phone', phone);
@@ -90,7 +120,7 @@
             }
         } catch (e) {
             console.error(e);
-            Swal.fire('خطأ', 'تأكد من البيانات', 'error');
+            Swal.fire(t('error'), t('checkData'), 'error');
         }
     }
 </script>
