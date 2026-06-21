@@ -48,14 +48,7 @@
 
     document.getElementById('loginBtn').addEventListener('click', login);
 
-    const p = localStorage.getItem('projectCode'), ph = localStorage.getItem('phone'), pass = localStorage.getItem('password');
-    if (p && ph && pass) {
-        document.getElementById('projectCode').value = p;
-        document.getElementById('phone').value = ph;
-        document.getElementById('password').value = pass;
-        login();
-    }
-
+    
     async function login() {
         const projectCode = document.getElementById('projectCode').value.trim();
         const phone = document.getElementById('phone').value.trim();
