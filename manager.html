@@ -44,6 +44,7 @@
             <button data-tab="projectSettings" class="tab-btn px-8 py-4">إعدادات المشروع</button>
             <button data-tab="bondSettings" class="tab-btn px-8 py-4">إعدادات السند</button>
             <button data-tab="delegates" class="tab-btn px-8 py-4">المناديب</button>
+           <button data-tab="paymentMethods" class="tab-btn px-8 py-4">طرق الدفع</button>
             <button data-tab="createBond" class="tab-btn px-8 py-4">إنشاء سند</button>
             <button data-tab="bondsList" class="tab-btn px-8 py-4">السندات</button>
         </div>
@@ -200,7 +201,25 @@
             </div>
         </div>
     </div>
-
+        <div id="paymentMethods" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <h2 class="text-3xl font-extrabold text-gray-800">طرق الدفع</h2>
+                    <button id="addPaymentMethodBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ طريقة دفع جديدة</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="paymentMethodsTable">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="p-4 text-right font-bold">اسم الطريقة</th>
+                            <th class="p-4 text-right font-bold">الحساب/الرقم</th>
+                            <th class="p-4 text-right font-bold">الحالة</th>
+                            <th class="p-4 text-right font-bold no-print">تحكم</th>
+                        </tr></thead>
+                        <tbody id="paymentMethodsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     <div id="printArea" class="print-area"></div>
     <script type="module">
     import { db } from './firebase.js';
@@ -236,7 +255,8 @@
     document.getElementById('saveProjectSettingsBtn').addEventListener('click', saveProjectSettings);
     document.getElementById('addBondTypeBtn').addEventListener('click', addBondType);
     document.getElementById('addDelegateBtn').addEventListener('click', addDelegate);
-    document.getElementById('saveBondBtn').addEventListener('click', saveBond);
+  document.getElementById('addPaymentMethodBtn').addEventListener('click', addPaymentMethod);
+        document.getElementById('saveBondBtn').addEventListener('click', saveBond);
     document.getElementById('exportBondsBtn').addEventListener('click', () => exportTableToExcel('bondsTable','السندات'));
 
     // تبويبات
@@ -269,7 +289,7 @@
     loadBondTypes();
     loadDelegates();
     loadBonds();
-
+    loadPaymentMethods();
     function toBase64(file) {
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -447,16 +467,25 @@
         });
     }
 
-    async function addDelegate() {
+       async function addDelegate() {
         const { value: formValues } = await Swal.fire({
             title: 'إضافة مندوب جديد',
+            width: '700px',
             html: `
                 <input id="swal-name" class="swal2-input" placeholder="اسم المندوب">
                 <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال">
                 <input id="swal-pass" type="password" class="swal2-input" placeholder="كلمة السر">
-                <div style="text-align:right;margin-top:10px">
+                <div style="text-align:right;margin-top:10px;border-top:1px solid #eee;padding-top:10px">
+                    <h4 class="font-bold mb-2">صلاحيات أنواع السندات</h4>
                     <label><input type="checkbox" id="perm-catch" checked> قبض</label><br>
                     <label><input type="checkbox" id="perm-spend" checked> صرف</label>
+                </div>
+                <div style="text-align:right;margin-top:10px;border-top:1px solid #eee;padding-top:10px">
+                    <h4 class="font-bold mb-2">قيود العدد والمبالغ</h4>
+                    <input id="swal-daily-limit" type="number" class="swal2-input" placeholder="الحد الأقصى للسندات اليومية - فاضي = بلا حد">
+                    <input id="swal-total-limit" type="number" class="swal2-input" placeholder="الحد الأقصى لإجمالي السندات - فاضي = بلا حد">
+                    <input id="swal-amount-limit" type="number" class="swal2-input" placeholder="الحد الأقصى لمبلغ السند الواحد - فاضي = بلا حد">
+                    <input id="swal-total-amount-limit" type="number" class="swal2-input" placeholder="الحد الأقصى لإجمالي المبالغ - فاضي = بلا حد">
                 </div>`,
             preConfirm: () => ({
                 name: document.getElementById('swal-name').value,
@@ -465,7 +494,11 @@
                 permissions: [
                     document.getElementById('perm-catch').checked? 'قبض' : null,
                     document.getElementById('perm-spend').checked? 'صرف' : null
-                ].filter(Boolean)
+                ].filter(Boolean),
+                dailyLimit: document.getElementById('swal-daily-limit').value || null,
+                totalLimit: document.getElementById('swal-total-limit').value || null,
+                amountLimit: document.getElementById('swal-amount-limit').value || null,
+                totalAmountLimit: document.getElementById('swal-total-amount-limit').value || null
             })
         });
         if (!formValues ||!formValues.name ||!formValues.phone ||!formValues.password) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
@@ -476,6 +509,10 @@
             password: formValues.password,
             role: 'delegate',
             permissions: formValues.permissions,
+            dailyLimit: formValues.dailyLimit? parseInt(formValues.dailyLimit) : null,
+            totalLimit: formValues.totalLimit? parseInt(formValues.totalLimit) : null,
+            amountLimit: formValues.amountLimit? parseFloat(formValues.amountLimit) : null,
+            totalAmountLimit: formValues.totalAmountLimit? parseFloat(formValues.totalAmountLimit) : null,
             active: true
         });
         Swal.fire('تم', 'انضاف المندوب بنجاح', 'success');
@@ -493,7 +530,75 @@
             if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/users/${phone}`));
         });
     }
+    function loadPaymentMethods() {
+        onValue(ref(db, `projects/${currentProject}/paymentMethods`), (snap) => {
+            const tbody = document.getElementById('paymentMethodsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (snap.exists()) {
+                Object.entries(snap.val()).forEach(([id, method]) => {
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-4 font-bold">${method.name}</td>
+                            <td class="p-4">${method.account || '-'}</td>
+                            <td class="p-4">
+                                <span class="px-3 py-1 rounded-full text-sm ${method.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${method.active? 'نشط' : 'موقوف'}
+                                </span>
+                            </td>
+                            <td class="p-4 no-print">
+                                <button data-action="toggle-payment" data-id="${id}" data-status="${method.active}" class="text-blue-600 hover:underline ml-3">
+                                    ${method.active? 'إيقاف' : 'تفعيل'}
+                                </button>
+                                <button data-action="delete-payment" data-id="${id}" class="text-red-600 hover:underline">حذف</button>
+                            </td>
+                        </tr>`;
+                });
+                document.querySelectorAll('[data-action="toggle-payment"]').forEach(btn => {
+                    btn.addEventListener('click', () => togglePaymentMethod(btn.dataset.id, btn.dataset.status === 'true'));
+                });
+                document.querySelectorAll('[data-action="delete-payment"]').forEach(btn => {
+                    btn.addEventListener('click', () => deletePaymentMethod(btn.dataset.id));
+                });
+            }
+        });
+    }
 
+    async function addPaymentMethod() {
+        const { value: formValues } = await Swal.fire({
+            title: 'إضافة طريقة دفع جديدة',
+            html: `
+                <input id="swal-pm-name" class="swal2-input" placeholder="اسم الطريقة - مثال: كاش, تحويل بنكي">
+                <input id="swal-pm-account" class="swal2-input" placeholder="رقم الحساب / IBAN - اختياري">`,
+            preConfirm: () => ({
+                name: document.getElementById('swal-pm-name').value,
+                account: document.getElementById('swal-pm-account').value
+            })
+        });
+        if (!formValues ||!formValues.name) return Swal.fire('خطأ', 'اكتب اسم الطريقة', 'error');
+        
+        const methodId = Date.now().toString();
+        await set(ref(db, `projects/${currentProject}/paymentMethods/${methodId}`), {
+            id: methodId,
+            name: formValues.name,
+            account: formValues.account,
+            active: true
+        });
+        Swal.fire('تم', 'انضافت طريقة الدفع', 'success');
+    }
+
+    function togglePaymentMethod(id, currentStatus) {
+        update(ref(db, `projects/${currentProject}/paymentMethods/${id}`), { active: !currentStatus });
+    }
+
+    function deletePaymentMethod(id) {
+        Swal.fire({
+            title: 'متأكد؟', text: 'ما تقدر تتراجع', icon: 'warning',
+            showCancelButton: true, confirmButtonText: 'نعم احذف', cancelButtonText: 'إلغاء'
+        }).then((result) => {
+            if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/paymentMethods/${id}`));
+        });
+    }
     function loadBonds() {
         onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
             const tbody = document.getElementById('bondsTableBody');
