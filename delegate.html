@@ -8,7 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; }
        .hidden { display: none!important; }
@@ -17,6 +19,8 @@
         @media print {.no-print { display: none!important; }.print-area { display: block!important; } body { background: white; } }
        .print-area { display: none; }
        .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
+       .excel-table input { width: 100%; border: none; background: transparent; padding: 4px; }
+       .excel-table input:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -41,9 +45,10 @@
             <button data-tab="dashboard" class="tab-btn px-8 py-4 active">الرئيسية</button>
             <button data-tab="createBond" class="tab-btn px-8 py-4">إنشاء سند</button>
             <button data-tab="bondsList" class="tab-btn px-8 py-4">سنداتي</button>
+            <button data-tab="printPreview" class="tab-btn px-8 py-4">معاينة الطباعة</button>
+            <button data-tab="smartSheet" class="tab-btn px-8 py-4">الصفحة الذكية</button>
         </div>
     </div>
-
     <div class="p-6">
         <div id="dashboard" class="tab-content">
             <h2 class="text-3xl font-extrabold mb-6 text-gray-800">لوحة التحكم</h2>
@@ -92,6 +97,12 @@
                             <label class="block mb-2 font-bold text-gray-700">اسم العميل</label>
                             <input id="bondClient" type="text" class="w-full p-3 border-2 rounded-lg" placeholder="اسم العميل أو الجهة">
                         </div>
+                        <div>
+                            <label class="block mb-2 font-bold text-gray-700">طريقة الدفع</label>
+                            <select id="bondPaymentMethod" class="w-full p-3 border-2 rounded-lg">
+                                <option value="">اختر طريقة الدفع</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label class="block mb-2 font-bold text-gray-700">البيان</label>
@@ -122,12 +133,69 @@
                 </div>
             </div>
         </div>
+
+        <div id="printPreview" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-6">معاينة الطباعة</h2>
+                <div id="noBondSelected" class="text-center py-12 text-gray-500">
+                    <i class="fas fa-file-invoice text-6xl mb-4"></i>
+                    <p class="text-xl">اختر سند من تبويب "سنداتي" واضغط "معاينة" عشان تشوفه هنا</p>
+                </div>
+                <div id="printPreviewArea" class="hidden">
+                    <div id="bondPreviewContent" class="border-2 border-gray-300 p-8 rounded-xl bg-white max-w-2xl mx-auto shadow-xl"></div>
+                    <div class="flex gap-3 justify-center mt-6 no-print">
+                        <button id="printBondBtn" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                            <i class="fas fa-print ml-2"></i>طباعة
+                        </button>
+                        <button id="whatsappBondBtn" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition">
+                            <i class="fab fa-whatsapp ml-2"></i>إرسال واتساب
+                        </button>
+                        <button id="downloadPdfBtn" class="bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition">
+                            <i class="fas fa-file-pdf ml-2"></i>تحميل PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="smartSheet" class="tab-content hidden">
+            <div class="bg-white p-8 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
+                    <h2 class="text-3xl font-extrabold text-gray-800">الصفحة الذكية</h2>
+                    <div class="flex gap-2">
+                        <input id="searchSheet" type="text" placeholder="بحث..." class="p-2 border-2 rounded-lg">
+                        <button id="exportSheetBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">تصدير Excel</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full excel-table" id="smartSheetTable">
+                        <thead class="bg-gray-100"><tr>
+                            <th class="p-3 text-right border">رقم السند</th>
+                            <th class="p-3 text-right border">النوع</th>
+                            <th class="p-3 text-right border">العميل</th>
+                            <th class="p-3 text-right border">المبلغ</th>
+                            <th class="p-3 text-right border">التاريخ</th>
+                            <th class="p-3 text-right border">البيان</th>
+                            <th class="p-3 text-right border">طريقة الدفع</th>
+                        </tr></thead>
+                        <tbody id="smartSheetBody"></tbody>
+                        <tfoot class="bg-blue-50 font-bold">
+                            <tr>
+                                <td colspan="3" class="p-3 border text-left">الإجمالي:</td>
+                                <td id="sheetTotal" class="p-3 border">0.00</td>
+                                <td colspan="3" class="p-3 border"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="printArea" class="print-area"></div>
     <script type="module">
     import { db } from './firebase.js';
-    import { ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { ref, get, set, update, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const role = localStorage.getItem('role');
     const phone = localStorage.getItem('phone');
@@ -137,7 +205,7 @@
         window.location.href = 'index.html';
     }
 
-    let currentUser = null, projectData = null, userPermissions = [];
+    let currentUser = null, projectData = null, userPermissions = [], selectedBondForPrint = null, allPaymentMethods = [];
 
     // تحميل بيانات المستخدم
     const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
@@ -158,6 +226,11 @@
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
     document.getElementById('saveBondBtn').addEventListener('click', saveBond);
+    document.getElementById('printBondBtn')?.addEventListener('click', () => window.print());
+    document.getElementById('whatsappBondBtn')?.addEventListener('click', sendWhatsApp);
+    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
+    document.getElementById('searchSheet')?.addEventListener('input', filterSheet);
+    document.getElementById('exportSheetBtn')?.addEventListener('click', exportSheet);
 
     // تبويبات
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -171,6 +244,8 @@
     loadDashboard();
     loadBondTypes();
     loadBonds();
+    loadPaymentMethods();
+    loadSmartSheet();
     checkPermissions();
 
     function checkPermissions() {
@@ -217,9 +292,25 @@
             select.innerHTML = '<option value="">اختر نوع السند</option>';
             if (snap.exists()) {
                 Object.entries(snap.val()).forEach(([id, type]) => {
-                    // فلترة حسب صلاحيات المندوب
                     if (userPermissions.includes(type.type) || userPermissions.includes('all')) {
                         select.innerHTML += `<option value="${id}">${type.name} - ${type.type}</option>`;
+                    }
+                });
+            }
+        });
+    }
+
+    function loadPaymentMethods() {
+        onValue(ref(db, `projects/${currentProject}/paymentMethods`), (snap) => {
+            const select = document.getElementById('bondPaymentMethod');
+            if (!select) return;
+            select.innerHTML = '<option value="">اختر طريقة الدفع</option>';
+            allPaymentMethods = [];
+            if (snap.exists()) {
+                Object.values(snap.val()).forEach(method => {
+                    if (method.active) {
+                        allPaymentMethods.push(method);
+                        select.innerHTML += `<option value="${method.name}">${method.name} ${method.account? '- ' + method.account : ''}</option>`;
                     }
                 });
             }
@@ -241,56 +332,119 @@
                                 <td class="p-4 font-bold ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toFixed(2)}</td>
                                 <td class="p-4">${bond.date}</td>
                                 <td class="p-4 no-print">
+                                    <button data-action="preview-bond" data-id="${id}" class="text-purple-600 hover:underline ml-3">معاينة</button>
                                     <button data-action="print-bond" data-id="${id}" class="text-blue-600 hover:underline">طباعة</button>
                                 </td>
                             </tr>`;
                     }
                 });
             }
-            // ربط أحداث الطباعة
+            document.querySelectorAll('[data-action="preview-bond"]').forEach(btn => {
+                btn.addEventListener('click', () => previewBond(btn.dataset.id));
+            });
             document.querySelectorAll('[data-action="print-bond"]').forEach(btn => {
                 btn.addEventListener('click', () => printBond(btn.dataset.id));
             });
         });
     }
 
+    function loadSmartSheet() {
+        onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
+            const tbody = document.getElementById('smartSheetBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            let total = 0;
+            if (snap.exists()) {
+                Object.entries(snap.val()).forEach(([id, bond]) => {
+                    if (bond.createdBy === currentUser.phone) {
+                        const amount = parseFloat(bond.amount);
+                        total += bond.type === 'قبض'? amount : -amount;
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-2 border">${bond.number}</td>
+                                <td class="p-2 border">${bond.typeName}</td>
+                                <td class="p-2 border">${bond.client}</td>
+                                <td class="p-2 border ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${amount.toFixed(2)}</td>
+                                <td class="p-2 border">${bond.date}</td>
+                                <td class="p-2 border">${bond.description || '-'}</td>
+                                <td class="p-2 border">${bond.paymentMethod || '-'}</td>
+                            </tr>`;
+                    }
+                });
+            }
+            document.getElementById('sheetTotal').textContent = total.toFixed(2);
+        });
+    }
+
+    function filterSheet() {
+        const search = document.getElementById('searchSheet').value.toLowerCase();
+        document.querySelectorAll('#smartSheetBody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(search)? '' : 'none';
+        });
+    }
+
+    function exportSheet() {
+        Swal.fire('قريباً', 'ميزة التصدير للإكسل قيد التطوير', 'info');
+    }
+
     async function saveBond() {
         const typeId = document.getElementById('bondTypeSelect').value;
-        const amount = document.getElementById('bondAmount').value;
+        const amount = parseFloat(document.getElementById('bondAmount').value);
         const date = document.getElementById('bondDate').value;
         const client = document.getElementById('bondClient').value;
         const description = document.getElementById('bondDescription').value;
+        const paymentMethod = document.getElementById('bondPaymentMethod').value;
 
         if (!typeId ||!amount ||!date ||!client) return Swal.fire('خطأ', 'عبي كل الحقول المطلوبة', 'error');
 
         const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
         const typeData = typeSnap.val();
 
-        // تحقق من الصلاحية
+        // 1. تحقق من الصلاحية
         if (!userPermissions.includes(typeData.type) &&!userPermissions.includes('all')) {
-            return Swal.fire('خطأ', 'ما عندك صلاحية لإنشاء سند من هذا النوع', 'error');
+            return Swal.fire('مرفوض', 'ما عندك صلاحية لإنشاء سند من هذا النوع', 'error');
+        }
+
+        // 2. تحقق من حد مبلغ السند الواحد
+        if (currentUser.amountLimit && amount > parseFloat(currentUser.amountLimit)) {
+            return Swal.fire('مرفوض', `المبلغ تجاوز الحد المسموح للسند الواحد: ${currentUser.amountLimit}`, 'error');
+        }
+
+        // 3. تحقق من العدد اليومي + الكلي + الإجمالي
+        const bondsSnap = await get(query(ref(db, `projects/${currentProject}/bonds`), orderByChild('createdBy'), equalTo(currentUser.phone)));
+        const today = new Date().toDateString();
+        let todayCount = 0, totalCount = 0, totalAmount = 0;
+
+        if (bondsSnap.exists()) {
+            Object.values(bondsSnap.val()).forEach(bond => {
+                totalCount++;
+                totalAmount += parseFloat(bond.amount);
+                if (new Date(bond.createdAt).toDateString() === today) todayCount++;
+            });
+        }
+
+        if (currentUser.dailyLimit && todayCount >= parseInt(currentUser.dailyLimit)) {
+            return Swal.fire('مرفوض', `وصلت الحد الأقصى للسندات اليوم: ${currentUser.dailyLimit}`, 'error');
+        }
+
+        if (currentUser.totalLimit && totalCount >= parseInt(currentUser.totalLimit)) {
+            return Swal.fire('مرفوض', `وصلت الحد الأقصى لإجمالي السندات: ${currentUser.totalLimit}`, 'error');
+        }
+
+        if (currentUser.totalAmountLimit && (totalAmount + amount) > parseFloat(currentUser.totalAmountLimit)) {
+            return Swal.fire('مرفوض', `إجمالي المبالغ راح يتجاوز الحد: ${currentUser.totalAmountLimit}`, 'error');
         }
 
         const newNumber = (typeData.current || typeData.start);
-        
         if (newNumber > typeData.end) return Swal.fire('خطأ', 'وصلت لنهاية التسلسل لهذا النوع', 'error');
 
         const bondId = Date.now().toString();
         const bondNumber = `${typeData.prefix}-${String(newNumber).padStart(6, '0')}`;
 
         await set(ref(db, `projects/${currentProject}/bonds/${bondId}`), {
-            id: bondId,
-            number: bondNumber,
-            typeId: typeId,
-            typeName: typeData.name,
-            type: typeData.type,
-            amount: amount,
-            date: date,
-            client: client,
-            description: description,
-            createdBy: currentUser.phone,
-            createdByName: currentUser.name,
-            createdAt: Date.now()
+            id: bondId, number: bondNumber, typeId, typeName: typeData.name, type: typeData.type,
+            amount, date, client, description, paymentMethod,
+            createdBy: currentUser.phone, createdByName: currentUser.name, createdAt: Date.now()
         });
 
         await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: newNumber + 1 });
@@ -301,33 +455,79 @@
         document.getElementById('bondDescription').value = '';
     }
 
-    async function printBond(bondId) {
+    async function previewBond(bondId) {
         const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
-        const bond = snap.val();
-        const printArea = document.getElementById('printArea');
-        printArea.innerHTML = `
-            <div class="bond-print">
-                <div style="text-align:center;margin-bottom:20px">
-                    ${projectData.logo? `<img src="${projectData.logo}" style="width:80px;margin:0 auto">` : ''}
-                    <h1 style="font-size:24px;font-weight:800;margin:10px 0">${projectData.companyName}</h1>
-                    <p>${projectData.address || ''}</p>
+        selectedBondForPrint = snap.val();
+        const bond = selectedBondForPrint;
+        
+        document.getElementById('noBondSelected').classList.add('hidden');
+        document.getElementById('printPreviewArea').classList.remove('hidden');
+        
+        const previewHTML = `
+            <div style="text-align:center;margin-bottom:20px">
+                ${projectData.logo? `<img src="${projectData.logo}" style="width:80px;margin:0 auto 10px">` : ''}
+                <h1 style="font-size:28px;font-weight:800;color:#1e40af">${projectData.companyName}</h1>
+                <p style="color:#6b7280">${projectData.address || ''} | ${projectData.phone || ''}</p>
+            </div>
+            <div style="border:3px solid #2563eb;border-radius:12px;padding:20px;margin:20px 0;background:linear-gradient(to bottom,#eff6ff,#ffffff)">
+                <h2 style="text-align:center;font-size:24px;font-weight:800;color:#1e40af;margin-bottom:20px">سند ${bond.type}</h2>
+                <table style="width:100%;font-size:15px">
+                    <tr><td style="padding:8px;font-weight:700;width:30%">رقم السند:</td><td style="font-weight:800;color:#2563eb">${bond.number}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">التاريخ:</td><td>${bond.date}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">العميل:</td><td>${bond.client}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">المبلغ:</td><td style="font-size:20px;font-weight:800;color:${bond.type === 'قبض'? '#16a34a' : '#dc2626'}">${parseFloat(bond.amount).toFixed(2)} ريال سعودي</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">طريقة الدفع:</td><td>${bond.paymentMethod || '-'}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">البيان:</td><td>${bond.description || '-'}</td></tr>
+                </table>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:30px;align-items:end">
+                <div style="text-align:center">
+                    <p style="font-weight:700;margin-bottom:40px">المستلم</p>
+                    <div style="border-top:2px solid #000;width:150px">__________</div>
                 </div>
-                <div style="border:2px solid #000;padding:15px;margin:20px 0">
-                    <h2 style="text-align:center;font-size:20px;font-weight:700;margin-bottom:15px">سند ${bond.type}</h2>
-                    <table style="width:100%;font-size:14px">
-                        <tr><td style="padding:5px;font-weight:bold">رقم السند:</td><td>${bond.number}</td><td style="font-weight:bold">التاريخ:</td><td>${bond.date}</td></tr>
-                        <tr><td style="padding:5px;font-weight:bold">العميل:</td><td colspan="3">${bond.client}</td></tr>
-                        <tr><td style="padding:5px;font-weight:bold">المبلغ:</td><td colspan="3" style="font-size:18px;font-weight:800">${parseFloat(bond.amount).toFixed(2)} ريال سعودي</td></tr>
-                        <tr><td style="padding:5px;font-weight:bold">البيان:</td><td colspan="3">${bond.description}</td></tr>
-                    </table>
+                <div id="qrcode" style="padding:10px;background:white;border:2px solid #e5e7eb;border-radius:8px"></div>
+                <div style="text-align:center">
+                    <p style="font-weight:700;margin-bottom:40px">المحاسب</p>
+                    <div style="border-top:2px solid #000;width:150px">__________</div>
                 </div>
-                <div style="display:flex;justify-content:space-between;margin-top:30px">
-                    <div>المستلم<br><br>__________</div>
-                    <div>المحاسب<br><br>__________</div>
-                    ${projectData.stamp? `<div><img src="${projectData.stamp}" style="width:100px"></div>` : ''}
-                </div>
-            </div>`;
-        window.print();
+            </div>
+            ${projectData.stamp? `<div style="text-align:center;margin-top:20px"><img src="${projectData.stamp}" style="width:120px;opacity:0.7"></div>` : ''}
+        `;
+        
+        document.getElementById('bondPreviewContent').innerHTML = previewHTML;
+        
+        // توليد QR
+        document.getElementById('qrcode').innerHTML = '';
+        new QRCode(document.getElementById('qrcode'), {
+            text: `سند ${bond.type} - ${bond.number}\nالمبلغ: ${bond.amount} ريال\nالعميل: ${bond.client}\nالتاريخ: ${bond.date}`,
+            width: 100, height: 100
+        });
+        
+        showTab('printPreview');
+    }
+
+    async function printBond(bondId) {
+        await previewBond(bondId);
+        setTimeout(() => window.print(), 500);
+    }
+
+    function sendWhatsApp() {
+        if (!selectedBondForPrint) return;
+        const bond = selectedBondForPrint;
+        const msg = `*${projectData.companyName}*\n\n*سند ${bond.type}*\nرقم: ${bond.number}\nالتاريخ: ${bond.date}\nالعميل: ${bond.client}\nالمبلغ: ${parseFloat(bond.amount).toFixed(2)} ريال\nطريقة الدفع: ${bond.paymentMethod || '-'}\nالبيان: ${bond.description || '-'}\n\nشكراً لتعاملكم معنا`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('bondPreviewContent');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (canvas.height * width) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save(`سند-${selectedBondForPrint.number}.pdf`);
     }
 
     function showChangePassword() {
