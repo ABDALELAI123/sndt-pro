@@ -42,12 +42,12 @@
     <!-- تبويبات مدير المشروع -->
     <div class="bg-white shadow-md border-b no-print">
         <div class="flex overflow-x-auto">
-            <button onclick="showTab('dashboard')" class="tab-btn px-8 py-4 active">الرئيسية</button>
-            <button onclick="showTab('projectSettings')" class="tab-btn px-8 py-4">إعدادات المشروع</button>
-            <button onclick="showTab('bondSettings')" class="tab-btn px-8 py-4">إعدادات السند</button>
-            <button onclick="showTab('delegates')" class="tab-btn px-8 py-4">المناديب</button>
-            <button onclick="showTab('createBond')" class="tab-btn px-8 py-4">إنشاء سند</button>
-            <button onclick="showTab('bondsList')" class="tab-btn px-8 py-4">السندات</button>
+            <button data-tab="dashboard" class="tab-btn px-8 py-4 active">الرئيسية</button>
+            <button data-tab="projectSettings" class="tab-btn px-8 py-4">إعدادات المشروع</button>
+            <button data-tab="bondSettings" class="tab-btn px-8 py-4">إعدادات السند</button>
+            <button data-tab="delegates" class="tab-btn px-8 py-4">المناديب</button>
+            <button data-tab="createBond" class="tab-btn px-8 py-4">إنشاء سند</button>
+            <button data-tab="bondsList" class="tab-btn px-8 py-4">السندات</button>
         </div>
     </div>
 
@@ -71,7 +71,6 @@
                     <p id="totalBalance" class="text-4xl font-extrabold mt-2">0.00</p>
                     <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
                 </div>
-            </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-green-500"><p class="text-gray-500 text-sm">إجمالي السندات</p><p id="totalBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
                 <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-yellow-500"><p class="text-gray-500 text-sm">سندات اليوم</p><p id="todayBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
@@ -108,7 +107,6 @@
                 </div>
             </div>
         </div>
-
         <!-- إعدادات أنواع السندات -->
         <div id="bondSettings" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
@@ -190,7 +188,7 @@
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                     <h2 class="text-3xl font-extrabold text-gray-800">السندات</h2>
-                    <button onclick="exportTableToExcel('bondsTable','السندات')" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
+                    <button id="exportBondsBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="bondsTable">
@@ -216,46 +214,48 @@
     import { db } from './firebase.js';
     import { ref, get, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // حماية الصفحة
     const role = localStorage.getItem('role');
     const phone = localStorage.getItem('phone');
     const currentProject = localStorage.getItem('projectCode');
-    
-    if (role!== 'manager') {
+
+    if (role!== 'manager' ||!currentProject || currentProject === 'SUPERADMIN') {
         window.location.href = 'index.html';
     }
 
     let currentUser = null, projectData = null, userPermissions = [];
-    let allBondsData = [], allBondTypesData = [], allDelegatesData = [];
 
     // تحميل بيانات المستخدم
-    get(ref(db, `projects/${currentProject}/users/${phone}`)).then(snap => {
-        currentUser = snap.val();
-        document.getElementById('currentUser').textContent = currentUser.name;
-        userPermissions = currentUser.permissions || [];
-    });
+    const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
+    currentUser = userSnap.val();
+    document.getElementById('currentUser').textContent = currentUser.name;
+    userPermissions = currentUser.permissions || [];
 
     // تحميل بيانات المشروع
-    get(ref(db, `projects/${currentProject}/info`)).then(snap => {
-        projectData = snap.val();
-        document.getElementById('currentProjectName').textContent = projectData.companyName;
-        if (projectData.logo) {
-            document.getElementById('headerLogo').src = projectData.logo;
-            document.getElementById('headerLogo').classList.remove('hidden');
-        }
-    });
+    const projectSnap = await get(ref(db, `projects/${currentProject}/info`));
+    projectData = projectSnap.val();
+    document.getElementById('currentProjectName').textContent = projectData.companyName;
+    if (projectData.logo) {
+        document.getElementById('headerLogo').src = projectData.logo;
+        document.getElementById('headerLogo').classList.remove('hidden');
+    }
 
+    // ربط الأحداث
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
     document.getElementById('saveProjectSettingsBtn').addEventListener('click', saveProjectSettings);
     document.getElementById('addBondTypeBtn').addEventListener('click', addBondType);
     document.getElementById('addDelegateBtn').addEventListener('click', addDelegate);
     document.getElementById('saveBondBtn').addEventListener('click', saveBond);
+    document.getElementById('exportBondsBtn').addEventListener('click', () => exportTableToExcel('bondsTable','السندات'));
+
+    // تبويبات
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => showTab(e.target.dataset.tab));
+    });
 
     if(document.getElementById('bondDate')) {
         document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
     }
-
     document.getElementById('set_logo').addEventListener('change', async (e) => {
         if (e.target.files[0]) {
             const base64 = await toBase64(e.target.files[0]);
@@ -277,7 +277,6 @@
     loadBondTypes();
     loadDelegates();
     loadBonds();
-    showTab('dashboard');
 
     function toBase64(file) {
         return new Promise((resolve) => {
@@ -291,7 +290,7 @@
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabName).classList.remove('hidden');
-        event.target.classList.add('active');
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     }
 
     function logout() {
@@ -303,10 +302,8 @@
         onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
             let income = 0, expense = 0, today = 0;
             const todayStr = new Date().toISOString().split('T')[0];
-            allBondsData = [];
             if (snap.exists()) {
                 Object.values(snap.val()).forEach(b => {
-                    allBondsData.push(b);
                     if (b.type === 'قبض') income += parseFloat(b.amount);
                     if (b.type === 'صرف') expense += parseFloat(b.amount);
                     if (b.date === todayStr) today++;
@@ -315,7 +312,7 @@
             document.getElementById('totalIncome').textContent = income.toFixed(2);
             document.getElementById('totalExpense').textContent = expense.toFixed(2);
             document.getElementById('totalBalance').textContent = (income - expense).toFixed(2);
-            document.getElementById('totalBonds').textContent = allBondsData.length;
+            document.getElementById('totalBonds').textContent = snap.exists()? Object.keys(snap.val()).length : 0;
             document.getElementById('todayBonds').textContent = today;
         });
 
@@ -361,10 +358,8 @@
             const select = document.getElementById('bondTypeSelect');
             tbody.innerHTML = '';
             select.innerHTML = '<option value="">اختر نوع السند</option>';
-            allBondTypesData = [];
             if (snap.exists()) {
                 Object.entries(snap.val()).forEach(([id, type]) => {
-                    allBondTypesData.push({id,...type});
                     select.innerHTML += `<option value="${id}">${type.name} - ${type.type}</option>`;
                     tbody.innerHTML += `
                         <tr class="border-b hover:bg-gray-50">
@@ -419,12 +414,10 @@
         onValue(ref(db, `projects/${currentProject}/users`), (snap) => {
             const tbody = document.getElementById('delegatesTableBody');
             tbody.innerHTML = '';
-            allDelegatesData = [];
             let count = 0;
             if (snap.exists()) {
                 Object.values(snap.val()).forEach(user => {
                     if (user.role === 'delegate') {
-                        allDelegatesData.push(user);
                         count++;
                         tbody.innerHTML += `
                             <tr class="border-b hover:bg-gray-50">
@@ -476,6 +469,19 @@
             active: true
         });
         Swal.fire('تم', 'انضاف المندوب بنجاح', 'success');
+    }
+
+    function toggleUser(phone, status) {
+        update(ref(db, `projects/${currentProject}/users/${phone}`), { active: status });
+    }
+
+    function deleteUser(phone) {
+        Swal.fire({
+            title: 'متأكد؟', text: "ما تقدر تتراجع", icon: 'warning',
+            showCancelButton: true, confirmButtonText: 'نعم احذف'
+        }).then((result) => {
+            if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/users/${phone}`));
+        });
     }
 
     function loadBonds() {
@@ -550,7 +556,7 @@
             <div class="bond-print">
                 <div style="text-align:center;margin-bottom:20px">
                     ${projectData.logo? `<img src="${projectData.logo}" style="width:80px;margin:0 auto">` : ''}
-                                   <h1 style="font-size:24px;font-weight:800;margin:10px 0">${projectData.companyName}</h1>
+                    <h1 style="font-size:24px;font-weight:800;margin:10px 0">${projectData.companyName}</h1>
                     <p>${projectData.address || ''}</p>
                 </div>
                 <div style="border:2px solid #000;padding:15px;margin:20px 0">
@@ -565,32 +571,10 @@
                 <div style="display:flex;justify-content:space-between;margin-top:30px">
                     <div>المستلم<br><br>__________</div>
                     <div>المحاسب<br><br>__________</div>
-                    ${projectData.stamp ? `<div><img src="${projectData.stamp}" style="width:100px"></div>` : ''}
+                    ${projectData.stamp? `<div><img src="${projectData.stamp}" style="width:100px"></div>` : ''}
                 </div>
             </div>`;
         window.print();
-    }
-
-    function toggleUser(phone, status) {
-        update(ref(db, `projects/${currentProject}/users/${phone}`), { active: status });
-    }
-
-    function deleteUser(phone) {
-        Swal.fire({
-            title: 'متأكد؟', text: "ما تقدر تتراجع", icon: 'warning',
-            showCancelButton: true, confirmButtonText: 'نعم احذف'
-        }).then((result) => {
-            if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/users/${phone}`));
-        });
-    }
-
-    function deleteBondType(id) {
-        Swal.fire({
-            title: 'متأكد؟', text: "ما تقدر تتراجع", icon: 'warning',
-            showCancelButton: true, confirmButtonText: 'نعم احذف'
-        }).then((result) => {
-            if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/bondTypes/${id}`));
-        });
     }
 
     function showChangePassword() {
@@ -604,7 +588,7 @@
             })
         }).then(async (result) => {
             if (!result.value) return;
-            if (result.value.old !== currentUser.password) return Swal.fire('خطأ', 'كلمة السر القديمة غلط', 'error');
+            if (result.value.old!== currentUser.password) return Swal.fire('خطأ', 'كلمة السر القديمة غلط', 'error');
             await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: result.value.new });
             Swal.fire('تم', 'تغيرت كلمة السر', 'success');
         });
@@ -615,13 +599,7 @@
         XLSX.writeFile(wb, `${filename}.xlsx`);
     }
 
-    window.showTab = showTab;
-    window.toggleUser = toggleUser;
-    window.deleteUser = deleteUser;
-    window.deleteBondType = deleteBondType;
-    window.printBond = printBond;
-    window.exportTableToExcel = exportTableToExcel;
-    // تصليح: نخلي الدوال global عشان الأزرار تشوفها
+    // ===== تصليح الأزرار - مهم جداً =====
     window.showTab = showTab;
     window.toggleUser = toggleUser;
     window.deleteUser = deleteUser;
