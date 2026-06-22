@@ -6,43 +6,594 @@
     <title>لوحة تحكم المدير</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style> body { font-family: 'Cairo', sans-serif; } </style>
-    <script type="module">
-        import { t, setLanguage, applyLanguage } from './lang.js';
-        window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage;
-        applyLanguage();
-    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .tab-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .btn-action { padding: 6px 12px; border-radius: 8px; font-size: 14px; margin: 2px; }
+        .field-disabled { background: #f3f4f6; cursor: not-allowed; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-green-600 to-teal-500 min-h-screen p-4">
-
-<div class="max-w-6xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
-        <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
-        <div class="text-right">
-            <h1 class="text-2xl font-extrabold">لوحة تحكم المدير</h1>
-            <p id="projectName" class="text-gray-500">جاري التحميل...</p>
-        </div>
-        <div class="w-16 h-16 bg-gradient-to-br from-green-600 to-teal-500 rounded-2xl flex items-center justify-center">
-            <i class="fas fa-user-tie text-white text-2xl"></i>
+<body class="bg-gray-100">
+    <!-- الشريط العلوي -->
+    <div class="bg-gradient-to-r from-green-700 to-emerald-800 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img id="companyLogo" src="" class="w-10 h-10 rounded-lg bg-white p-1 hidden">
+                <div>
+                    <h1 id="companyName" class="text-2xl font-bold">لوحة تحكم المدير</h1>
+                    <span class="text-sm opacity-90">المشروع: <span id="projectCode">---</span></span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleLanguage()" class="bg-white/20 px-4 py-2 rounded-lg hover:bg-white/30">
+                    <i class="fas fa-language"></i> <span id="langText">English</span>
+                </button>
+                <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-xl p-8">
-        <h2 class="text-xl font-bold mb-6"><i class="fas fa-users text-green-500"></i> المناديب</h2>
-        <div id="delegatesList" class="text-center text-gray-500">
-            جاري تحميل المناديب...
+    <!-- التبويبات -->
+    <div class="bg-white shadow-md">
+        <div class="container mx-auto flex gap-2 p-2 overflow-x-auto">
+            <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap tab-active">
+                <i class="fas fa-home"></i> الرئيسية
+            </button>
+            <button onclick="showTab('delegates')" id="tab-delegates" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-users"></i> المناديب
+            </button>
+            <button onclick="showTab('payments')" id="tab-payments" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-credit-card"></i> طرق الدفع والصناديق
+            </button>
+            <button onclick="showTab('company')" id="tab-company" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-building"></i> إعداد الشركة
+            </button>
+            <button onclick="showTab('print')" id="tab-print" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-print"></i> إعداد الطباعة
+            </button>
+            <button onclick="showTab('bonds')" id="tab-bonds" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-file-invoice"></i> إعداد السند
+            </button>
+            <button onclick="showTab('reports')" id="tab-reports" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-chart-bar"></i> التقارير والتوريد
+            </button>
         </div>
-        <button onclick="addDelegate()" class="mt-6 bg-green-500 text-white px-6 py-3 rounded-xl font-bold w-full">
-            <i class="fas fa-plus"></i> إضافة مندوب
-        </button>
     </div>
-</div>
 
-<script type="module">
+    <div class="container mx-auto p-6">
+                <!-- تبويب الرئيسية -->
+        <div id="content-dashboard" class="tab-content">
+            <div class="grid md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+                    <div class="text-3xl font-bold" id="stat_delegates">0</div>
+                    <div class="text-sm opacity-90">المناديب</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
+                    <div class="text-3xl font-bold" id="stat_bonds_today">0</div>
+                    <div class="text-sm opacity-90">سندات اليوم</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl">
+                    <div class="text-3xl font-bold" id="stat_bonds_pending">0</div>
+                    <div class="text-sm opacity-90">غير مورد/موثق</div>
+                </div>
+                <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl">
+                    <div class="text-3xl font-bold" id="stat_total_amount">0</div>
+                    <div class="text-sm opacity-90">إجمالي المبالغ</div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <canvas id="dashboardChart"></canvas>
+            </div>
+        </div>
+
+        <!-- تبويب المناديب -->
+        <div id="content-delegates" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-users text-green-600"></i> إدارة المناديب والقيود
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportDelegatesExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </button>
+                        <button onclick="showAddDelegateModal()" class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-2 rounded-lg font-bold">
+                            <i class="fas fa-plus"></i> مندوب جديد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3">اسم المندوب</th>
+                                <th class="p-3">الجوال</th>
+                                <th class="p-3">الحد اليومي</th>
+                                <th class="p-3">الحد الإجمالي</th>
+                                <th class="p-3">المستخدم</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delegatesTableBody">
+                            <tr><td colspan="7" class="text-center p-8 text-gray-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة مندوب مع كل القيود -->
+        <div id="delegateModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
+            <div class="bg-white rounded-xl p-6 w-full max-w-3xl mx-4 my-8">
+                <h3 class="text-xl font-bold mb-4" id="delegateModalTitle">إضافة مندوب جديد</h3>
+                <input type="hidden" id="editDelegateId">
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- بيانات أساسية -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-green-700 border-b pb-2">البيانات الأساسية</h4>
+                        <input id="modal_delegateName" type="text" placeholder="اسم المندوب" class="w-full p-3 border-2 rounded-lg">
+                        <input id="modal_delegatePhone" type="text" placeholder="رقم الجوال" class="w-full p-3 border-2 rounded-lg">
+                        <input id="modal_delegatePassword" type="text" placeholder="كلمة المرور" class="w-full p-3 border-2 rounded-lg">
+                    </div>
+
+                    <!-- قيود العدد -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-blue-700 border-b pb-2">قيود العدد</h4>
+                        <div>
+                            <label class="text-sm text-gray-600">الحد اليومي للسندات</label>
+                            <input id="modal_dailyLimit" type="number" placeholder="مثال: 20" value="20" min="1" class="w-full p-3 border-2 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">الحد الإجمالي للسندات</label>
+                            <input id="modal_totalLimit" type="number" placeholder="مثال: 1000" value="1000" min="1" class="w-full p-3 border-2 rounded-lg">
+                        </div>
+                    </div>
+
+                    <!-- قيود المبالغ -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-purple-700 border-b pb-2">قيود المبالغ</h4>
+                        <div>
+                            <label class="text-sm text-gray-600">الحد الأقصى للسند الواحد</label>
+                            <input id="modal_maxAmountPerBond" type="number" placeholder="مثال: 5000" value="5000" class="w-full p-3 border-2 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">الحد الإجمالي للمبالغ</label>
+                            <input id="modal_maxTotalAmount" type="number" placeholder="مثال: 100000" value="100000" class="w-full p-3 border-2 rounded-lg">
+                        </div>
+                    </div>
+
+                    <!-- قيود طرق الدفع وأنواع السندات -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-orange-700 border-b pb-2">الصلاحيات</h4>
+                        <div>
+                            <label class="text-sm text-gray-600">طرق الدفع المسموحة</label>
+                            <div id="allowedPayments" class="border-2 rounded-lg p-3 max-h-32 overflow-y-auto space-y-1">
+                                <p class="text-sm text-gray-400">أضف طرق الدفع من تبويب "طرق الدفع" أولاً</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600">أنواع السندات المسموحة</label>
+                            <div id="allowedBondTypes" class="border-2 rounded-lg p-3 max-h-32 overflow-y-auto space-y-1">
+                                <p class="text-sm text-gray-400">أضف أنواع السندات من تبويب "إعداد السند" أولاً</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 p-3 rounded-lg mt-4 text-sm">
+                    <i class="fas fa-info-circle text-yellow-600"></i>
+                    <strong>ملاحظة:</strong> القيود تفتح تلقائياً بعد "توريد" القبض أو "توثيق" الصرف. المندوب لا يشوف الأرقام هذي أبداً.
+                </div>
+
+                <div class="flex gap-2 mt-6">
+                    <button onclick="saveDelegate()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('delegateModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+               <!-- تبويب طرق الدفع والصناديق -->
+        <div id="content-payments" class="tab-content hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- طرق الدفع -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-credit-card text-green-600"></i> طرق الدفع
+                        </h2>
+                        <button onclick="showAddPaymentModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-plus"></i> إضافة
+                        </button>
+                    </div>
+                    <div id="paymentsList" class="space-y-2">
+                        <p class="text-gray-400 text-center p-4">لا توجد طرق دفع</p>
+                    </div>
+                </div>
+
+                <!-- الصناديق -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-box text-green-600"></i> الصناديق
+                        </h2>
+                        <button onclick="showAddBoxModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-plus"></i> إضافة
+                        </button>
+                    </div>
+                    <div id="boxesList" class="space-y-2">
+                        <p class="text-gray-400 text-center p-4">لا توجد صناديق</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب إعداد الشركة -->
+        <div id="content-company" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
+                    <i class="fas fa-building text-green-600"></i> بيانات الشركة
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">اسم الشركة</label>
+                            <input id="company_name" type="text" class="w-full p-3 border-2 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">الرقم الضريبي</label>
+                            <input id="company_tax" type="text" class="w-full p-3 border-2 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">عنوان الشركة</label>
+                            <textarea id="company_address" rows="3" class="w-full p-3 border-2 rounded-lg"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">شعار الشركة</label>
+                            <input id="company_logo" type="file" accept="image/*" class="w-full p-3 border-2 rounded-lg">
+                            <img id="preview_logo" src="" class="w-32 h-32 mt-2 rounded-lg border hidden object-contain">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">الختم</label>
+                            <input id="company_stamp" type="file" accept="image/*" class="w-full p-3 border-2 rounded-lg">
+                            <img id="preview_stamp" src="" class="w-32 h-32 mt-2 rounded-lg border hidden object-contain">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">التوقيع</label>
+                            <input id="company_signature" type="file" accept="image/*" class="w-full p-3 border-2 rounded-lg">
+                            <img id="preview_signature" src="" class="w-32 h-32 mt-2 rounded-lg border hidden object-contain">
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="saveCompanyData()" class="mt-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-lg font-bold">
+                    <i class="fas fa-save"></i> حفظ بيانات الشركة
+                </button>
+            </div>
+        </div>
+                <!-- تبويب إعداد الطباعة -->
+        <div id="content-print" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
+                    <i class="fas fa-print text-green-600"></i> إعداد الطباعة
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">لون الهيدر</label>
+                            <input id="print_headerColor" type="color" value="#10b981" class="w-full h-12 rounded-lg cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">حجم الخط</label>
+                            <select id="print_fontSize" class="w-full p-3 border-2 rounded-lg">
+                                <option value="12">صغير</option>
+                                <option value="14" selected>متوسط</option>
+                                <option value="16">كبير</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">مكان الشعار</label>
+                            <select id="print_logoPosition" class="w-full p-3 border-2 rounded-lg">
+                                <option value="right">يمين</option>
+                                <option value="center">وسط</option>
+                                <option value="left">يسار</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="font-bold text-gray-700">العناصر الظاهرة في الطباعة</h4>
+                        <label class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <input type="checkbox" id="print_showLogo" checked> الشعار
+                        </label>
+                        <label class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <input type="checkbox" id="print_showTax" checked> الرقم الضريبي
+                        </label>
+                        <label class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <input type="checkbox" id="print_showAddress" checked> العنوان
+                        </label>
+                        <label class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <input type="checkbox" id="print_showStamp" checked> الختم
+                        </label>
+                        <label class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <input type="checkbox" id="print_showSignature" checked> التوقيع
+                        </label>
+                        <label class="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                            <input type="checkbox" id="print_showQR" checked> QR Code
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="savePrintSettings()" class="mt-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-lg font-bold">
+                    <i class="fas fa-save"></i> حفظ إعدادات الطباعة
+                </button>
+
+                <!-- معاينة -->
+                <div class="mt-6 border-2 border-dashed rounded-lg p-4">
+                    <h4 class="font-bold mb-2">معاينة السند:</h4>
+                    <div id="printPreview" class="bg-white p-4 rounded shadow">
+                        <p class="text-center text-gray-400">المعاينة تظهر بعد الحفظ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب إعداد السند -->
+        <div id="content-bonds" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-file-invoice text-green-600"></i> أنواع السندات والحقول الإضافية
+                    </h2>
+                    <button onclick="showAddBondTypeModal()" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">
+                        <i class="fas fa-plus"></i> نوع سند جديد
+                    </button>
+                </div>
+
+                <div id="bondTypesList" class="space-y-4">
+                    <p class="text-center text-gray-400 p-8">لا توجد أنواع سندات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة نوع سند -->
+        <div id="bondTypeModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
+            <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 my-8">
+                <h3 class="text-xl font-bold mb-4">إضافة نوع سند</h3>
+                <input type="hidden" id="editBondTypeId">
+
+                <div class="space-y-4">
+                    <div class="grid md:grid-cols-2 gap-3">
+                        <input id="modal_bondTypeName" type="text" placeholder="اسم النوع: قبض / صرف" class="w-full p-3 border-2 rounded-lg">
+                        <input id="modal_bondPrefix" type="text" placeholder="البادئة: QBD- / SRF-" class="w-full p-3 border-2 rounded-lg">
+                        <input id="modal_bondStartNumber" type="number" placeholder="رقم البداية: 1" value="1" class="w-full p-3 border-2 rounded-lg">
+                        <select id="modal_bondCategory" class="w-full p-3 border-2 rounded-lg">
+                            <option value="positive">إيجابي - قبض</option>
+                            <option value="negative">سلبي - صرف</option>
+                        </select>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-green-700">الحقول الإضافية - مفتوحة</h4>
+                            <button onclick="addCustomField()" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-plus"></i> إضافة حقل
+                            </button>
+                        </div>
+                        <div id="customFieldsList" class="space-y-2">
+                            <p class="text-sm text-gray-400">لا توجد حقول إضافية</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-6">
+                    <button onclick="saveBondType()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('bondTypeModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة طريقة دفع -->
+        <div id="paymentModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                <h3 class="text-xl font-bold mb-4">إضافة طريقة دفع</h3>
+                <input id="modal_paymentName" type="text" placeholder="اسم طريقة الدفع: نقدي / شبكة" class="w-full p-3 border-2 rounded-lg mb-4">
+                <div class="flex gap-2">
+                    <button onclick="savePayment()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('paymentModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة صندوق -->
+        <div id="boxModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                <h3 class="text-xl font-bold mb-4">إضافة صندوق</h3>
+                <input id="modal_boxName" type="text" placeholder="اسم الصندوق: الرئيسي / فرع 1" class="w-full p-3 border-2 rounded-lg mb-4">
+                <div class="flex gap-2">
+                    <button onclick="saveBox()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('boxModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+               <!-- تبويب إعداد الطباعة -->
+        <div id="content-print" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
+                    <i class="fas fa-print text-green-600"></i> إعداد الطباعة والمعاينة المباشرة
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- الإعدادات -->
+                    <div class="space-y-4">
+                        <h4 class="font-bold text-green-700">إعدادات المظهر</h4>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">لون الهيدر</label>
+                            <input id="print_headerColor" type="color" value="#10b981" class="w-full h-12 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">مكان الشعار</label>
+                            <select id="print_logoPosition" class="w-full p-3 border-2 rounded-lg">
+                                <option value="right">يمين</option>
+                                <option value="center">وسط</option>
+                                <option value="left">يسار</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="print_showTax" checked> إظهار الرقم الضريبي
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="print_showAddress" checked> إظهار العنوان
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="print_showStamp" checked> إظهار الختم
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="print_showSignature" checked> إظهار التوقيع
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="print_showQR" checked> إظهار QR Code
+                            </label>
+                        </div>
+                        <button onclick="savePrintSettings()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold">
+                            <i class="fas fa-save"></i> حفظ إعدادات الطباعة
+                        </button>
+                    </div>
+
+                    <!-- المعاينة -->
+                    <div>
+                        <h4 class="font-bold text-blue-700 mb-2">معاينة مباشرة</h4>
+                        <div id="printPreview" class="border-4 rounded-lg p-4 bg-white min-h-">
+                            <p class="text-center text-gray-400 mt-20">اضغط حفظ عشان تشوف المعاينة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب إعداد السند -->
+        <div id="content-bonds" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-file-invoice text-green-600"></i> أنواع السندات والحقول الإضافية
+                    </h2>
+                    <button onclick="showAddBondTypeModal()" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">
+                        <i class="fas fa-plus"></i> نوع سند جديد
+                    </button>
+                </div>
+
+                <div id="bondTypesList" class="space-y-4">
+                    <p class="text-gray-400 text-center p-8">لا توجد أنواع سندات. أضف نوع جديد</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة نوع سند -->
+        <div id="bondTypeModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
+            <div class="bg-white rounded-xl p-6 w-full max-w-3xl mx-4 my-8">
+                <h3 class="text-xl font-bold mb-4">إضافة نوع سند جديد</h3>
+                <input type="hidden" id="editBondTypeId">
+
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <input id="modal_bondTypeName" type="text" placeholder="اسم النوع: قبض / صرف" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_bondPrefix" type="text" placeholder="البادئة: QBD-" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_bondStartNumber" type="number" placeholder="رقم البداية: 1" value="1" class="w-full p-3 border-2 rounded-lg">
+                    <select id="modal_bondColor" class="w-full p-3 border-2 rounded-lg">
+                        <option value="green">أخضر - قبض</option>
+                        <option value="red">أحمر - صرف</option>
+                        <option value="blue">أزرق - تحويل</option>
+                    </select>
+                </div>
+
+                <h4 class="font-bold text-purple-700 border-b pb-2 mb-3">الحقول الإضافية - مفتوحة بلا عدد</h4>
+                <div id="customFieldsContainer" class="space-y-2 mb-3"></div>
+
+                <button onclick="addCustomField()" class="w-full bg-blue-100 text-blue-700 p-2 rounded-lg font-bold mb-4">
+                    <i class="fas fa-plus"></i> إضافة حقل جديد
+                </button>
+
+                <div class="flex gap-2">
+                    <button onclick="saveBondType()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('bondTypeModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب التقارير والتوريد -->
+        <div id="content-reports" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
+                    <i class="fas fa-chart-bar text-green-600"></i> التقارير والتوريد والتوثيق
+                </h2>
+
+                <!-- الفلاتر -->
+                <div class="grid md:grid-cols-5 gap-3 mb-6 bg-gray-50 p-4 rounded-lg">
+                    <input id="filter_dateFrom" type="date" class="p-2 border rounded-lg">
+                    <input id="filter_dateTo" type="date" class="p-2 border rounded-lg">
+                    <select id="filter_delegate" class="p-2 border rounded-lg">
+                        <option value="">كل المناديب</option>
+                    </select>
+                    <select id="filter_bondType" class="p-2 border rounded-lg">
+                        <option value="">كل الأنواع</option>
+                    </select>
+                    <button onclick="loadReports()" class="bg-blue-600 text-white rounded-lg">
+                        <i class="fas fa-search"></i> بحث
+                    </button>
+                </div>
+
+                <!-- الأزرار -->
+                <div class="flex gap-2 mb-4">
+                    <button onclick="exportReportsExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                    <button onclick="exportReportsPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-file-pdf"></i> تصدير PDF
+                    </button>
+                </div>
+
+                <!-- الجدول -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3">رقم السند</th>
+                                <th class="p-3">التاريخ</th>
+                                <th class="p-3">المندوب</th>
+                                <th class="p-3">النوع</th>
+                                <th class="p-3">المبلغ</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTableBody">
+                            <tr><td colspan="7" class="text-center p-8 text-gray-400">اختر الفلاتر واضغط بحث</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, query, where, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc, setDoc, increment, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
@@ -56,70 +607,347 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
+    let currentManager = null;
+    let projectCode = '';
 
-    // جيب بيانات المدير من التخزين المحلي
-    const managerData = JSON.parse(localStorage.getItem('managerData') || '{}');
-    
-    if (!managerData.projectCode) {
-        Swal.fire('خطأ', 'الرجاء تسجيل الدخول أولاً', 'error').then(() => {
-            location.href = './index.html';
-        });
+    // التحقق من دخول المدير
+    window.onload = async () => {
+        const managerId = localStorage.getItem('managerId');
+        if(!managerId) return location.href = './index.html';
+
+        const docSnap = await getDoc(doc(db, 'managers', managerId));
+        if(!docSnap.exists()) return location.href = './index.html';
+
+        currentManager = {id: managerId,...docSnap.data()};
+        projectCode = currentManager.projectCode;
+        document.getElementById('projectCode').textContent = projectCode;
+
+        loadCompanyData();
+        loadDashboard();
+        loadDelegates();
     }
 
-    document.getElementById('projectName').textContent = `مشروع: ${managerData.projectCode} | المدير: ${managerData.name}`;
+    // تبديل التبويبات
+    window.showTab = (tab) => {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
+        document.getElementById('content-' + tab).classList.remove('hidden');
+        document.getElementById('tab-' + tab).classList.add('tab-active');
 
-    async function loadDelegates() {
-        const q = query(collection(db, 'delegates'), where('projectCode', '==', managerData.projectCode));
-        const snap = await getDocs(q);
-        const list = document.getElementById('delegatesList');
-        
-        if (snap.empty) {
-            list.innerHTML = '<p>لا يوجد مناديب حالياً</p>';
-            return;
-        }
-
-        list.innerHTML = '';
-        snap.forEach(doc => {
-            const d = doc.data();
-            list.innerHTML += `
-                <div class="border border-gray-200 p-4 rounded-xl mb-3 flex justify-between items-center">
-                    <div class="text-right">
-                        <p class="font-bold">${d.name}</p>
-                        <p class="text-gray-500 text-sm">جوال: ${d.phone}</p>
-                    </div>
-                </div>`;
-        });
+        if(tab === 'dashboard') loadDashboard();
+        if(tab === 'delegates') loadDelegates();
+        if(tab === 'payments') loadPaymentsAndBoxes();
+        if(tab === 'bonds') loadBondTypes();
     }
 
-    window.addDelegate = async () => {
-        const { value: form } = await Swal.fire({
-            title: 'إضافة مندوب جديد',
-            html: `<input id="swal-name" class="swal2-input" placeholder="اسم المندوب">
-                   <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال">
-                   <input id="swal-pass" type="password" class="swal2-input" placeholder="كلمة المرور">`,
-            confirmButtonText: 'حفظ',
-            showCancelButton: true, cancelButtonText: 'إلغاء',
-            preConfirm: () => {
-                const name = document.getElementById('swal-name').value;
-                const phone = document.getElementById('swal-phone').value;
-                const password = document.getElementById('swal-pass').value;
-                if (!name || !phone || !password) Swal.showValidationMessage('املأ كل الحقول');
-                return { name, phone, password, projectCode: managerData.projectCode }
+    // الرئيسية: تحميل الإحصائيات + السندات المعلقة
+    window.loadDashboard = async () => {
+        const delegatesQ = query(collection(db, 'delegates'), where('projectCode', '==', projectCode));
+        const delegatesSnap = await getDocs(delegatesQ);
+        document.getElementById('stat_delegates').textContent = delegatesSnap.size;
+
+        const today = new Date().toISOString().split('T')[0];
+        const bondsQ = query(collection(db, 'bonds'), where('projectCode', '==', projectCode), where('date', '==', today));
+        const bondsSnap = await getDocs(bondsQ);
+        document.getElementById('stat_bonds_today').textContent = bondsSnap.size;
+
+        let totalAmount = 0;
+        let pendingCount = 0;
+        const pendingTable = document.getElementById('pendingBondsTable');
+        pendingTable.innerHTML = '';
+
+        const allBondsQ = query(collection(db, 'bonds'), where('projectCode', '==', projectCode));
+        const allBondsSnap = await getDocs(allBondsQ);
+
+        allBondsSnap.forEach(docSnap => {
+            const data = docSnap.data();
+            totalAmount += data.amount || 0;
+
+            if(data.status === 'غير مورد' || data.status === 'غير موثق') {
+                pendingCount++;
+                if(pendingTable.children.length < 10) {
+                    pendingTable.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3">${data.bondNumber}</td>
+                            <td class="p-3">${data.delegateName}</td>
+                            <td class="p-3">${data.type}</td>
+                            <td class="p-3 font-bold">${data.amount}</td>
+                            <td class="p-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${data.status}</span></td>
+                            <td class="p-3">
+                                <button onclick="approveBond('${docSnap.id}', '${data.type}')" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                    ${data.type === 'قبض'? 'توريد' : 'توثيق'}
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
             }
         });
-        if (form) {
-            await addDoc(collection(db, 'delegates'), form);
-            Swal.fire('تم', 'تم إضافة المندوب', 'success');
-            loadDelegates();
+
+        document.getElementById('stat_total_amount').textContent = totalAmount.toLocaleString();
+        document.getElementById('stat_pending').textContent = pendingCount;
+    }
+
+    // توريد/توثيق السند = فتح القيود تلقائي
+    window.approveBond = async (bondId, type) => {
+        const bondRef = doc(db, 'bonds', bondId);
+        const bondSnap = await getDoc(bondRef);
+        const bondData = bondSnap.data();
+
+        const newStatus = type === 'قبض'? 'مورد' : 'موثق';
+        await updateDoc(bondRef, {
+            status: newStatus,
+            approvedBy: currentManager.name,
+            approvedAt: serverTimestamp()
+        });
+
+        // فتح القيد للمندوب = زيادة الحد المفتوح له
+        const delegateRef = doc(db, 'delegates', bondData.delegateId);
+        await updateDoc(delegateRef, {
+            usedAmount: increment(bondData.amount),
+            usedCount: increment(1)
+        });
+
+        Swal.fire('تم', `تم ${newStatus} السند وانفتح الحد للمندوب تلقائي`, 'success');
+        loadDashboard();
+    }
+
+    // تحميل المناديب مع القيود
+    window.loadDelegates = async () => {
+        const q = query(collection(db, 'delegates'), where('projectCode', '==', projectCode));
+        const snap = await getDocs(q);
+        const tbody = document.getElementById('delegatesTableBody');
+        tbody.innerHTML = '';
+
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const usedCount = d.usedCount || 0;
+            const usedAmount = d.usedAmount || 0;
+            const remainingCount = (d.limitTotalCount || 0) - usedCount;
+            const remainingAmount = (d.limitTotalAmount || 0) - usedAmount;
+
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-bold">${d.name}</td>
+                    <td class="p-3">${d.phone}</td>
+                    <td class="p-3 text-center">${d.limitDailyCount || 0}</td>
+                    <td class="p-3 text-center">${d.limitTotalCount || 0}</td>
+                    <td class="p-3 text-center">${d.limitSingleAmount || 0}</td>
+                    <td class="p-3 text-center">
+                        <div class="text-xs">
+                            <div>العدد: ${usedCount} / ${d.limitTotalCount}</div>
+                            <div>المبلغ: ${usedAmount.toLocaleString()} / ${d.limitTotalAmount?.toLocaleString()}</div>
+                            <div class="text-green-600">المتبقي: ${remainingCount} سند / ${remainingAmount.toLocaleString()}</div>
+                        </div>
+                    </td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-1 rounded text-sm ${d.status === 'active'? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${d.status === 'active'? 'نشط' : 'متوقف'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="editDelegate('${docSnap.id}')" class="btn-action bg-blue-500 text-white"><i class="fas fa-edit"></i></button>
+                        <button onclick="toggleDelegateStatus('${docSnap.id}', '${d.status}')" class="btn-action bg-yellow-500 text-white"><i class="fas fa-pause"></i></button>
+                        <button onclick="deleteDelegate('${docSnap.id}')" class="btn-action bg-red-500 text-white"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // حفظ مندوب مع كل القيود
+    window.saveDelegate = async () => {
+        const id = document.getElementById('editDelegateId').value;
+
+        // جمع أنواع السندات المسموحة
+        const allowedBondTypes = [];
+        document.querySelectorAll('.bond-type-check:checked').forEach(cb => {
+            allowedBondTypes.push(cb.value);
+        });
+
+        // جمع طرق الدفع المسموحة
+        const allowedPayments = [];
+        document.querySelectorAll('.payment-check:checked').forEach(cb => {
+            allowedPayments.push(cb.value);
+        });
+
+        const data = {
+            name: document.getElementById('modal_delegateName').value,
+            phone: document.getElementById('modal_delegatePhone').value,
+            password: document.getElementById('modal_delegatePassword').value,
+            status: document.getElementById('modal_delegateStatus').value,
+            limitDailyCount: parseInt(document.getElementById('modal_limitDailyCount').value) || 20,
+            limitTotalCount: parseInt(document.getElementById('modal_limitTotalCount').value) || 1000,
+            limitSingleAmount: parseInt(document.getElementById('modal_limitSingleAmount').value) || 5000,
+            limitTotalAmount: parseInt(document.getElementById('modal_limitTotalAmount').value) || 100000,
+            allowedBondTypes: allowedBondTypes,
+            allowedPayments: allowedPayments,
+            usedCount: 0,
+            usedAmount: 0,
+            projectCode: projectCode
+        };
+
+        if(!data.name ||!data.phone ||!data.password) {
+            return Swal.fire('خطأ', 'املأ البيانات الأساسية', 'error');
         }
+
+        if(id) {
+            await updateDoc(doc(db, 'delegates', id), data);
+        } else {
+            await addDoc(collection(db, 'delegates'), data);
+        }
+
+        closeModal('delegateModal');
+        loadDelegates();
+        Swal.fire('تم', 'تم حفظ المندوب مع كل القيود', 'success');
+    }
+
+    // تحميل طرق الدفع والصناديق
+    window.loadPaymentsAndBoxes = async () => {
+        // طرق الدفع
+        const payQ = query(collection(db, 'paymentMethods'), where('projectCode', '==', projectCode));
+        const paySnap = await getDocs(payQ);
+        const payList = document.getElementById('paymentsList');
+        const allowedPayDiv = document.getElementById('allowedPaymentMethods');
+
+        payList.innerHTML = '';
+        allowedPayDiv.innerHTML = '';
+
+        paySnap.forEach(docSnap => {
+            const data = docSnap.data();
+            payList.innerHTML += `
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
+                    <span>${data.name}</span>
+                    <button onclick="deletePayment('${docSnap.id}')" class="text-red-600"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            allowedPayDiv.innerHTML += `
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" value="${data.name}" class="payment-check"> ${data.name}
+                </label>
+            `;
+        });
+
+        // الصناديق
+        const boxQ = query(collection(db, 'boxes'), where('projectCode', '==', projectCode));
+        const boxSnap = await getDocs(boxQ);
+        const boxList = document.getElementById('boxesList');
+        boxList.innerHTML = '';
+
+        boxSnap.forEach(docSnap => {
+            const data = docSnap.data();
+            boxList.innerHTML += `
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
+                    <span>${data.name}</span>
+                    <button onclick="deleteBox('${docSnap.id}')" class="text-red-600"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+        });
+    }
+
+    // حفظ طريقة دفع
+    window.savePayment = async () => {
+        const name = document.getElementById('modal_paymentName').value;
+        if(!name) return;
+        await addDoc(collection(db, 'paymentMethods'), {name, projectCode});
+        closeModal('paymentModal');
+        loadPaymentsAndBoxes();
+    }
+
+    // حفظ صندوق
+    window.saveBox = async () => {
+        const name = document.getElementById('modal_boxName').value;
+        if(!name) return;
+        await addDoc(collection(db, 'boxes'), {name, projectCode});
+        closeModal('boxModal');
+        loadPaymentsAndBoxes();
+    }
+
+    // إضافة حقل مخصص لنوع السند
+    window.addCustomField = () => {
+        const container = document.getElementById('customFieldsContainer');
+        const fieldId = Date.now();
+        container.innerHTML += `
+            <div class="flex gap-2 items-center bg-gray-50 p-2 rounded" id="field_${fieldId}">
+                <input type="text" placeholder="اسم الحقل" class="flex-1 p-2 border rounded custom-field-name">
+                <select class="p-2 border rounded custom-field-type">
+                    <option value="text">نص</option>
+                    <option value="number">رقم</option>
+                    <option value="date">تاريخ</option>
+                </select>
+                <label class="flex items-center gap-1">
+                    <input type="checkbox" class="custom-field-required"> إلزامي
+                </label>
+                <button onclick="document.getElementById('field_${fieldId}').remove()" class="text-red-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    // حفظ نوع سند مع الحقول الإضافية المفتوحة
+    window.saveBondType = async () => {
+        const customFields = [];
+        document.querySelectorAll('#customFieldsContainer > div').forEach(div => {
+            const name = div.querySelector('.custom-field-name').value;
+            const type = div.querySelector('.custom-field-type').value;
+            const required = div.querySelector('.custom-field-required').checked;
+            if(name) customFields.push({name, type, required});
+        });
+
+        const data = {
+            name: document.getElementById('modal_bondTypeName').value,
+            prefix: document.getElementById('modal_bondPrefix').value,
+            startNumber: parseInt(document.getElementById('modal_bondStartNumber').value) || 1,
+            color: document.getElementById('modal_bondColor').value,
+            customFields: customFields,
+            projectCode: projectCode
+        };
+
+        await addDoc(collection(db, 'bondTypes'), data);
+        closeModal('bondTypeModal');
+        loadBondTypes();
+        Swal.fire('تم', 'تم حفظ نوع السند مع الحقول الإضافية', 'success');
+    }
+
+    // دوال مساعدة
+    window.showAddDelegateModal = () => {
+        document.getElementById('editDelegateId').value = '';
+        document.getElementById('delegateModalTitle').textContent = 'إضافة مندوب جديد';
+        document.getElementById('delegateModal').classList.remove('hidden');
+        document.getElementById('delegateModal').classList.add('flex');
+        loadPaymentsAndBoxes();
+    }
+
+    window.showAddPaymentModal = () => {
+        document.getElementById('paymentModal').classList.remove('hidden');
+        document.getElementById('paymentModal').classList.add('flex');
+    }
+
+    window.showAddBoxModal = () => {
+        document.getElementById('boxModal').classList.remove('hidden');
+        document.getElementById('boxModal').classList.add('flex');
+    }
+
+    window.showAddBondTypeModal = () => {
+        document.getElementById('customFieldsContainer').innerHTML = '';
+        document.getElementById('bondTypeModal').classList.remove('hidden');
+        document.getElementById('bondTypeModal').classList.add('flex');
+    }
+
+    window.closeModal = (id) => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById(id).classList.remove('flex');
     }
 
     window.logout = () => {
-        localStorage.removeItem('managerData');
+        localStorage.clear();
         location.href = './index.html';
     }
 
-    loadDelegates();
+    window.toggleLanguage = () => Swal.fire('قريباً', 'اللغة بنضيفها بعد ما نخلص كل الملفات', 'info');
+
 </script>
 </body>
 </html>
