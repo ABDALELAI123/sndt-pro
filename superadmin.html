@@ -4,92 +4,326 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم السوبر أدمن</title>
+    <!-- المكتبات الأساسية -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style> body { font-family: 'Cairo', sans-serif; } </style>
-    <script type="module">
-        import { t, setLanguage, applyLanguage } from './lang.js';
-        window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage;
-        applyLanguage();
-    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .tab-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-action { padding: 6px 12px; border-radius: 8px; font-size: 14px; margin: 2px; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-purple-600 to-blue-500 min-h-screen p-4">
-
-<div class="max-w-6xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
-        <div class="flex gap-3">
-            <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
-            <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')" class="text-2xl">🌍</button>
-        </div>
-        <div class="text-right">
-            <h1 class="text-2xl font-extrabold">لوحة تحكم السوبر أدمن</h1>
-            <p class="text-gray-500">إدارة كل المشاريع</p>
-        </div>
-        <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-500 rounded-2xl flex items-center justify-center">
-            <i class="fas fa-crown text-white text-2xl"></i>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-xl p-2 mb-6 flex gap-2">
-        <button onclick="showTab('stats')" id="statsTab" class="flex-1 py-3 rounded-xl font-bold bg-blue-500 text-white">
-            <i class="fas fa-chart-pie"></i> الإحصائيات
-        </button>
-        <button onclick="showTab('projects')" id="projectsTab" class="flex-1 py-3 rounded-xl font-bold text-gray-600">
-            <i class="fas fa-building"></i> المشاريع
-        </button>
-        <button onclick="showTab('managers')" id="managersTab" class="flex-1 py-3 rounded-xl font-bold text-gray-600">
-            <i class="fas fa-user-tie"></i> المدراء
-        </button>
-    </div>
-
-    <div id="statsDiv" class="bg-white rounded-2xl shadow-xl p-8">
-        <h2 class="text-xl font-bold mb-6"><i class="fas fa-chart-pie text-blue-500"></i> الإحصائيات العامة</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-blue-500 text-white p-6 rounded-2xl text-center">
-                <i class="fas fa-building text-3xl mb-2"></i><p>إجمالي المشاريع</p>
-                <p id="totalProjects" class="text-4xl font-extrabold">0</p>
+<body class="bg-gray-100">
+    <!-- الشريط العلوي -->
+    <div class="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img id="appIcon" src="" class="w-10 h-10 rounded-lg bg-white p-1 hidden">
+                <h1 id="appName" class="text-2xl font-bold">السندات الذكية</h1>
+                <span class="bg-white/20 px-3 py-1 rounded-full text-sm">سوبر أدمن</span>
             </div>
-            <div class="bg-green-500 text-white p-6 rounded-2xl text-center">
-                <i class="fas fa-users text-3xl mb-2"></i><p>إجمالي المدراء</p>
-                <p id="totalManagers" class="text-4xl font-extrabold">0</p>
-            </div>
-            <div class="bg-purple-500 text-white p-6 rounded-2xl text-center">
-                <i class="fas fa-user text-3xl mb-2"></i><p>إجمالي المناديب</p>
-                <p id="totalDelegates" class="text-4xl font-extrabold">0</p>
-            </div>
-            <div class="bg-pink-500 text-white p-6 rounded-2xl text-center">
-                <i class="fas fa-file-invoice text-3xl mb-2"></i><p>إجمالي السندات</p>
-                <p id="totalBonds" class="text-4xl font-extrabold">0</p>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleLanguage()" class="bg-white/20 px-4 py-2 rounded-lg hover:bg-white/30">
+                    <i class="fas fa-language"></i> <span id="langText">English</span>
+                </button>
+                <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="projectsDiv" class="bg-white rounded-2xl shadow-xl p-8 hidden">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="addProject()" class="bg-green-500 text-white px-6 py-3 rounded-xl font-bold">
-                <i class="fas fa-plus"></i> إضافة مشروع
+    <!-- التبويبات -->
+    <div class="bg-white shadow-md">
+        <div class="container mx-auto flex gap-2 p-2 overflow-x-auto">
+            <button onclick="showTab('settings')" id="tab-settings" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-cog"></i> إعداد البرنامج
             </button>
-            <h2 class="text-xl font-bold"><i class="fas fa-building text-blue-500"></i> المشاريع</h2>
-        </div>
-        <div id="projectsList" class="space-y-3"></div>
-    </div>
-
-    <div id="managersDiv" class="bg-white rounded-2xl shadow-xl p-8 hidden">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="addManager()" class="bg-green-500 text-white px-6 py-3 rounded-xl font-bold">
-                <i class="fas fa-plus"></i> إضافة مدير
+            <button onclick="showTab('projects')" id="tab-projects" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap tab-active">
+                <i class="fas fa-building"></i> المشاريع
             </button>
-            <h2 class="text-xl font-bold"><i class="fas fa-user-tie text-blue-500"></i> المدراء</h2>
+            <button onclick="showTab('managers')" id="tab-managers" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-users"></i> المدراء
+            </button>
+            <button onclick="showTab('stats')" id="tab-stats" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap">
+                <i class="fas fa-chart-line"></i> الإحصائيات
+            </button>
         </div>
-        <div id="managersList" class="space-y-3"></div>
     </div>
-</div>
 
-<script type="module">
+    <div class="container mx-auto p-6">
+        <!-- تبويب إعداد البرنامج -->
+        <div id="content-settings" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
+                    <i class="fas fa-sliders-h text-purple-600"></i> إعدادات البرنامج العامة
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- العمود الأول -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">اسم البرنامج</label>
+                            <input id="setting_appName" type="text" placeholder="السندات الذكية" 
+                                class="w-full p-3 border-2 rounded-lg focus:border-purple-500">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">أيقونة البرنامج</label>
+                            <input id="setting_icon" type="file" accept="image/*" 
+                                class="w-full p-3 border-2 rounded-lg">
+                            <img id="preview_icon" src="" class="w-20 h-20 mt-2 rounded-lg border hidden">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">اللون الرئيسي</label>
+                            <input id="setting_color" type="color" value="#667eea" 
+                                class="w-full h-12 border-2 rounded-lg cursor-pointer">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-2">اللغة الافتراضية</label>
+                            <select id="setting_lang" class="w-full p-3 border-2 rounded-lg">
+                                <option value="ar">العربية</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- العمود الثاني -->
+                    <div class="space-y-4">
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-purple-800 mb-3">
+                                <i class="fas fa-eye"></i> إظهار/إخفاء الحقول عند المدراء
+                            </h3>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="show_taxNumber" class="w-5 h-5" checked>
+                                    <span>الرقم الضريبي</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="show_address" class="w-5 h-5" checked>
+                                    <span>عنوان الشركة</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="show_stamp" class="w-5 h-5" checked>
+                                    <span>الختم</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="show_signature" class="w-5 h-5" checked>
+                                    <span>التوقيع</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="show_qr" class="w-5 h-5" checked>
+                                    <span>QR Code</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-green-800 mb-2">
+                                <i class="fas fa-info-circle"></i> ملاحظة
+                            </h3>
+                            <p class="text-sm text-gray-600">الإعدادات هذي تنطبق على كل المدراء والمناديب. أي تغيير هنا يسمع في النظام كامل فوراً.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex gap-3">
+                    <button onclick="saveAppSettings()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg">
+                        <i class="fas fa-save"></i> حفظ الإعدادات
+                    </button>
+                    <button onclick="loadAppSettings()" class="bg-gray-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-600">
+                        <i class="fas fa-sync"></i> إعادة تحميل
+                    </button>
+                </div>
+            </div>
+        </div>
+                <!-- تبويب المشاريع -->
+        <div id="content-projects" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-building text-purple-600"></i> إدارة المشاريع
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportProjectsExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </button>
+                        <button onclick="showAddProjectModal()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-bold">
+                            <i class="fas fa-plus"></i> مشروع جديد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-purple-100">
+                            <tr>
+                                <th class="p-3 text-right">اسم المشروع</th>
+                                <th class="p-3 text-center">كود المشروع</th>
+                                <th class="p-3 text-center">عدد المدراء</th>
+                                <th class="p-3 text-center">الحالة</th>
+                                <th class="p-3 text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectsTable">
+                            <tr><td colspan="5" class="text-center p-8 text-gray-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب المدراء -->
+        <div id="content-managers" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-users text-purple-600"></i> إدارة المدراء
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportManagersExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </button>
+                        <button onclick="showAddManagerModal()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg font-bold">
+                            <i class="fas fa-user-plus"></i> مدير جديد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-purple-100">
+                            <tr>
+                                <th class="p-3 text-right">اسم المدير</th>
+                                <th class="p-3 text-center">المشروع</th>
+                                <th class="p-3 text-center">الجوال</th>
+                                <th class="p-3 text-center">الحالة</th>
+                                <th class="p-3 text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="managersTable">
+                            <tr><td colspan="5" class="text-center p-8 text-gray-400">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة مشروع -->
+        <div id="projectModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                <h3 class="text-xl font-bold mb-4">إضافة مشروع جديد</h3>
+                <div class="space-y-3">
+                    <input id="modal_projectName" type="text" placeholder="اسم المشروع" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_projectCode" type="text" placeholder="كود المشروع" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_managerCount" type="number" placeholder="عدد المدراء المسموح" value="1" min="1" class="w-full p-3 border-2 rounded-lg">
+                    <div class="bg-yellow-50 p-3 rounded-lg text-sm">
+                        <i class="fas fa-info-circle text-yellow-600"></i>
+                        عدد المدراء: تقدر تحدد كم مدير يقدر يدير هذا المشروع
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button onclick="saveProject()" class="flex-1 bg-purple-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('projectModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة إضافة مدير -->
+        <div id="managerModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                <h3 class="text-xl font-bold mb-4">إضافة مدير جديد</h3>
+                <div class="space-y-3">
+                    <select id="modal_managerProject" class="w-full p-3 border-2 rounded-lg">
+                        <option value="">اختر المشروع</option>
+                    </select>
+                    <div id="managerCountInfo" class="bg-blue-50 p-2 rounded text-sm hidden"></div>
+                    <input id="modal_managerName" type="text" placeholder="اسم المدير" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_managerPhone" type="text" placeholder="رقم الجوال" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_managerPassword" type="text" placeholder="كلمة المرور" class="w-full p-3 border-2 rounded-lg">
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button onclick="saveManager()" class="flex-1 bg-purple-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('managerModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+             <!-- تبويب الإحصائيات -->
+        <div id="content-stats" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-chart-line text-purple-600"></i> الإحصائيات الشاملة
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportFullReportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-file-excel"></i> تقرير شامل Excel
+                        </button>
+                        <button onclick="exportFullReportPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                            <i class="fas fa-file-pdf"></i> تقرير شامل PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- الكروت -->
+                <div class="grid md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+                        <div class="text-3xl font-bold" id="stat_projects">0</div>
+                        <div class="text-sm opacity-90">إجمالي المشاريع</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
+                        <div class="text-3xl font-bold" id="stat_managers">0</div>
+                        <div class="text-sm opacity-90">إجمالي المدراء</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl">
+                        <div class="text-3xl font-bold" id="stat_delegates">0</div>
+                        <div class="text-sm opacity-90">إجمالي المناديب</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl">
+                        <div class="text-3xl font-bold" id="stat_bonds">0</div>
+                        <div class="text-sm opacity-90">إجمالي السندات</div>
+                    </div>
+                </div>
+
+                <!-- الرسم البياني -->
+                <div class="bg-gray-50 p-4 rounded-xl">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة مشروع -->
+    <div id="projectModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4" id="projectModalTitle">إضافة مشروع جديد</h3>
+            <input type="hidden" id="editProjectId">
+            <div class="space-y-3">
+                <input id="modal_projectName" type="text" placeholder="اسم المشروع" class="w-full p-3 border-2 rounded-lg">
+                <input id="modal_projectCode" type="text" placeholder="كود المشروع" class="w-full p-3 border-2 rounded-lg">
+                <input id="modal_managerCount" type="number" placeholder="عدد المدراء المسموح" value="1" min="1" class="w-full p-3 border-2 rounded-lg">
+                <div class="bg-blue-50 p-3 rounded-lg text-sm">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                    حدد كم مدير يقدر يدير هذا المشروع. تقدر تغيره بعدين
+                </div>
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button onclick="saveProject()" class="flex-1 bg-purple-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                <button onclick="closeModal('projectModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+            </div>
+        </div>
+    </div>
+    <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
@@ -103,129 +337,344 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    let allProjects = [], allManagers = [], currentTab = 'projects';
 
-    async function loadStats() {
-        const projects = await getDocs(collection(db, 'projects'));
-        const managers = await getDocs(collection(db, 'managers'));
-        const delegates = await getDocs(collection(db, 'delegates'));
-        const bonds = await getDocs(collection(db, 'bonds'));
-        document.getElementById('totalProjects').textContent = projects.size;
-        document.getElementById('totalManagers').textContent = managers.size;
-        document.getElementById('totalDelegates').textContent = delegates.size;
-        document.getElementById('totalBonds').textContent = bonds.size;
-    }
-
-    async function loadProjects() {
-        const snap = await getDocs(collection(db, 'projects'));
-        const list = document.getElementById('projectsList');
-        list.innerHTML = '';
-        snap.forEach(doc => {
-            const p = doc.data();
-            if(p.name && p.code) {
-                list.innerHTML += `
-                    <div class="border border-gray-200 p-4 rounded-xl flex justify-between items-center">
-                        <button onclick="deleteProject('${doc.id}')" class="bg-red-500 text-white px-4 py-2 rounded-lg"><i class="fas fa-trash"></i></button>
-                        <div class="text-right">
-                            <p class="font-bold text-lg">${p.name}</p>
-                            <p class="text-gray-500 text-sm">كود: ${p.code}</p>
-                        </div>
-                    </div>`;
-            }
-        });
-    }
-
-    async function loadManagers() {
-        const snap = await getDocs(collection(db, 'managers'));
-        const list = document.getElementById('managersList');
-        list.innerHTML = '';
-        snap.forEach(doc => {
-            const m = doc.data();
-            list.innerHTML += `
-                <div class="border border-gray-200 p-4 rounded-xl flex justify-between items-center">
-                    <button onclick="deleteManager('${doc.id}')" class="bg-red-500 text-white px-4 py-2 rounded-lg"><i class="fas fa-trash"></i></button>
-                    <div class="text-right">
-                        <p class="font-bold text-lg">${m.name || 'بدون اسم'}</p>
-                        <p class="text-gray-500 text-sm">كود المشروع: ${m.projectCode} | الجوال: ${m.phone}</p>
-                    </div>
-                </div>`;
-        });
-    }
-
-    window.addProject = async () => {
-        const { value: form } = await Swal.fire({
-            title: 'إضافة مشروع جديد',
-            html: `<input id="swal-name" class="swal2-input" placeholder="اسم المشروع">
-                   <input id="swal-code" class="swal2-input" placeholder="كود المشروع">`,
-            confirmButtonText: 'حفظ', 
-            showCancelButton: true, cancelButtonText: 'إلغاء',
-            preConfirm: () => {
-                const name = document.getElementById('swal-name').value;
-                const code = document.getElementById('swal-code').value;
-                if (!name || !code) Swal.showValidationMessage('املأ كل الحقول');
-                return { name, code }
-            }
-        });
-        if (form) {
-            await addDoc(collection(db, 'projects'), form);
-            Swal.fire('تم', 'تم إضافة المشروع', 'success');
-            loadProjects(); loadStats();
-        }
-    }
-
-    window.addManager = async () => {
-        const { value: form } = await Swal.fire({
-            title: 'إضافة مدير جديد',
-            html: `<input id="swal-name" class="swal2-input" placeholder="اسم المدير">
-                   <input id="swal-code" class="swal2-input" placeholder="كود المشروع">
-                   <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال">
-                   <input id="swal-pass" type="password" class="swal2-input" placeholder="كلمة المرور">`,
-            confirmButtonText: 'حفظ',
-            showCancelButton: true, cancelButtonText: 'إلغاء',
-            preConfirm: () => {
-                const name = document.getElementById('swal-name').value;
-                const projectCode = document.getElementById('swal-code').value;
-                const phone = document.getElementById('swal-phone').value;
-                const password = document.getElementById('swal-pass').value;
-                if (!name || !projectCode || !phone || !password) Swal.showValidationMessage('املأ كل الحقول');
-                return { name, projectCode, phone, password }
-            }
-        });
-        if (form) {
-            await addDoc(collection(db, 'managers'), form);
-            Swal.fire('تم', 'تم إضافة المدير', 'success');
-            loadManagers(); loadStats();
-        }
-    }
-
-    window.deleteProject = async (id) => {
-        const c = await Swal.fire({title: 'متأكد؟', icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم احذف', cancelButtonText: 'إلغاء'});
-        if (c.isConfirmed) {
-            await deleteDoc(doc(db, 'projects', id));
-            Swal.fire('انحذف', 'تم حذف المشروع', 'success');
-            loadProjects(); loadStats();
-        }
-    }
-    window.deleteManager = async (id) => {
-        const c = await Swal.fire({title: 'متأكد؟', icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم احذف', cancelButtonText: 'إلغاء'});
-        if (c.isConfirmed) {
-            await deleteDoc(doc(db, 'managers', id));
-            Swal.fire('انحذف', 'تم حذف المدير', 'success');
-            loadManagers(); loadStats();
-        }
-    }
-
+    // تبديل التبويبات
     window.showTab = (tab) => {
-        ['statsDiv','projectsDiv','managersDiv'].forEach(d => document.getElementById(d).classList.add('hidden'));
-        ['statsTab','projectsTab','managersTab'].forEach(t => document.getElementById(t).classList.remove('bg-blue-500', 'text-white'));
-        document.getElementById(tab+'Div').classList.remove('hidden');
-        document.getElementById(tab+'Tab').classList.add('bg-blue-500', 'text-white');
-        if(tab==='stats') loadStats();
-        if(tab==='projects') loadProjects();
-        if(tab==='managers') loadManagers();
+        currentTab = tab;
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
+        document.getElementById(`content-${tab}`).classList.remove('hidden');
+        document.getElementById(`tab-${tab}`).classList.add('tab-active');
+        if(tab === 'projects') loadProjects();
+        if(tab === 'managers') loadManagers();
+        if(tab === 'stats') loadStats();
+        if(tab === 'settings') loadAppSettings();
     }
 
-    window.logout = () => location.href = './index.html';
-    loadStats();
+    // تحميل الإعدادات
+    window.loadAppSettings = async () => {
+        const docRef = doc(db, 'app_settings', 'config');
+        const snap = await getDoc(docRef);
+        if(snap.exists()) {
+            const data = snap.data();
+            document.getElementById('setting_appName').value = data.appName || '';
+            document.getElementById('setting_color').value = data.color || '#667eea';
+            document.getElementById('setting_lang').value = data.lang || 'ar';
+            document.getElementById('show_taxNumber').checked = data.showTax!== false;
+            document.getElementById('show_address').checked = data.showAddress!== false;
+            document.getElementById('show_stamp').checked = data.showStamp!== false;
+            document.getElementById('show_signature').checked = data.showSignature!== false;
+            document.getElementById('show_qr').checked = data.showQr!== false;
+            if(data.icon) {
+                document.getElementById('preview_icon').src = data.icon;
+                document.getElementById('preview_icon').classList.remove('hidden');
+                document.getElementById('appIcon').src = data.icon;
+                document.getElementById('appIcon').classList.remove('hidden');
+            }
+            document.getElementById('appName').textContent = data.appName || 'السندات الذكية';
+        }
+    }
+
+    // حفظ الإعدادات
+    window.saveAppSettings = async () => {
+        const iconFile = document.getElementById('setting_icon').files[0];
+        let iconBase64 = document.getElementById('preview_icon').src;
+
+        if(iconFile) {
+            iconBase64 = await toBase64(iconFile);
+        }
+
+        const settings = {
+            appName: document.getElementById('setting_appName').value,
+            icon: iconBase64,
+            color: document.getElementById('setting_color').value,
+            lang: document.getElementById('setting_lang').value,
+            showTax: document.getElementById('show_taxNumber').checked,
+            showAddress: document.getElementById('show_address').checked,
+            showStamp: document.getElementById('show_stamp').checked,
+            showSignature: document.getElementById('show_signature').checked,
+            showQr: document.getElementById('show_qr').checked,
+            updatedAt: new Date().toISOString()
+        };
+
+        await setDoc(doc(db, 'app_settings', 'config'), settings);
+        Swal.fire('تم', 'تم حفظ الإعدادات بنجاح', 'success');
+        loadAppSettings();
+    }
+
+    // تحويل صورة لـ Base64
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    document.getElementById('setting_icon').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            const base64 = await toBase64(file);
+            document.getElementById('preview_icon').src = base64;
+            document.getElementById('preview_icon').classList.remove('hidden');
+        }
+    });
+
+    // تحميل المشاريع
+    window.loadProjects = async () => {
+        const snap = await getDocs(collection(db, 'projects'));
+        allProjects = snap.docs.map(d => ({id: d.id,...d.data()}));
+        const managersSnap = await getDocs(collection(db, 'managers'));
+        const managers = managersSnap.docs.map(d => d.data());
+
+        const tbody = document.getElementById('projectsTableBody');
+        tbody.innerHTML = allProjects.map(p => {
+            const currentManagers = managers.filter(m => m.projectCode === p.projectCode).length;
+            const statusBadge = p.active!== false?
+                '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">نشط</span>' :
+                '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">موقوف</span>';
+
+            return `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 font-bold">${p.projectName}</td>
+                <td class="p-3 text-center">${p.projectCode}</td>
+                <td class="p-3 text-center">${p.managerCount || 1}</td>
+                <td class="p-3 text-center font-bold ${currentManagers >= p.managerCount? 'text-red-600' : 'text-green-600'}">${currentManagers} / ${p.managerCount || 1}</td>
+                <td class="p-3 text-center">${statusBadge}</td>
+                <td class="p-3 text-center">
+                    <button onclick="editProject('${p.id}')" class="btn-action bg-blue-500 text-white hover:bg-blue-600"><i class="fas fa-edit"></i></button>
+                    <button onclick="toggleProject('${p.id}', ${p.active!== false})" class="btn-action bg-yellow-500 text-white hover:bg-yellow-600">
+                        <i class="fas fa-${p.active!== false? 'pause' : 'play'}"></i>
+                    </button>
+                    <button onclick="deleteProject('${p.id}')" class="btn-action bg-red-500 text-white hover:bg-red-600"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
+        }).join('') || '<tr><td colspan="6" class="text-center p-8 text-gray-400">لا توجد مشاريع</td></tr>';
+    }
+
+    // تحميل المدراء
+    window.loadManagers = async () => {
+        const snap = await getDocs(collection(db, 'managers'));
+        allManagers = snap.docs.map(d => ({id: d.id,...d.data()}));
+
+        const tbody = document.getElementById('managersTableBody');
+        tbody.innerHTML = allManagers.map(m => {
+            const statusBadge = m.active!== false?
+                '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">نشط</span>' :
+                '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">موقوف</span>';
+
+            return `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 font-bold">${m.managerName}</td>
+                <td class="p-3 text-center">${m.projectCode}</td>
+                <td class="p-3 text-center">${m.phone}
+                    <a href="https://wa.me/${m.phone}" target="_blank" class="text-green-600 hover:text-green-700">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </td>
+                <td class="p-3 text-center">${m.password}</td>
+                <td class="p-3 text-center">${statusBadge}</td>
+                <td class="p-3 text-center">
+                    <button onclick="editManager('${m.id}')" class="btn-action bg-blue-500 text-white hover:bg-blue-600"><i class="fas fa-edit"></i></button>
+                    <button onclick="toggleManager('${m.id}', ${m.active!== false})" class="btn-action bg-yellow-500 text-white hover:bg-yellow-600">
+                        <i class="fas fa-${m.active!== false? 'pause' : 'play'}"></i>
+                    </button>
+                    <button onclick="deleteManager('${m.id}')" class="btn-action bg-red-500 text-white hover:bg-red-600"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
+        }).join('') || '<tr><td colspan="6" class="text-center p-8 text-gray-400">لا يوجد مدراء</td></tr>';
+    }
+
+    // الإحصائيات
+    window.loadStats = async () => {
+        const [projects, managers, delegates, bonds] = await Promise.all([
+            getDocs(collection(db, 'projects')),
+            getDocs(collection(db, 'managers')),
+            getDocs(collection(db, 'delegates')),
+            getDocs(collection(db, 'bonds'))
+        ]);
+
+        document.getElementById('stat_projects').textContent = projects.size;
+        document.getElementById('stat_managers').textContent = managers.size;
+        document.getElementById('stat_delegates').textContent = delegates.size;
+        document.getElementById('stat_bonds').textContent = bonds.size;
+    }
+
+    // النوافذ
+    window.showAddProjectModal = () => {
+        document.getElementById('editProjectId').value = '';
+        document.getElementById('projectModalTitle').textContent = 'إضافة مشروع جديد';
+        document.getElementById('modal_projectName').value = '';
+        document.getElementById('modal_projectCode').value = '';
+        document.getElementById('modal_managerCount').value = '1';
+        document.getElementById('projectModal').classList.remove('hidden');
+        document.getElementById('projectModal').classList.add('flex');
+    }
+
+    window.showAddManagerModal = async () => {
+        await loadProjects();
+        const select = document.getElementById('modal_managerProject');
+        select.innerHTML = '<option value="">اختر المشروع</option>' +
+            allProjects.map(p => `<option value="${p.projectCode}">${p.projectName} - ${p.projectCode}</option>`).join('');
+        document.getElementById('managerModal').classList.remove('hidden');
+        document.getElementById('managerModal').classList.add('flex');
+    }
+
+    window.closeModal = (id) => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById(id).classList.remove('flex');
+    }
+
+    // حفظ مشروع
+    window.saveProject = async () => {
+        const id = document.getElementById('editProjectId').value;
+        const data = {
+            projectName: document.getElementById('modal_projectName').value,
+            projectCode: document.getElementById('modal_projectCode').value,
+            managerCount: parseInt(document.getElementById('modal_managerCount').value) || 1,
+            active: true,
+            createdAt: new Date().toISOString()
+        };
+
+        if(!data.projectName ||!data.projectCode) {
+            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
+        }
+
+        if(id) {
+            await updateDoc(doc(db, 'projects', id), data);
+        } else {
+            await addDoc(collection(db, 'projects'), data);
+        }
+
+        closeModal('projectModal');
+        loadProjects();
+        Swal.fire('تم', 'تم الحفظ بنجاح', 'success');
+    }
+
+    // حفظ مدير
+    window.saveManager = async () => {
+        const projectCode = document.getElementById('modal_managerProject').value;
+        const project = allProjects.find(p => p.projectCode === projectCode);
+        const currentManagers = allManagers.filter(m => m.projectCode === projectCode).length;
+
+        if(currentManagers >= (project?.managerCount || 1)) {
+            return Swal.fire('خطأ', `وصلت للحد الأقصى للمدراء في هذا المشروع: ${project?.managerCount}`, 'error');
+        }
+
+        const data = {
+            projectCode: projectCode,
+            managerName: document.getElementById('modal_managerName').value,
+            phone: document.getElementById('modal_managerPhone').value,
+            password: document.getElementById('modal_managerPassword').value,
+            active: true,
+            createdAt: new Date().toISOString()
+        };
+
+        if(!data.projectCode ||!data.managerName ||!data.phone ||!data.password) {
+            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
+        }
+
+        await addDoc(collection(db, 'managers'), data);
+        closeModal('managerModal');
+        loadManagers();
+        Swal.fire('تم', 'تم إضافة المدير بنجاح', 'success');
+    }
+
+    // حذف وتعديل
+    window.deleteProject = async (id) => {
+        const result = await Swal.fire({
+            title: 'متأكد؟',
+            text: 'سيتم حذف المشروع وكل المدراء والمناديب التابعين له',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'نعم، احذف',
+            cancelButtonText: 'إلغاء'
+        });
+        if(result.isConfirmed) {
+            await deleteDoc(doc(db, 'projects', id));
+            loadProjects();
+            Swal.fire('تم الحذف', '', 'success');
+        }
+    }
+
+    window.toggleProject = async (id, current) => {
+        await updateDoc(doc(db, 'projects', id), {active:!current});
+        loadProjects();
+    }
+
+    window.deleteManager = async (id) => {
+        const result = await Swal.fire({title: 'متأكد؟', icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم', cancelButtonText: 'إلغاء'});
+        if(result.isConfirmed) {
+            await deleteDoc(doc(db, 'managers', id));
+            loadManagers();
+            Swal.fire('تم الحذف', '', 'success');
+        }
+    }
+
+    window.toggleManager = async (id, current) => {
+        await updateDoc(doc(db, 'managers', id), {active:!current});
+        loadManagers();
+    }
+
+    // تصدير Excel
+    window.exportProjectsExcel = () => {
+        const ws = XLSX.utils.json_to_sheet(allProjects);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'المشاريع');
+        XLSX.writeFile(wb, 'المشاريع.xlsx');
+    }
+
+    window.exportManagersExcel = () => {
+        const ws = XLSX.utils.json_to_sheet(allManagers);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'المدراء');
+        XLSX.writeFile(wb, 'المدراء.xlsx');
+    }
+
+    window.exportFullReportExcel = async () => {
+        const [projects, managers, delegates, bonds] = await Promise.all([
+            getDocs(collection(db, 'projects')),
+            getDocs(collection(db, 'managers')),
+            getDocs(collection(db, 'delegates')),
+            getDocs(collection(db, 'bonds'))
+        ]);
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(projects.docs.map(d => d.data())), 'المشاريع');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(managers.docs.map(d => d.data())), 'المدراء');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(delegates.docs.map(d => d.data())), 'المناديب');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(bonds.docs.map(d => d.data())), 'السندات');
+        XLSX.writeFile(wb, 'تقرير_شامل.xlsx');
+    }
+
+    // خروج
+    window.logout = () => {
+        localStorage.clear();
+        location.href = './index.html';
+    }
+
+    // تبديل اللغة
+    window.toggleLanguage = () => {
+        const current = document.documentElement.lang;
+        if(current === 'ar') {
+            document.documentElement.lang = 'en';
+            document.documentElement.dir = 'ltr';
+            document.getElementById('langText').textContent = 'عربي';
+        } else {
+            document.documentElement.lang = 'ar';
+            document.documentElement.dir = 'rtl';
+            document.getElementById('langText').textContent = 'English';
+        }
+    }
+
+    // تحقق دخول سوبر أدمن
+    if(localStorage.getItem('userRole')!== 'superadmin') {
+        location.href = './index.html';
+    }
+
+    // تحميل أولي
+    loadAppSettings();
+    loadProjects();
 </script>
 </body>
 </html>
