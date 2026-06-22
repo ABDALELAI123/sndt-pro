@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية - المندوب</title>
+    <title data-i18n="appName">السندات الذكية - المندوب</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -13,15 +13,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-       .hidden { display: none!important; }
-       .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-       .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
+      .hidden { display: none!important; }
+      .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
+      .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
         @media print {.no-print { display: none!important; }.print-area { display: block!important; } body { background: white; } }
-       .print-area { display: none; }
-       .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
-       .excel-table input { width: 100%; border: none; background: transparent; padding: 4px; }
-       .excel-table input:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
+      .print-area { display: none; }
+      .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
+      .excel-table input { width: 100%; border: none; background: transparent; padding: 4px; }
+      .excel-table input:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
     </style>
+
+    <script type="module">
+        import { t, setLanguage, applyLanguage } from './lang.js';
+        window.t = t;
+        window.setLanguage = setLanguage;
+        applyLanguage();
+    </script>
 </head>
 <body class="bg-gray-50">
     <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg no-print">
@@ -29,91 +36,92 @@
             <div class="flex items-center gap-4">
                 <img id="headerLogo" class="project-logo hidden" src="" alt="Logo">
                 <div>
-                    <h1 class="text-2xl font-extrabold">السندات الذكية</h1>
-                    <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span class="bg-white/20 px-2 py-1 rounded">مندوب</span></p>
+                    <h1 class="text-2xl font-extrabold" data-i18n="appName">السندات الذكية</h1>
+                    <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span class="bg-white/20 px-2 py-1 rounded" data-i18n="delegate">مندوب</span></p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm">تغيير كلمة السر</button>
-                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm">خروج</button>
+                <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')" class="bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg font-bold transition text-sm">🌍</button>
+                <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm" data-i18n="changePassword">تغيير كلمة السر</button>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm" data-i18n="logout">خروج</button>
             </div>
         </div>
     </div>
 
     <div class="bg-white shadow-md border-b no-print">
         <div class="flex overflow-x-auto">
-            <button data-tab="dashboard" class="tab-btn px-8 py-4 active">الرئيسية</button>
-            <button data-tab="createBond" class="tab-btn px-8 py-4">إنشاء سند</button>
-            <button data-tab="bondsList" class="tab-btn px-8 py-4">سنداتي</button>
-            <button data-tab="printPreview" class="tab-btn px-8 py-4">معاينة الطباعة</button>
-            <button data-tab="smartSheet" class="tab-btn px-8 py-4">الصفحة الذكية</button>
+            <button data-tab="dashboard" class="tab-btn px-8 py-4 active" data-i18n="dashboard">الرئيسية</button>
+            <button data-tab="createBond" class="tab-btn px-8 py-4" data-i18n="createBond">إنشاء سند</button>
+            <button data-tab="bondsList" class="tab-btn px-8 py-4" data-i18n="myBonds">سنداتي</button>
+            <button data-tab="printPreview" class="tab-btn px-8 py-4" data-i18n="printPreview">معاينة الطباعة</button>
+            <button data-tab="smartSheet" class="tab-btn px-8 py-4" data-i18n="smartSheet">الصفحة الذكية</button>
         </div>
     </div>
     <div class="p-6">
         <div id="dashboard" class="tab-content">
-            <h2 class="text-3xl font-extrabold mb-6 text-gray-800">لوحة التحكم</h2>
+            <h2 class="text-3xl font-extrabold mb-6 text-gray-800" data-i18n="dashboard">لوحة التحكم</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
                 <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90">إجمالي قبض سنداتي</p>
+                    <p class="text-sm opacity-90" data-i18n="totalIncome">إجمالي قبض سنداتي</p>
                     <p id="totalIncome" class="text-4xl font-extrabold mt-2">0.00</p>
-                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
+                    <p class="text-xs mt-1 opacity-75" data-i18n="currency">ريال سعودي</p>
                 </div>
                 <div class="bg-gradient-to-br from-red-500 to-rose-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90">إجمالي صرف سنداتي</p>
+                    <p class="text-sm opacity-90" data-i18n="totalExpense">إجمالي صرف سنداتي</p>
                     <p id="totalExpense" class="text-4xl font-extrabold mt-2">0.00</p>
-                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
+                    <p class="text-xs mt-1 opacity-75" data-i18n="currency">ريال سعودي</p>
                 </div>
                 <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90">عدد سنداتي</p>
+                    <p class="text-sm opacity-90" data-i18n="bondsCount">عدد سنداتي</p>
                     <p id="totalBonds" class="text-4xl font-extrabold mt-2">0</p>
-                    <p class="text-xs mt-1 opacity-75">سند</p>
+                    <p class="text-xs mt-1 opacity-75" data-i18n="bond">سند</p>
                 </div>
             </div>
             <div id="permissionsWarning" class="hidden bg-yellow-100 border-r-4 border-yellow-500 text-yellow-700 p-4 rounded-lg">
-                <p class="font-bold">تنبيه: لا تملك أي صلاحيات لإنشاء سندات. راجع مدير المشروع.</p>
+                <p class="font-bold" data-i18n="noPermission">تنبيه: لا تملك أي صلاحيات لإنشاء سندات. راجع مدير المشروع.</p>
             </div>
         </div>
 
         <div id="createBond" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-3xl">
-                <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إنشاء سند جديد</h2>
+                <h2 class="text-3xl font-extrabold mb-6 text-gray-800" data-i18n="createBond">إنشاء سند جديد</h2>
                 <div class="space-y-5">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label class="block mb-2 font-bold text-gray-700">نوع السند</label>
+                            <label class="block mb-2 font-bold text-gray-700" data-i18n="bondType">نوع السند</label>
                             <select id="bondTypeSelect" class="w-full p-3 border-2 rounded-lg">
-                                <option value="">اختر نوع السند</option>
+                                <option value="" data-i18n="selectBondType">اختر نوع السند</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block mb-2 font-bold text-gray-700">المبلغ</label>
+                            <label class="block mb-2 font-bold text-gray-700" data-i18n="amount">المبلغ</label>
                             <input id="bondAmount" type="number" step="0.01" class="w-full p-3 border-2 rounded-lg" placeholder="0.00">
                         </div>
                         <div>
-                            <label class="block mb-2 font-bold text-gray-700">التاريخ</label>
+                            <label class="block mb-2 font-bold text-gray-700" data-i18n="date">التاريخ</label>
                             <input id="bondDate" type="date" class="w-full p-3 border-2 rounded-lg">
                         </div>
                         <div>
-                            <label class="block mb-2 font-bold text-gray-700">اسم العميل</label>
-                            <input id="bondClient" type="text" class="w-full p-3 border-2 rounded-lg" placeholder="اسم العميل أو الجهة">
+                            <label class="block mb-2 font-bold text-gray-700" data-i18n="clientName">اسم العميل</label>
+                            <input id="bondClient" type="text" class="w-full p-3 border-2 rounded-lg" data-i18n-placeholder="clientName" placeholder="اسم العميل أو الجهة">
                         </div>
                         <div id="clientPhoneField" class="hidden">
-                            <label class="block mb-2 font-bold text-gray-700">جوال العميل <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 font-bold text-gray-700"><span data-i18n="clientPhone">جوال العميل</span> <span class="text-red-500">*</span></label>
                             <input id="bondClientPhone" type="tel" class="w-full p-3 border-2 rounded-lg" placeholder="05xxxxxxxx" dir="ltr">
-                            <p class="text-xs text-gray-500 mt-1">مطلوب لسندات القبض فقط</p>
+                            <p class="text-xs text-gray-500 mt-1" data-i18n="requiredForReceipt">مطلوب لسندات القبض فقط</p>
                         </div>
                         <div>
-                            <label class="block mb-2 font-bold text-gray-700">طريقة الدفع</label>
+                            <label class="block mb-2 font-bold text-gray-700" data-i18n="paymentMethod">طريقة الدفع</label>
                             <select id="bondPaymentMethod" class="w-full p-3 border-2 rounded-lg">
-                                <option value="">اختر طريقة الدفع</option>
+                                <option value="" data-i18n="selectPaymentMethod">اختر طريقة الدفع</option>
                             </select>
                         </div>
                     </div>
                     <div>
-                        <label class="block mb-2 font-bold text-gray-700">البيان</label>
-                        <textarea id="bondDescription" class="w-full p-3 border-2 rounded-lg" rows="3" placeholder="تفاصيل السند..."></textarea>
+                        <label class="block mb-2 font-bold text-gray-700" data-i18n="description">البيان</label>
+                        <textarea id="bondDescription" class="w-full p-3 border-2 rounded-lg" rows="3" data-i18n-placeholder="description" placeholder="تفاصيل السند..."></textarea>
                     </div>
-                    <button id="saveBondBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">حفظ السند</button>
+                    <button id="saveBondBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition" data-i18n="saveBond">حفظ السند</button>
                 </div>
             </div>
         </div>
@@ -121,17 +129,17 @@
         <div id="bondsList" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800">سنداتي</h2>
+                    <h2 class="text-3xl font-extrabold text-gray-800" data-i18n="myBonds">سنداتي</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full" id="bondsTable">
                         <thead class="bg-gray-50"><tr>
-                            <th class="p-4 text-right font-bold">رقم السند</th>
-                            <th class="p-4 text-right font-bold">النوع</th>
-                            <th class="p-4 text-right font-bold">العميل</th>
-                            <th class="p-4 text-right font-bold">المبلغ</th>
-                            <th class="p-4 text-right font-bold">التاريخ</th>
-                            <th class="p-4 text-right font-bold no-print">تحكم</th>
+                            <th class="p-4 text-right font-bold" data-i18n="bondNumber">رقم السند</th>
+                            <th class="p-4 text-right font-bold" data-i18n="type">النوع</th>
+                            <th class="p-4 text-right font-bold" data-i18n="client">العميل</th>
+                            <th class="p-4 text-right font-bold" data-i18n="amount">المبلغ</th>
+                            <th class="p-4 text-right font-bold" data-i18n="date">التاريخ</th>
+                            <th class="p-4 text-right font-bold no-print" data-i18n="actions">تحكم</th>
                         </tr></thead>
                         <tbody id="bondsTableBody"></tbody>
                     </table>
@@ -141,25 +149,25 @@
 
         <div id="printPreview" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
-                <h2 class="text-3xl font-extrabold text-gray-800 mb-6">معاينة الطباعة</h2>
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-6" data-i18n="printPreview">معاينة الطباعة</h2>
                 <div id="noBondSelected" class="text-center py-12 text-gray-500">
                     <i class="fas fa-file-invoice text-6xl mb-4"></i>
-                    <p class="text-xl">اختر سند من تبويب "سنداتي" واضغط "معاينة" عشان تشوفه هنا</p>
+                    <p class="text-xl" data-i18n="selectBondToPreview">اختر سند من تبويب "سنداتي" واضغط "معاينة" عشان تشوفه هنا</p>
                 </div>
                 <div id="printPreviewArea" class="hidden">
                     <div id="bondPreviewContent" class="border-2 border-gray-300 p-8 rounded-xl bg-white max-w-2xl mx-auto shadow-xl"></div>
                     <div class="flex gap-3 justify-center mt-6 no-print flex-wrap">
                         <button id="printBondBtn" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                            <i class="fas fa-print ml-2"></i>طباعة
+                            <i class="fas fa-print ml-2"></i><span data-i18n="print">طباعة</span>
                         </button>
                         <button id="whatsappBondBtn" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition">
-                            <i class="fab fa-whatsapp ml-2"></i>إرسال واتساب
+                            <i class="fab fa-whatsapp ml-2"></i><span data-i18n="sendWhatsapp">إرسال واتساب</span>
                         </button>
                         <button id="whatsappClientBtn" class="bg-green-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-600 transition hidden">
-                            <i class="fab fa-whatsapp ml-2"></i>إرسال للعميل
+                            <i class="fab fa-whatsapp ml-2"></i><span data-i18n="sendToClient">إرسال للعميل</span>
                         </button>
                         <button id="downloadPdfBtn" class="bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition">
-                            <i class="fas fa-file-pdf ml-2"></i>تحميل PDF
+                            <i class="fas fa-file-pdf ml-2"></i><span data-i18n="downloadPdf">تحميل PDF</span>
                         </button>
                     </div>
                 </div>
@@ -169,26 +177,27 @@
         <div id="smartSheet" class="tab-content hidden">
             <div class="bg-white p-8 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800">الصفحة الذكية</h2>
+                    <h2 class="text-3xl font-extrabold text-gray-800" data-i18n="smartSheet">الصفحة الذكية</h2>
                     <div class="flex gap-2">
-                        <input id="searchSheet" type="text" placeholder="بحث..." class="p-2 border-2 rounded-lg">
-                        <button id="exportSheetBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">تصدير Excel</button>
+                        <input id="searchSheet" type="text" data-i18n-placeholder="search" placeholder="بحث..." class="p-2 border-2 rounded-lg">
+                        <button id="exportSheetBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold" data-i18n="exportExcel">تصدير Excel</button>
                     </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full excel-table" id="smartSheetTable">
                         <thead class="bg-gray-100"><tr>
-                            <th class="p-3 text-right border">رقم السند</th>
-                            <th class="p-3 text-right border">النوع</th>
-                            <th class="p-3 text-right border">العميل</th>
-                            <th class="p-3 text-right border">المبلغ</th>
-                            <th class="p-3 text-right border">التاريخ</th>
-                            <th class="p-3 text-right border">البيان</th>
-                            <th class="p-3 text-right border">طريقة الدفع</th>
+                            <th class="p-3 text-right border" data-i18n="bondNumber">رقم السند</th>
+                            <th class="p-3 text-right border" data-i18n="type">النوع</th>
+                            <th class="p-3 text-right border" data-i18n="client">العميل</th>
+                            <th class="p-3 text-right border" data-i18n="amount">المبلغ</th>
+                            <th class="p-3 text-right border" data-i18n="date">التاريخ</th>
+                            <th class="p-3 text-right border" data-i18n="description">البيان</th>
+                            <th class="p-3 text-right border" data-i18n="paymentMethod">طريقة الدفع</th>
                         </tr></thead>
                         <tbody id="smartSheetBody"></tbody>
                         <tfoot class="bg-blue-50 font-bold">
                             <tr>
-                                <td colspan="3" class="p-3 border text-left">الإجمالي:</td>
+                                <td colspan="3" class="p-3 border text-left" data-i18n="total">الإجمالي:</td>
                                 <td id="sheetTotal" class="p-3 border">0.00</td>
                                 <td colspan="3" class="p-3 border"></td>
                             </tr>
@@ -207,20 +216,18 @@
     const role = localStorage.getItem('role');
     const phone = localStorage.getItem('phone');
     const currentProject = localStorage.getItem('projectCode');
-    
+
     if (role!== 'delegate' ||!currentProject || currentProject === 'SUPERADMIN') {
         window.location.href = 'index.html';
     }
 
     let currentUser = null, projectData = null, userPermissions = [], selectedBondForPrint = null, allPaymentMethods = [], currentBondType = null;
 
-    // تحميل بيانات المستخدم
     const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
     currentUser = userSnap.val();
     userPermissions = currentUser.permissions || [];
     document.getElementById('currentUser').textContent = currentUser.name;
 
-    // تحميل بيانات المشروع
     const projectSnap = await get(ref(db, `projects/${currentProject}/info`));
     projectData = projectSnap.val();
     document.getElementById('currentProjectName').textContent = projectData.companyName;
@@ -229,7 +236,6 @@
         document.getElementById('headerLogo').classList.remove('hidden');
     }
 
-    // ربط الأحداث
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
     document.getElementById('saveBondBtn').addEventListener('click', saveBond);
@@ -239,11 +245,8 @@
     document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
     document.getElementById('searchSheet')?.addEventListener('input', filterSheet);
     document.getElementById('exportSheetBtn')?.addEventListener('click', exportSheet);
-    
-    // إظهار/إخفاء حقل الجوال حسب نوع السند
     document.getElementById('bondTypeSelect').addEventListener('change', handleBondTypeChange);
 
-    // تبويبات
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => showTab(e.target.dataset.tab));
     });
@@ -316,7 +319,7 @@
     function loadBondTypes() {
         onValue(ref(db, `projects/${currentProject}/bondTypes`), (snap) => {
             const select = document.getElementById('bondTypeSelect');
-            select.innerHTML = '<option value="">اختر نوع السند</option>';
+            select.innerHTML = `<option value="">${t('selectBondType')}</option>`;
             if (snap.exists()) {
                 Object.entries(snap.val()).forEach(([id, type]) => {
                     if (userPermissions.includes(type.type) || userPermissions.includes('all')) {
@@ -331,7 +334,7 @@
         onValue(ref(db, `projects/${currentProject}/paymentMethods`), (snap) => {
             const select = document.getElementById('bondPaymentMethod');
             if (!select) return;
-            select.innerHTML = '<option value="">اختر طريقة الدفع</option>';
+            select.innerHTML = `<option value="">${t('selectPaymentMethod')}</option>`;
             allPaymentMethods = [];
             if (snap.exists()) {
                 Object.values(snap.val()).forEach(method => {
@@ -359,8 +362,8 @@
                                 <td class="p-4 font-bold ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toFixed(2)}</td>
                                 <td class="p-4">${bond.date}</td>
                                 <td class="p-4 no-print">
-                                    <button data-action="preview-bond" data-id="${id}" class="text-purple-600 hover:underline ml-3">معاينة</button>
-                                    <button data-action="print-bond" data-id="${id}" class="text-blue-600 hover:underline">طباعة</button>
+                                    <button data-action="preview-bond" data-id="${id}" class="text-purple-600 hover:underline ml-3">${t('preview')}</button>
+                                    <button data-action="print-bond" data-id="${id}" class="text-blue-600 hover:underline">${t('print')}</button>
                                 </td>
                             </tr>`;
                     }
@@ -374,7 +377,8 @@
             });
         });
     }
-           function loadSmartSheet() {
+
+    function loadSmartSheet() {
         onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
             const tbody = document.getElementById('smartSheetBody');
             if (!tbody) return;
@@ -410,10 +414,9 @@
     }
 
     function exportSheet() {
-        Swal.fire('قريباً', 'ميزة التصدير للإكسل قيد التطوير', 'info');
+        Swal.fire(t('comingSoon'), t('exportSoon'), 'info');
     }
-
-    async function saveBond() {
+            async function saveBond() {
         const typeId = document.getElementById('bondTypeSelect').value;
         const amount = parseFloat(document.getElementById('bondAmount').value);
         const date = document.getElementById('bondDate').value;
@@ -422,32 +425,27 @@
         const description = document.getElementById('bondDescription').value;
         const paymentMethod = document.getElementById('bondPaymentMethod').value;
 
-        if (!typeId ||!amount ||!date ||!client) return Swal.fire('خطأ', 'عبي كل الحقول المطلوبة', 'error');
+        if (!typeId ||!amount ||!date ||!client) return Swal.fire(t('error'), t('fillAllFields'), 'error');
 
         const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
         const typeData = typeSnap.val();
 
-        // تحقق من جوال العميل لسندات القبض
         if (typeData.type === 'قبض' && !clientPhone) {
-            return Swal.fire('خطأ', 'جوال العميل مطلوب لسندات القبض', 'error');
+            return Swal.fire(t('error'), t('phoneRequiredForReceipt'), 'error');
         }
 
-        // تحقق من صيغة الجوال
         if (clientPhone && !/^05\d{8}$/.test(clientPhone)) {
-            return Swal.fire('خطأ', 'رقم الجوال لازم يبدأ بـ 05 ويكون 10 أرقام', 'error');
+            return Swal.fire(t('error'), t('invalidPhone'), 'error');
         }
 
-        // 1. تحقق من الصلاحية
         if (!userPermissions.includes(typeData.type) &&!userPermissions.includes('all')) {
-            return Swal.fire('مرفوض', 'ما عندك صلاحية لإنشاء سند من هذا النوع', 'error');
+            return Swal.fire(t('rejected'), t('noPermission'), 'error');
         }
 
-        // 2. تحقق من حد مبلغ السند الواحد
         if (currentUser.amountLimit && amount > parseFloat(currentUser.amountLimit)) {
-            return Swal.fire('مرفوض', `المبلغ تجاوز الحد المسموح للسند الواحد: ${currentUser.amountLimit}`, 'error');
+            return Swal.fire(t('rejected'), `${t('amountExceeded')} ${currentUser.amountLimit}`, 'error');
         }
 
-        // 3. تحقق من العدد اليومي + الكلي + الإجمالي
         const bondsSnap = await get(query(ref(db, `projects/${currentProject}/bonds`), orderByChild('createdBy'), equalTo(currentUser.phone)));
         const today = new Date().toDateString();
         let todayCount = 0, totalCount = 0, totalAmount = 0;
@@ -461,19 +459,19 @@
         }
 
         if (currentUser.dailyLimit && todayCount >= parseInt(currentUser.dailyLimit)) {
-            return Swal.fire('مرفوض', `وصلت الحد الأقصى للسندات اليوم: ${currentUser.dailyLimit}`, 'error');
+            return Swal.fire(t('rejected'), `${t('dailyLimitReached')} ${currentUser.dailyLimit}`, 'error');
         }
 
         if (currentUser.totalLimit && totalCount >= parseInt(currentUser.totalLimit)) {
-            return Swal.fire('مرفوض', `وصلت الحد الأقصى لإجمالي السندات: ${currentUser.totalLimit}`, 'error');
+            return Swal.fire(t('rejected'), `${t('totalLimitReached')} ${currentUser.totalLimit}`, 'error');
         }
 
         if (currentUser.totalAmountLimit && (totalAmount + amount) > parseFloat(currentUser.totalAmountLimit)) {
-            return Swal.fire('مرفوض', `إجمالي المبالغ راح يتجاوز الحد: ${currentUser.totalAmountLimit}`, 'error');
+            return Swal.fire(t('rejected'), `${t('totalAmountExceeded')} ${currentUser.totalAmountLimit}`, 'error');
         }
 
         const newNumber = (typeData.current || typeData.start);
-        if (newNumber > typeData.end) return Swal.fire('خطأ', 'وصلت لنهاية التسلسل لهذا النوع', 'error');
+        if (newNumber > typeData.end) return Swal.fire(t('error'), t('sequenceEnded'), 'error');
 
         const bondId = Date.now().toString();
         const bondNumber = `${typeData.prefix}-${String(newNumber).padStart(6, '0')}`;
@@ -486,7 +484,7 @@
 
         await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: newNumber + 1 });
 
-        Swal.fire('تم', `انحفظ السند رقم ${bondNumber}`, 'success');
+        Swal.fire(t('done'), `${t('bondSaved')} ${bondNumber}`, 'success');
         document.getElementById('bondAmount').value = '';
         document.getElementById('bondClient').value = '';
         document.getElementById('bondClientPhone').value = '';
@@ -502,7 +500,6 @@
         document.getElementById('noBondSelected').classList.add('hidden');
         document.getElementById('printPreviewArea').classList.remove('hidden');
         
-        // إظهار زر إرسال للعميل لو فيه جوال
         if (bond.clientPhone && bond.type === 'قبض') {
             document.getElementById('whatsappClientBtn').classList.remove('hidden');
         } else {
@@ -516,25 +513,25 @@
                 <p style="color:#6b7280">${projectData.address || ''} | ${projectData.phone || ''}</p>
             </div>
             <div style="border:3px solid #2563eb;border-radius:12px;padding:20px;margin:20px 0;background:linear-gradient(to bottom,#eff6ff,#ffffff)">
-                <h2 style="text-align:center;font-size:24px;font-weight:800;color:#1e40af;margin-bottom:20px">سند ${bond.type}</h2>
+                <h2 style="text-align:center;font-size:24px;font-weight:800;color:#1e40af;margin-bottom:20px">${t('bond')} ${bond.type}</h2>
                 <table style="width:100%;font-size:15px">
-                    <tr><td style="padding:8px;font-weight:700;width:30%">رقم السند:</td><td style="font-weight:800;color:#2563eb">${bond.number}</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">التاريخ:</td><td>${bond.date}</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">العميل:</td><td>${bond.client}</td></tr>
-                    ${bond.clientPhone? `<tr><td style="padding:8px;font-weight:700">جوال العميل:</td><td dir="ltr">${bond.clientPhone}</td></tr>` : ''}
-                    <tr><td style="padding:8px;font-weight:700">المبلغ:</td><td style="font-size:20px;font-weight:800;color:${bond.type === 'قبض'? '#16a34a' : '#dc2626'}">${parseFloat(bond.amount).toFixed(2)} ريال سعودي</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">طريقة الدفع:</td><td>${bond.paymentMethod || '-'}</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">البيان:</td><td>${bond.description || '-'}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700;width:30%">${t('bondNumber')}:</td><td style="font-weight:800;color:#2563eb">${bond.number}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">${t('date')}:</td><td>${bond.date}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">${t('client')}:</td><td>${bond.client}</td></tr>
+                    ${bond.clientPhone? `<tr><td style="padding:8px;font-weight:700">${t('clientPhone')}:</td><td dir="ltr">${bond.clientPhone}</td></tr>` : ''}
+                    <tr><td style="padding:8px;font-weight:700">${t('amount')}:</td><td style="font-size:20px;font-weight:800;color:${bond.type === 'قبض'? '#16a34a' : '#dc2626'}">${parseFloat(bond.amount).toFixed(2)} ${t('currency')}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">${t('paymentMethod')}:</td><td>${bond.paymentMethod || '-'}</td></tr>
+                    <tr><td style="padding:8px;font-weight:700">${t('description')}:</td><td>${bond.description || '-'}</td></tr>
                 </table>
             </div>
             <div style="display:flex;justify-content:space-between;margin-top:30px;align-items:end">
                 <div style="text-align:center">
-                    <p style="font-weight:700;margin-bottom:40px">المستلم</p>
+                    <p style="font-weight:700;margin-bottom:40px">${t('receiver')}</p>
                     <div style="border-top:2px solid #000;width:150px">__________</div>
                 </div>
                 <div id="qrcode" style="padding:10px;background:white;border:2px solid #e5e7eb;border-radius:8px"></div>
                 <div style="text-align:center">
-                    <p style="font-weight:700;margin-bottom:40px">المحاسب</p>
+                    <p style="font-weight:700;margin-bottom:40px">${t('accountant')}</p>
                     <div style="border-top:2px solid #000;width:150px">__________</div>
                 </div>
             </div>
@@ -543,10 +540,9 @@
         
         document.getElementById('bondPreviewContent').innerHTML = previewHTML;
         
-        // توليد QR
         document.getElementById('qrcode').innerHTML = '';
         new QRCode(document.getElementById('qrcode'), {
-            text: `سند ${bond.type} - ${bond.number}\nالمبلغ: ${bond.amount} ريال\nالعميل: ${bond.client}\nالتاريخ: ${bond.date}`,
+            text: `${t('bond')} ${bond.type} - ${bond.number}\n${t('amount')}: ${bond.amount} ${t('currency')}\n${t('client')}: ${bond.client}\n${t('date')}: ${bond.date}`,
             width: 100, height: 100
         });
         
@@ -561,16 +557,16 @@
     function sendWhatsApp() {
         if (!selectedBondForPrint) return;
         const bond = selectedBondForPrint;
-        const msg = `*${projectData.companyName}*\n\n*سند ${bond.type}*\nرقم: ${bond.number}\nالتاريخ: ${bond.date}\nالعميل: ${bond.client}\nالمبلغ: ${parseFloat(bond.amount).toFixed(2)} ريال\nطريقة الدفع: ${bond.paymentMethod || '-'}\nالبيان: ${bond.description || '-'}\n\nشكراً لتعاملكم معنا`;
+        const msg = `*${projectData.companyName}*\n\n*${t('bond')} ${bond.type}*\n${t('bondNumber')}: ${bond.number}\n${t('date')}: ${bond.date}\n${t('client')}: ${bond.client}\n${t('amount')}: ${parseFloat(bond.amount).toFixed(2)} ${t('currency')}\n${t('paymentMethod')}: ${bond.paymentMethod || '-'}\n${t('description')}: ${bond.description || '-'}\n\n${t('thankYou')}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     function sendWhatsAppToClient() {
         if (!selectedBondForPrint || !selectedBondForPrint.clientPhone) {
-            return Swal.fire('تنبيه', 'لا يوجد رقم جوال للعميل', 'warning');
+            return Swal.fire(t('alert'), t('noClientPhone'), 'warning');
         }
         const bond = selectedBondForPrint;
-        const msg = `*${projectData.companyName}*\n\nعزيزي ${bond.client}\nتم استلام مبلغ *${parseFloat(bond.amount).toFixed(2)} ريال سعودي*\n\n*تفاصيل السند:*\nرقم السند: ${bond.number}\nالتاريخ: ${bond.date}\nطريقة الدفع: ${bond.paymentMethod || '-'}\n${bond.description? `البيان: ${bond.description}\n` : ''}\nشكراً لتعاملكم معنا 🙏`;
+        const msg = `*${projectData.companyName}*\n\n${t('dear')} ${bond.client}\n${t('receivedAmount')} *${parseFloat(bond.amount).toFixed(2)} ${t('currency')}*\n\n*${t('bondDetails')}:*\n${t('bondNumber')}: ${bond.number}\n${t('date')}: ${bond.date}\n${t('paymentMethod')}: ${bond.paymentMethod || '-'}\n${bond.description? `${t('description')}: ${bond.description}\n` : ''}\n${t('thankYou')} 🙏`;
         const phone = selectedBondForPrint.clientPhone.replace(/^0/, '966');
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
@@ -584,25 +580,28 @@
         const width = pdf.internal.pageSize.getWidth();
         const height = (canvas.height * width) / canvas.width;
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        pdf.save(`سند-${selectedBondForPrint.number}.pdf`);
+        pdf.save(`${t('bond')}-${selectedBondForPrint.number}.pdf`);
     }
 
     function showChangePassword() {
         Swal.fire({
-            title: 'تغيير كلمة السر',
-            html: `<input id="swal-old" type="password" class="swal2-input" placeholder="كلمة السر القديمة">
-                   <input id="swal-new" type="password" class="swal2-input" placeholder="كلمة السر الجديدة">`,
+            title: t('changePassword'),
+            html: `<input id="swal-old" type="password" class="swal2-input" placeholder="${t('oldPassword')}">
+                   <input id="swal-new" type="password" class="swal2-input" placeholder="${t('newPassword')}">`,
+            confirmButtonText: t('save'),
+            cancelButtonText: t('cancel'),
+            showCancelButton: true,
             preConfirm: () => ({
                 old: document.getElementById('swal-old').value,
                 new: document.getElementById('swal-new').value
             })
         }).then(async (result) => {
             if (!result.value) return;
-            if (result.value.old!== currentUser.password) return Swal.fire('خطأ', 'كلمة السر القديمة غلط', 'error');
+            if (result.value.old!== currentUser.password) return Swal.fire(t('error'), t('wrongOldPassword'), 'error');
             await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: result.value.new });
-            Swal.fire('تم', 'تغيرت كلمة السر', 'success');
+            Swal.fire(t('done'), t('passwordChanged'), 'success');
         });
     }
 </script>
 </body>
-</html> 
+</html>
