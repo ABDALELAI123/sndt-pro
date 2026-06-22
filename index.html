@@ -3,147 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية V8.5 - تسجيل الدخول</title>
+    <title>السندات الذكية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { font-family: 'Cairo', sans-serif; }
-        .login-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        body { font-family: 'Cairo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+       .hidden { display: none!important; }
     </style>
-    
-    <!-- شغل اللغة -->
     <script type="module">
-        import { setLanguage, applyLanguage, t } from './lang.js';
-        window.setLanguage = setLanguage;
-        window.t = t;
-        window.applyLanguage = applyLanguage;
-        
-        // طبّق اللغة على طول
+        import { t, setLanguage, applyLanguage } from './lang.js';
+        window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage;
         applyLanguage();
-
-        // إذا ما اختار لغة من قبل، نظهر النافذة
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!localStorage.getItem('language')) {
-                document.getElementById('languageModal').classList.remove('hidden');
-            }
-        });
     </script>
 </head>
-<body class="bg-gray-50">
+<body class="flex items-center justify-center p-4">
 
-<!-- نافذة اختيار اللغة -->
-<div id="languageModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center">
-        <div class="text-5xl mb-4">🌍</div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">اختر اللغة | Select Language</h2>
-        <p class="text-gray-600 mb-6">Choose your preferred language</p>
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="setLanguage('ar'); document.getElementById('languageModal').classList.add('hidden')" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
-                العربية
-            </button>
-            <button onclick="setLanguage('en'); document.getElementById('languageModal').classList.add('hidden')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
-                English
-            </button>
-        </div>
-    </div>
-</div>
+    <!-- شاشة دخول واحدة للكل -->
+    <div id="loginScreen" class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 relative">
+            <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')"
+                    class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 text-2xl">🌍</button>
 
-<!-- شاشة تسجيل الدخول -->
-<div id="loginScreen" class="min-h-screen login-bg flex items-center justify-center p-4">
-    <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md relative">
-        <!-- زر تغيير اللغة -->
-        <button onclick="document.getElementById('languageModal').classList.remove('hidden')" class="absolute top-4 left-4 text-gray-500 hover:text-blue-600 transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
-            </svg>
-        </button>
-
-        <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <span class="text-4xl">📝</span>
+            <div class="flex justify-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-white text-3xl"></i>
                 </div>
             </div>
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-2" data-i18n="appName">السندات الذكية</h1>
-            <p class="text-gray-500" data-i18n="login">نظام إدارة السندات السحابي</p>
-        </div>
-        <div class="space-y-5">
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="projectCode">كود المشروع</label>
-                <input id="projectCode" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" data-i18n-placeholder="projectCode" placeholder="ادخل كود مشروعك">
+
+            <h1 class="text-3xl font-extrabold text-center mb-2">السندات الذكية</h1>
+            <p class="text-center text-gray-500 mb-8">تسجيل الدخول</p>
+
+            <div class="space-y-4">
+                <input id="projectCode" type="text" class="w-full border border-gray-300 p-3 rounded-xl text-center text-lg" placeholder="كود المشروع" dir="ltr">
+                <input id="phone" type="tel" class="w-full border border-gray-300 p-3 rounded-xl text-center text-lg" placeholder="رقم الجوال" dir="ltr">
+                <input id="password" type="password" class="w-full border border-gray-300 p-3 rounded-xl text-center text-lg" placeholder="كلمة المرور">
+                <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">تسجيل الدخول</button>
             </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="phone">رقم الجوال</label>
-                <input id="phone" type="text" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" data-i18n-placeholder="phone" placeholder="05xxxxxxxx">
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2" data-i18n="password">كلمة المرور</label>
-                <input id="password" type="password" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center focus:border-blue-500 focus:outline-none" data-i18n-placeholder="password" placeholder="••••">
-            </div>
-            <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition" data-i18n="login">تسجيل الدخول</button>
         </div>
     </div>
-</div>
 
-<!-- كود الجافاسكربت معدل لـ Firestore -->
 <script type="module">
-    import { db } from './firebase.js';
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-    // بيانات السوبر أدمن - غيّرها حسب مشروعك
-    const SUPERADMIN = {
-        phone: "0500000000",
-        password: "admin123"
+    // ⚠️ ضع Firebase Config حقك هنا
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID"
     };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    document.getElementById('loginBtn').addEventListener('click', login);
-    
-    async function login() {
+    // السوبر أدمن الثابت حقك
+    const SUPER_ADMIN = { projectCode: "001122334455", phone: "0597087767", password: "500600" };
+
+    document.getElementById('loginBtn').onclick = async () => {
         const projectCode = document.getElementById('projectCode').value.trim();
         const phone = document.getElementById('phone').value.trim();
-        const password = document.getElementById('password').value;
+        const password = document.getElementById('password').value.trim();
 
-        if (!phone || !password) return Swal.fire(t('error'), t('fillAllFields'), 'error');
+        if (!projectCode ||!phone ||!password) return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
 
-        if (phone === SUPERADMIN.phone && password === SUPERADMIN.password) {
-            localStorage.setItem('projectCode', 'SUPERADMIN');
-            localStorage.setItem('phone', phone);
-            localStorage.setItem('password', password);
-            localStorage.setItem('role', 'superadmin');
-            window.location.href = 'superadmin.html';
+        // 1. تحقق سوبر أدمن
+        if (projectCode === SUPER_ADMIN.projectCode && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
+            Swal.fire('تم', 'دخول سوبر أدمن', 'success').then(()=> {
+                // هنا تحط كود لوحة السوبر أدمن القديمة حقتك
+                location.href = './superadmin.html'; 
+            });
             return;
         }
 
-        if (!projectCode) return Swal.fire(t('error'), t('enterProjectCode'), 'error');
-
-        try {
-            // Firestore بدل Realtime Database
-            const userDoc = await getDoc(doc(db, `projects/${projectCode}/users/${phone}`));
-            if (!userDoc.exists()) return Swal.fire(t('error'), t('userNotFound'), 'error');
-
-            const user = userDoc.data();
-            if (user.password !== password) return Swal.fire(t('error'), t('wrongPassword'), 'error');
-            if (!user.active) return Swal.fire(t('error'), t('accountSuspended'), 'error');
-
-            const projectDoc = await getDoc(doc(db, `projects/${projectCode}`));
-            if (!projectDoc.data().active) return Swal.fire(t('error'), t('projectSuspended'), 'error');
-
-            localStorage.setItem('projectCode', projectCode);
-            localStorage.setItem('phone', phone);
-            localStorage.setItem('password', password);
-            localStorage.setItem('role', user.role);
-
-            if (user.role === 'manager') {
-                window.location.href = 'manager.html';
-            } else if (user.role === 'delegate') {
-                window.location.href = 'delegate.html';
-            }
-        } catch (e) {
-            console.error(e);
-            Swal.fire(t('error'), t('checkData'), 'error');
+        // 2. تحقق مدير من Firebase
+        const q1 = query(collection(db, 'managers'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
+        const snap1 = await getDocs(q1);
+        if (!snap1.empty) {
+            Swal.fire('تم', 'دخول مدير', 'success').then(()=> {
+                location.href = './manager.html';
+            });
+            return;
         }
-    }
+
+        // 3. تحقق مندوب من Firebase
+        const q2 = query(collection(db, 'delegates'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
+        const snap2 = await getDocs(q2);
+        if (!snap2.empty) {
+            Swal.fire('تم', 'دخول مندوب', 'success').then(()=> {
+                location.href = './delegate.html';
+            });
+            return;
+        }
+
+        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+    };
 </script>
 </body>
 </html>
