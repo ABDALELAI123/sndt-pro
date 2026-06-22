@@ -13,20 +13,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-      .hidden { display: none!important; }
-      .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-      .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
+        .hidden { display: none!important; }
+        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
+        .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
         @media print {.no-print { display: none!important; }.print-area { display: block!important; } body { background: white; } }
-      .print-area { display: none; }
-      .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
-      .excel-table input { width: 100%; border: none; background: transparent; padding: 4px; }
-      .excel-table input:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
+        .print-area { display: none; }
+        .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
+        .excel-table input { width: 100%; border: none; background: transparent; padding: 4px; }
+        .excel-table input:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
     </style>
 
     <script type="module">
         import { t, setLanguage, applyLanguage } from './lang.js';
         window.t = t;
         window.setLanguage = setLanguage;
+        window.applyLanguage = applyLanguage;
         applyLanguage();
     </script>
 </head>
@@ -211,7 +212,7 @@
     <div id="printArea" class="print-area"></div>
     <script type="module">
     import { db } from './firebase.js';
-    import { ref, get, set, update, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const role = localStorage.getItem('role');
     const phone = localStorage.getItem('phone');
@@ -223,19 +224,21 @@
 
     let currentUser = null, projectData = null, userPermissions = [], selectedBondForPrint = null, allPaymentMethods = [], currentBondType = null;
 
-    const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
-    currentUser = userSnap.val();
+    // تحميل بيانات المستخدم والمشروع
+    const userDoc = await getDoc(doc(db, `projects/${currentProject}/users/${phone}`));
+    currentUser = userDoc.data();
     userPermissions = currentUser.permissions || [];
     document.getElementById('currentUser').textContent = currentUser.name;
 
-    const projectSnap = await get(ref(db, `projects/${currentProject}/info`));
-    projectData = projectSnap.val();
+    const projectDoc = await getDoc(doc(db, `projects/${currentProject}`));
+    projectData = projectDoc.data();
     document.getElementById('currentProjectName').textContent = projectData.companyName;
     if (projectData.logo) {
         document.getElementById('headerLogo').src = projectData.logo;
         document.getElementById('headerLogo').classList.remove('hidden');
     }
 
+    // الأحداث
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
     document.getElementById('saveBondBtn').addEventListener('click', saveBond);
@@ -255,6 +258,7 @@
         document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
     }
 
+    // تحميل البيانات
     loadDashboard();
     loadBondTypes();
     loadBonds();
@@ -267,9 +271,9 @@
             document.getElementById('clientPhoneField').classList.add('hidden');
             return;
         }
-        const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${e.target.value}`));
-        if (typeSnap.exists()) {
-            currentBondType = typeSnap.val();
+        const typeDoc = await getDoc(doc(db, `projects/${currentProject}/bondTypes/${e.target.value}`));
+        if (typeDoc.exists()) {
+            currentBondType = typeDoc.data();
             if (currentBondType.type === 'قبض') {
                 document.getElementById('clientPhoneField').classList.remove('hidden');
             } else {
@@ -299,17 +303,16 @@
     }
 
     function loadDashboard() {
-        onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
+        onSnapshot(collection(db, `projects/${currentProject}/bonds`), (snap) => {
             let income = 0, expense = 0, count = 0;
-            if (snap.exists()) {
-                Object.values(snap.val()).forEach(b => {
-                    if (b.createdBy === currentUser.phone) {
-                        if (b.type === 'قبض') income += parseFloat(b.amount);
-                        if (b.type === 'صرف') expense += parseFloat(b.amount);
-                        count++;
-                    }
-                });
-            }
+            snap.forEach(docSnap => {
+                const b = docSnap.data();
+                if (b.createdBy === currentUser.phone) {
+                    if (b.type === 'قبض') income += parseFloat(b.amount);
+                    if (b.type === 'صرف') expense += parseFloat(b.amount);
+                    count++;
+                }
+            });
             document.getElementById('totalIncome').textContent = income.toFixed(2);
             document.getElementById('totalExpense').textContent = expense.toFixed(2);
             document.getElementById('totalBonds').textContent = count;
@@ -317,58 +320,55 @@
     }
 
     function loadBondTypes() {
-        onValue(ref(db, `projects/${currentProject}/bondTypes`), (snap) => {
+        onSnapshot(collection(db, `projects/${currentProject}/bondTypes`), (snap) => {
             const select = document.getElementById('bondTypeSelect');
             select.innerHTML = `<option value="">${t('selectBondType')}</option>`;
-            if (snap.exists()) {
-                Object.entries(snap.val()).forEach(([id, type]) => {
-                    if (userPermissions.includes(type.type) || userPermissions.includes('all')) {
-                        select.innerHTML += `<option value="${id}">${type.name} - ${type.type}</option>`;
-                    }
-                });
-            }
+            snap.forEach(docSnap => {
+                const type = docSnap.data();
+                if (userPermissions.includes(type.type) || userPermissions.includes('all')) {
+                    select.innerHTML += `<option value="${docSnap.id}">${type.name} - ${type.type}</option>`;
+                }
+            });
         });
     }
 
     function loadPaymentMethods() {
-        onValue(ref(db, `projects/${currentProject}/paymentMethods`), (snap) => {
+        onSnapshot(collection(db, `projects/${currentProject}/paymentMethods`), (snap) => {
             const select = document.getElementById('bondPaymentMethod');
             if (!select) return;
             select.innerHTML = `<option value="">${t('selectPaymentMethod')}</option>`;
             allPaymentMethods = [];
-            if (snap.exists()) {
-                Object.values(snap.val()).forEach(method => {
-                    if (method.active) {
-                        allPaymentMethods.push(method);
-                        select.innerHTML += `<option value="${method.name}">${method.name} ${method.account? '- ' + method.account : ''}</option>`;
-                    }
-                });
-            }
+            snap.forEach(docSnap => {
+                const method = docSnap.data();
+                if (method.active) {
+                    allPaymentMethods.push(method);
+                    select.innerHTML += `<option value="${method.name}">${method.name} ${method.account? '- ' + method.account : ''}</option>`;
+                }
+            });
         });
     }
-
-    function loadBonds() {
-        onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
+            function loadBonds() {
+        onSnapshot(collection(db, `projects/${currentProject}/bonds`), (snap) => {
             const tbody = document.getElementById('bondsTableBody');
             tbody.innerHTML = '';
-            if (snap.exists()) {
-                Object.entries(snap.val()).reverse().forEach(([id, bond]) => {
-                    if (bond.createdBy === currentUser.phone) {
-                        tbody.innerHTML += `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-4 font-bold">${bond.number}</td>
-                                <td class="p-4">${bond.typeName}</td>
-                                <td class="p-4">${bond.client}</td>
-                                <td class="p-4 font-bold ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toFixed(2)}</td>
-                                <td class="p-4">${bond.date}</td>
-                                <td class="p-4 no-print">
-                                    <button data-action="preview-bond" data-id="${id}" class="text-purple-600 hover:underline ml-3">${t('preview')}</button>
-                                    <button data-action="print-bond" data-id="${id}" class="text-blue-600 hover:underline">${t('print')}</button>
-                                </td>
-                            </tr>`;
-                    }
-                });
-            }
+            const bonds = [];
+            snap.forEach(docSnap => bonds.push({id: docSnap.id, ...docSnap.data()}));
+            bonds.reverse().forEach(bond => {
+                if (bond.createdBy === currentUser.phone) {
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-4 font-bold">${bond.number}</td>
+                            <td class="p-4">${bond.typeName}</td>
+                            <td class="p-4">${bond.client}</td>
+                            <td class="p-4 font-bold ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toFixed(2)}</td>
+                            <td class="p-4">${bond.date}</td>
+                            <td class="p-4 no-print">
+                                <button data-action="preview-bond" data-id="${bond.id}" class="text-purple-600 hover:underline ml-3">${t('preview')}</button>
+                                <button data-action="print-bond" data-id="${bond.id}" class="text-blue-600 hover:underline">${t('print')}</button>
+                            </td>
+                        </tr>`;
+                }
+            });
             document.querySelectorAll('[data-action="preview-bond"]').forEach(btn => {
                 btn.addEventListener('click', () => previewBond(btn.dataset.id));
             });
@@ -379,29 +379,28 @@
     }
 
     function loadSmartSheet() {
-        onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
+        onSnapshot(collection(db, `projects/${currentProject}/bonds`), (snap) => {
             const tbody = document.getElementById('smartSheetBody');
             if (!tbody) return;
             tbody.innerHTML = '';
             let total = 0;
-            if (snap.exists()) {
-                Object.entries(snap.val()).forEach(([id, bond]) => {
-                    if (bond.createdBy === currentUser.phone) {
-                        const amount = parseFloat(bond.amount);
-                        total += bond.type === 'قبض'? amount : -amount;
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-2 border">${bond.number}</td>
-                                <td class="p-2 border">${bond.typeName}</td>
-                                <td class="p-2 border">${bond.client}</td>
-                                <td class="p-2 border ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${amount.toFixed(2)}</td>
-                                <td class="p-2 border">${bond.date}</td>
-                                <td class="p-2 border">${bond.description || '-'}</td>
-                                <td class="p-2 border">${bond.paymentMethod || '-'}</td>
-                            </tr>`;
-                    }
-                });
-            }
+            snap.forEach(docSnap => {
+                const bond = docSnap.data();
+                if (bond.createdBy === currentUser.phone) {
+                    const amount = parseFloat(bond.amount);
+                    total += bond.type === 'قبض'? amount : -amount;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-2 border">${bond.number}</td>
+                            <td class="p-2 border">${bond.typeName}</td>
+                            <td class="p-2 border">${bond.client}</td>
+                            <td class="p-2 border ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${amount.toFixed(2)}</td>
+                            <td class="p-2 border">${bond.date}</td>
+                            <td class="p-2 border">${bond.description || '-'}</td>
+                            <td class="p-2 border">${bond.paymentMethod || '-'}</td>
+                        </tr>`;
+                }
+            });
             document.getElementById('sheetTotal').textContent = total.toFixed(2);
         });
     }
@@ -416,7 +415,8 @@
     function exportSheet() {
         Swal.fire(t('comingSoon'), t('exportSoon'), 'info');
     }
-            async function saveBond() {
+
+    async function saveBond() {
         const typeId = document.getElementById('bondTypeSelect').value;
         const amount = parseFloat(document.getElementById('bondAmount').value);
         const date = document.getElementById('bondDate').value;
@@ -427,8 +427,8 @@
 
         if (!typeId ||!amount ||!date ||!client) return Swal.fire(t('error'), t('fillAllFields'), 'error');
 
-        const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
-        const typeData = typeSnap.val();
+        const typeDoc = await getDoc(doc(db, `projects/${currentProject}/bondTypes/${typeId}`));
+        const typeData = typeDoc.data();
 
         if (typeData.type === 'قبض' && !clientPhone) {
             return Swal.fire(t('error'), t('phoneRequiredForReceipt'), 'error');
@@ -446,17 +446,17 @@
             return Swal.fire(t('rejected'), `${t('amountExceeded')} ${currentUser.amountLimit}`, 'error');
         }
 
-        const bondsSnap = await get(query(ref(db, `projects/${currentProject}/bonds`), orderByChild('createdBy'), equalTo(currentUser.phone)));
+        const bondsQuery = query(collection(db, `projects/${currentProject}/bonds`), where('createdBy', '==', currentUser.phone));
+        const bondsSnap = await getDocs(bondsQuery);
         const today = new Date().toDateString();
         let todayCount = 0, totalCount = 0, totalAmount = 0;
 
-        if (bondsSnap.exists()) {
-            Object.values(bondsSnap.val()).forEach(bond => {
-                totalCount++;
-                totalAmount += parseFloat(bond.amount);
-                if (new Date(bond.createdAt).toDateString() === today) todayCount++;
-            });
-        }
+        bondsSnap.forEach(docSnap => {
+            const bond = docSnap.data();
+            totalCount++;
+            totalAmount += parseFloat(bond.amount);
+            if (new Date(bond.createdAt).toDateString() === today) todayCount++;
+        });
 
         if (currentUser.dailyLimit && todayCount >= parseInt(currentUser.dailyLimit)) {
             return Swal.fire(t('rejected'), `${t('dailyLimitReached')} ${currentUser.dailyLimit}`, 'error');
@@ -476,13 +476,13 @@
         const bondId = Date.now().toString();
         const bondNumber = `${typeData.prefix}-${String(newNumber).padStart(6, '0')}`;
 
-        await set(ref(db, `projects/${currentProject}/bonds/${bondId}`), {
+        await setDoc(doc(db, `projects/${currentProject}/bonds/${bondId}`), {
             id: bondId, number: bondNumber, typeId, typeName: typeData.name, type: typeData.type,
             amount, date, client, clientPhone: clientPhone || '', description, paymentMethod,
             createdBy: currentUser.phone, createdByName: currentUser.name, createdAt: Date.now()
         });
 
-        await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: newNumber + 1 });
+        await updateDoc(doc(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: newNumber + 1 });
 
         Swal.fire(t('done'), `${t('bondSaved')} ${bondNumber}`, 'success');
         document.getElementById('bondAmount').value = '';
@@ -493,8 +493,8 @@
     }
 
     async function previewBond(bondId) {
-        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
-        selectedBondForPrint = snap.val();
+        const snap = await getDoc(doc(db, `projects/${currentProject}/bonds/${bondId}`));
+        selectedBondForPrint = snap.data();
         const bond = selectedBondForPrint;
         
         document.getElementById('noBondSelected').classList.add('hidden');
@@ -598,7 +598,7 @@
         }).then(async (result) => {
             if (!result.value) return;
             if (result.value.old!== currentUser.password) return Swal.fire(t('error'), t('wrongOldPassword'), 'error');
-            await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: result.value.new });
+            await updateDoc(doc(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: result.value.new });
             Swal.fire(t('done'), t('passwordChanged'), 'success');
         });
     }
