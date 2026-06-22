@@ -3,720 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية - مدير المشروع</title>
+    <title>لوحة تحكم المدير</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-       .hidden { display: none!important; }
-       .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-       .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
-       .logo-preview { max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px dashed #ccc; object-fit: contain; }
-        @media print {.no-print { display: none!important; }.print-area { display: block!important; } body { background: white; } }
-       .print-area { display: none; }
-       .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg no-print">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <img id="headerLogo" class="project-logo hidden" src="" alt="Logo">
-                <div>
-                    <h1 class="text-2xl font-extrabold">السندات الذكية</h1>
-                    <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span class="bg-white/20 px-2 py-1 rounded">مدير</span></p>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm">تغيير كلمة السر</button>
-                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm">خروج</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white shadow-md border-b no-print">
-        <div class="flex overflow-x-auto">
-            <button data-tab="dashboard" class="tab-btn px-8 py-4 active">الرئيسية</button>
-            <button data-tab="projectSettings" class="tab-btn px-8 py-4">إعدادات المشروع</button>
-            <button data-tab="bondSettings" class="tab-btn px-8 py-4">إعدادات السند</button>
-            <button data-tab="delegates" class="tab-btn px-8 py-4">المناديب</button>
-           <button data-tab="paymentMethods" class="tab-btn px-8 py-4">طرق الدفع</button>
-            <button data-tab="createBond" class="tab-btn px-8 py-4">إنشاء سند</button>
-            <button data-tab="bondsList" class="tab-btn px-8 py-4">السندات</button>
-        </div>
-    </div>
-
-    <div class="p-6">
-        <div id="dashboard" class="tab-content">
-            <h2 class="text-3xl font-extrabold mb-6 text-gray-800">لوحة التحكم</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90">إجمالي القبض</p>
-                    <p id="totalIncome" class="text-4xl font-extrabold mt-2">0.00</p>
-                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
-                </div>
-                <div class="bg-gradient-to-br from-red-500 to-rose-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90">إجمالي الصرف</p>
-                    <p id="totalExpense" class="text-4xl font-extrabold mt-2">0.00</p>
-                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
-                </div>
-                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90">الرصيد الحالي</p>
-                    <p id="totalBalance" class="text-4xl font-extrabold mt-2">0.00</p>
-                    <p class="text-xs mt-1 opacity-75">ريال سعودي</p>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-green-500"><p class="text-gray-500 text-sm">إجمالي السندات</p><p id="totalBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-yellow-500"><p class="text-gray-500 text-sm">سندات اليوم</p><p id="todayBonds" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-purple-500"><p class="text-gray-500 text-sm">المناديب</p><p id="totalUsers" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
-                <div class="bg-white p-6 rounded-xl shadow-lg border-r-4 border-blue-500"><p class="text-gray-500 text-sm">أنواع السندات</p><p id="totalBondTypes" class="text-4xl font-extrabold text-gray-800 mt-2">0</p></div>
-            </div>
-        </div>
-
-        <div id="projectSettings" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg max-w-4xl">
-                <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إعدادات المشروع</h2>
-                <div class="space-y-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div><label class="block mb-2 font-bold text-gray-700">اسم الشركة</label><input id="set_companyName" type="text" class="w-full p-3 border-2 rounded-lg"></div>
-                        <div><label class="block mb-2 font-bold text-gray-700">السجل التجاري</label><input id="set_cr" type="text" class="w-full p-3 border-2 rounded-lg"></div>
-                        <div><label class="block mb-2 font-bold">الرقم الضريبي</label><input id="set_tax" type="text" class="w-full p-3 border-2 rounded-lg"></div>
-                        <div><label class="block mb-2 font-bold">رقم التواصل</label><input id="set_contact" type="text" class="w-full p-3 border-2 rounded-lg"></div>
-                    </div>
-                    <div><label class="block mb-2 font-bold">العنوان</label><textarea id="set_address" class="w-full p-3 border-2 rounded-lg" rows="2"></textarea></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block mb-2 font-bold">شعار الشركة</label>
-                            <input id="set_logo" type="file" accept="image/*" class="w-full p-3 border-2 rounded-lg">
-                            <img id="preview_logo" class="logo-preview mt-3 hidden">
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold">الختم</label>
-                            <input id="set_stamp" type="file" accept="image/*" class="w-full p-3 border-2 rounded-lg">
-                            <img id="preview_stamp" class="logo-preview mt-3 hidden">
-                        </div>
-                    </div>
-                    <button id="saveProjectSettingsBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition">حفظ الإعدادات</button>
-                </div>
-            </div>
-        </div>
-        <div id="bondSettings" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800">إعدادات أنواع السندات</h2>
-                    <button id="addBondTypeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ نوع جديد</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="bondTypesTable">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="p-4 text-right font-bold">اسم النوع</th><th class="p-4 text-right font-bold">البادئة</th>
-                            <th class="p-4 text-right font-bold">النوع</th><th class="p-4 text-right font-bold">بداية التسلسل</th>
-                            <th class="p-4 text-right font-bold">نهاية التسلسل</th><th class="p-4 text-right font-bold">الرقم الحالي</th><th class="p-4 text-right font-bold no-print">تحكم</th>
-                        </tr></thead>
-                        <tbody id="bondTypesTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div id="delegates" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800">المناديب</h2>
-                    <button id="addDelegateBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ إضافة مندوب</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="delegatesTable">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="p-4 text-right font-bold">الاسم</th>
-                            <th class="p-4 text-right font-bold">الجوال</th>
-                            <th class="p-4 text-right font-bold">الصلاحيات</th>
-                            <th class="p-4 text-right font-bold">الحالة</th>
-                            <th class="p-4 text-right font-bold no-print">تحكم</th>
-                        </tr></thead>
-                        <tbody id="delegatesTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div id="createBond" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg max-w-3xl">
-                <h2 class="text-3xl font-extrabold mb-6 text-gray-800">إنشاء سند جديد</h2>
-                <div class="space-y-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700">نوع السند</label>
-                            <select id="bondTypeSelect" class="w-full p-3 border-2 rounded-lg">
-                                <option value="">اختر نوع السند</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700">المبلغ</label>
-                            <input id="bondAmount" type="number" step="0.01" class="w-full p-3 border-2 rounded-lg" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700">التاريخ</label>
-                            <input id="bondDate" type="date" class="w-full p-3 border-2 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700">اسم العميل</label>
-                            <input id="bondClient" type="text" class="w-full p-3 border-2 rounded-lg" placeholder="اسم العميل أو الجهة">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block mb-2 font-bold text-gray-700">البيان</label>
-                        <textarea id="bondDescription" class="w-full p-3 border-2 rounded-lg" rows="3" placeholder="تفاصيل السند..."></textarea>
-                    </div>
-                    <button id="saveBondBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">حفظ السند</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="bondsList" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800">السندات</h2>
-                    <button id="exportBondsBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold transition">📊 اكسل</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="bondsTable">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="p-4 text-right font-bold">رقم السند</th>
-                            <th class="p-4 text-right font-bold">النوع</th>
-                            <th class="p-4 text-right font-bold">العميل</th>
-                            <th class="p-4 text-right font-bold">المبلغ</th>
-                            <th class="p-4 text-right font-bold">التاريخ</th>
-                            <th class="p-4 text-right font-bold">المنشئ</th>
-                            <th class="p-4 text-right font-bold no-print">تحكم</th>
-                        </tr></thead>
-                        <tbody id="bondsTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-        <div id="paymentMethods" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800">طرق الدفع</h2>
-                    <button id="addPaymentMethodBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">+ طريقة دفع جديدة</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="paymentMethodsTable">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="p-4 text-right font-bold">اسم الطريقة</th>
-                            <th class="p-4 text-right font-bold">الحساب/الرقم</th>
-                            <th class="p-4 text-right font-bold">الحالة</th>
-                            <th class="p-4 text-right font-bold no-print">تحكم</th>
-                        </tr></thead>
-                        <tbody id="paymentMethodsTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    <div id="printArea" class="print-area"></div>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style> body { font-family: 'Cairo', sans-serif; } </style>
     <script type="module">
-    import { db } from './firebase.js';
-    import { ref, get, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { t, setLanguage, applyLanguage } from './lang.js';
+        window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage;
+        applyLanguage();
+    </script>
+</head>
+<body class="bg-gradient-to-br from-green-600 to-teal-500 min-h-screen p-4">
 
-    const role = localStorage.getItem('role');
-    const phone = localStorage.getItem('phone');
-    const currentProject = localStorage.getItem('projectCode');
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
+        <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
+        <div class="text-right">
+            <h1 class="text-2xl font-extrabold">لوحة تحكم المدير</h1>
+            <p id="projectName" class="text-gray-500">جاري التحميل...</p>
+        </div>
+        <div class="w-16 h-16 bg-gradient-to-br from-green-600 to-teal-500 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-user-tie text-white text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-xl font-bold mb-6"><i class="fas fa-users text-green-500"></i> المناديب</h2>
+        <div id="delegatesList" class="text-center text-gray-500">
+            جاري تحميل المناديب...
+        </div>
+        <button onclick="addDelegate()" class="mt-6 bg-green-500 text-white px-6 py-3 rounded-xl font-bold w-full">
+            <i class="fas fa-plus"></i> إضافة مندوب
+        </button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, query, where, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+      authDomain: "sanadat-pro.firebaseapp.com",
+      databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sanadat-pro",
+      storageBucket: "sanadat-pro.firebasestorage.app",
+      messagingSenderId: "1039476751095",
+      appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // جيب بيانات المدير من التخزين المحلي
+    const managerData = JSON.parse(localStorage.getItem('managerData') || '{}');
     
-    if (role!== 'manager' ||!currentProject || currentProject === 'SUPERADMIN') {
-        window.location.href = 'index.html';
+    if (!managerData.projectCode) {
+        Swal.fire('خطأ', 'الرجاء تسجيل الدخول أولاً', 'error').then(() => {
+            location.href = './index.html';
+        });
     }
 
-    let currentUser = null, projectData = null;
+    document.getElementById('projectName').textContent = `مشروع: ${managerData.projectCode} | المدير: ${managerData.name}`;
 
-    // تحميل بيانات المستخدم
-    const userSnap = await get(ref(db, `projects/${currentProject}/users/${phone}`));
-    currentUser = userSnap.val();
-    document.getElementById('currentUser').textContent = currentUser.name;
-
-    // تحميل بيانات المشروع
-    const projectSnap = await get(ref(db, `projects/${currentProject}/info`));
-    projectData = projectSnap.val();
-    document.getElementById('currentProjectName').textContent = projectData.companyName;
-    if (projectData.logo) {
-        document.getElementById('headerLogo').src = projectData.logo;
-        document.getElementById('headerLogo').classList.remove('hidden');
-    }
-
-    // ربط الأحداث - الطريقة الصحيحة بدل onclick
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
-    document.getElementById('saveProjectSettingsBtn').addEventListener('click', saveProjectSettings);
-    document.getElementById('addBondTypeBtn').addEventListener('click', addBondType);
-    document.getElementById('addDelegateBtn').addEventListener('click', addDelegate);
-  document.getElementById('addPaymentMethodBtn').addEventListener('click', addPaymentMethod);
-        document.getElementById('saveBondBtn').addEventListener('click', saveBond);
-    document.getElementById('exportBondsBtn').addEventListener('click', () => exportTableToExcel('bondsTable','السندات'));
-
-    // تبويبات
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showTab(e.target.dataset.tab));
-    });
-
-    if(document.getElementById('bondDate')) {
-        document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
-    }
-
-    document.getElementById('set_logo').addEventListener('change', async (e) => {
-        if (e.target.files[0]) {
-            const base64 = await toBase64(e.target.files[0]);
-            document.getElementById('preview_logo').src = base64;
-            document.getElementById('preview_logo').classList.remove('hidden');
+    async function loadDelegates() {
+        const q = query(collection(db, 'delegates'), where('projectCode', '==', managerData.projectCode));
+        const snap = await getDocs(q);
+        const list = document.getElementById('delegatesList');
+        
+        if (snap.empty) {
+            list.innerHTML = '<p>لا يوجد مناديب حالياً</p>';
+            return;
         }
-    });
 
-    document.getElementById('set_stamp').addEventListener('change', async (e) => {
-        if (e.target.files[0]) {
-            const base64 = await toBase64(e.target.files[0]);
-            document.getElementById('preview_stamp').src = base64;
-            document.getElementById('preview_stamp').classList.remove('hidden');
-        }
-    });
-
-    loadDashboard();
-    loadProjectSettings();
-    loadBondTypes();
-    loadDelegates();
-    loadBonds();
-    loadPaymentMethods();
-    function toBase64(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(file);
+        list.innerHTML = '';
+        snap.forEach(doc => {
+            const d = doc.data();
+            list.innerHTML += `
+                <div class="border border-gray-200 p-4 rounded-xl mb-3 flex justify-between items-center">
+                    <div class="text-right">
+                        <p class="font-bold">${d.name}</p>
+                        <p class="text-gray-500 text-sm">جوال: ${d.phone}</p>
+                    </div>
+                </div>`;
         });
     }
 
-    function showTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName).classList.remove('hidden');
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    }
-
-    function logout() {
-        localStorage.clear();
-        window.location.href = 'index.html';
-    }
-
-    function loadDashboard() {
-        onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
-            let income = 0, expense = 0, today = 0;
-            const todayStr = new Date().toISOString().split('T')[0];
-            if (snap.exists()) {
-                Object.values(snap.val()).forEach(b => {
-                    if (b.type === 'قبض') income += parseFloat(b.amount);
-                    if (b.type === 'صرف') expense += parseFloat(b.amount);
-                    if (b.date === todayStr) today++;
-                });
-            }
-            document.getElementById('totalIncome').textContent = income.toFixed(2);
-            document.getElementById('totalExpense').textContent = expense.toFixed(2);
-            document.getElementById('totalBalance').textContent = (income - expense).toFixed(2);
-            document.getElementById('totalBonds').textContent = snap.exists()? Object.keys(snap.val()).length : 0;
-            document.getElementById('todayBonds').textContent = today;
-        });
-
-        onValue(ref(db, `projects/${currentProject}/bondTypes`), (snap) => {
-            document.getElementById('totalBondTypes').textContent = snap.exists()? Object.keys(snap.val()).length : 0;
-        });
-
-        onValue(ref(db, `projects/${currentProject}/users`), (snap) => {
-            let count = 0;
-            if (snap.exists()) {
-                Object.values(snap.val()).forEach(user => {
-                    if (user.role === 'delegate') count++;
-                });
-            }
-            document.getElementById('totalUsers').textContent = count;
-        });
-    }
-
-    function loadProjectSettings() {
-        if (!projectData) return;
-        document.getElementById('set_companyName').value = projectData.companyName || '';
-        document.getElementById('set_cr').value = projectData.cr || '';
-        document.getElementById('set_tax').value = projectData.tax || '';
-        document.getElementById('set_contact').value = projectData.contact || '';
-        document.getElementById('set_address').value = projectData.address || '';
-        if (projectData.logo) {
-            document.getElementById('preview_logo').src = projectData.logo;
-            document.getElementById('preview_logo').classList.remove('hidden');
-        }
-        if (projectData.stamp) {
-            document.getElementById('preview_stamp').src = projectData.stamp;
-            document.getElementById('preview_stamp').classList.remove('hidden');
-        }
-    }
-
-    async function saveProjectSettings() {
-        const data = {
-            companyName: document.getElementById('set_companyName').value,
-            cr: document.getElementById('set_cr').value,
-            tax: document.getElementById('set_tax').value,
-            contact: document.getElementById('set_contact').value,
-            address: document.getElementById('set_address').value,
-            logo: document.getElementById('preview_logo').src || '',
-            stamp: document.getElementById('preview_stamp').src || ''
-        };
-        await update(ref(db, `projects/${currentProject}/info`), data);
-        Swal.fire('تم', 'انحفظت الإعدادات', 'success');
-    }
-
-    function loadBondTypes() {
-        onValue(ref(db, `projects/${currentProject}/bondTypes`), (snap) => {
-            const tbody = document.getElementById('bondTypesTableBody');
-            const select = document.getElementById('bondTypeSelect');
-            tbody.innerHTML = '';
-            select.innerHTML = '<option value="">اختر نوع السند</option>';
-            if (snap.exists()) {
-                Object.entries(snap.val()).forEach(([id, type]) => {
-                    select.innerHTML += `<option value="${id}">${type.name} - ${type.type}</option>`;
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4">${type.name}</td>
-                            <td class="p-4">${type.prefix}</td>
-                            <td class="p-4">${type.type}</td>
-                            <td class="p-4">${type.start}</td>
-                            <td class="p-4">${type.end}</td>
-                            <td class="p-4">${type.current || type.start}</td>
-                            <td class="p-4 no-print">
-                                <button data-action="delete-bond-type" data-id="${id}" class="text-red-600 hover:underline">حذف</button>
-                            </td>
-                        </tr>`;
-                });
-            }
-            // ربط أحداث الحذف - بدل onclick
-            document.querySelectorAll('[data-action="delete-bond-type"]').forEach(btn => {
-                btn.addEventListener('click', () => deleteBondType(btn.dataset.id));
-            });
-        });
-    }
-
-    async function addBondType() {
-        const { value: formValues } = await Swal.fire({
-            title: 'نوع سند جديد',
-            html: `
-                <input id="swal-name" class="swal2-input" placeholder="اسم النوع">
-                <input id="swal-prefix" class="swal2-input" placeholder="البادئة">
-                <select id="swal-type" class="swal2-input"><option value="قبض">قبض</option><option value="صرف">صرف</option></select>
-                <input id="swal-start" type="number" class="swal2-input" placeholder="بداية التسلسل">
-                <input id="swal-end" type="number" class="swal2-input" placeholder="نهاية التسلسل">`,
-            preConfirm: () => ({
-                name: document.getElementById('swal-name').value,
-                prefix: document.getElementById('swal-prefix').value,
-                type: document.getElementById('swal-type').value,
-                start: parseInt(document.getElementById('swal-start').value),
-                end: parseInt(document.getElementById('swal-end').value)
-            })
-        });
-        if (!formValues ||!formValues.name ||!formValues.prefix ||!formValues.start ||!formValues.end) return;
-        const id = Date.now().toString();
-        await set(ref(db, `projects/${currentProject}/bondTypes/${id}`), {...formValues, current: formValues.start});
-        Swal.fire('تم', 'انضاف النوع', 'success');
-    }
-
-    function deleteBondType(id) {
-        Swal.fire({
-            title: 'متأكد؟', text: "ما تقدر تتراجع", icon: 'warning',
-            showCancelButton: true, confirmButtonText: 'نعم احذف'
-        }).then((result) => {
-            if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/bondTypes/${id}`));
-        });
-    }
-
-    function loadDelegates() {
-        onValue(ref(db, `projects/${currentProject}/users`), (snap) => {
-            const tbody = document.getElementById('delegatesTableBody');
-            tbody.innerHTML = '';
-            if (snap.exists()) {
-                Object.values(snap.val()).forEach(user => {
-                    if (user.role === 'delegate') {
-                        tbody.innerHTML += `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-4">${user.name}</td>
-                                <td class="p-4">${user.phone}</td>
-                                <td class="p-4">${user.permissions?.join(', ') || 'قبض وصرف'}</td>
-                                <td class="p-4">${user.active? '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">نشط</span>' : '<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">موقوف</span>'}</td>
-                                <td class="p-4 no-print">
-                                    <button data-action="toggle-user" data-phone="${user.phone}" data-status="${!user.active}" class="text-blue-600 hover:underline ml-2">${user.active? 'إيقاف' : 'تفعيل'}</button>
-                                    <button data-action="delete-user" data-phone="${user.phone}" class="text-red-600 hover:underline">حذف</button>
-                                </td>
-                            </tr>`;
-                    }
-                });
-            }
-            // ربط الأحداث - بدل onclick
-            document.querySelectorAll('[data-action="toggle-user"]').forEach(btn => {
-                btn.addEventListener('click', () => toggleUser(btn.dataset.phone, btn.dataset.status === 'true'));
-            });
-            document.querySelectorAll('[data-action="delete-user"]').forEach(btn => {
-                btn.addEventListener('click', () => deleteUser(btn.dataset.phone));
-            });
-        });
-    }
-
-       async function addDelegate() {
-        const { value: formValues } = await Swal.fire({
+    window.addDelegate = async () => {
+        const { value: form } = await Swal.fire({
             title: 'إضافة مندوب جديد',
-            width: '700px',
-            html: `
-                <input id="swal-name" class="swal2-input" placeholder="اسم المندوب">
-                <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال">
-                <input id="swal-pass" type="password" class="swal2-input" placeholder="كلمة السر">
-                <div style="text-align:right;margin-top:10px;border-top:1px solid #eee;padding-top:10px">
-                    <h4 class="font-bold mb-2">صلاحيات أنواع السندات</h4>
-                    <label><input type="checkbox" id="perm-catch" checked> قبض</label><br>
-                    <label><input type="checkbox" id="perm-spend" checked> صرف</label>
-                </div>
-                <div style="text-align:right;margin-top:10px;border-top:1px solid #eee;padding-top:10px">
-                    <h4 class="font-bold mb-2">قيود العدد والمبالغ</h4>
-                    <input id="swal-daily-limit" type="number" class="swal2-input" placeholder="الحد الأقصى للسندات اليومية - فاضي = بلا حد">
-                    <input id="swal-total-limit" type="number" class="swal2-input" placeholder="الحد الأقصى لإجمالي السندات - فاضي = بلا حد">
-                    <input id="swal-amount-limit" type="number" class="swal2-input" placeholder="الحد الأقصى لمبلغ السند الواحد - فاضي = بلا حد">
-                    <input id="swal-total-amount-limit" type="number" class="swal2-input" placeholder="الحد الأقصى لإجمالي المبالغ - فاضي = بلا حد">
-                </div>`,
-            preConfirm: () => ({
-                name: document.getElementById('swal-name').value,
-                phone: document.getElementById('swal-phone').value,
-                password: document.getElementById('swal-pass').value,
-                permissions: [
-                    document.getElementById('perm-catch').checked? 'قبض' : null,
-                    document.getElementById('perm-spend').checked? 'صرف' : null
-                ].filter(Boolean),
-                dailyLimit: document.getElementById('swal-daily-limit').value || null,
-                totalLimit: document.getElementById('swal-total-limit').value || null,
-                amountLimit: document.getElementById('swal-amount-limit').value || null,
-                totalAmountLimit: document.getElementById('swal-total-amount-limit').value || null
-            })
-        });
-        if (!formValues ||!formValues.name ||!formValues.phone ||!formValues.password) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
-        
-        await set(ref(db, `projects/${currentProject}/users/${formValues.phone}`), {
-            name: formValues.name,
-            phone: formValues.phone,
-            password: formValues.password,
-            role: 'delegate',
-            permissions: formValues.permissions,
-            dailyLimit: formValues.dailyLimit? parseInt(formValues.dailyLimit) : null,
-            totalLimit: formValues.totalLimit? parseInt(formValues.totalLimit) : null,
-            amountLimit: formValues.amountLimit? parseFloat(formValues.amountLimit) : null,
-            totalAmountLimit: formValues.totalAmountLimit? parseFloat(formValues.totalAmountLimit) : null,
-            active: true
-        });
-        Swal.fire('تم', 'انضاف المندوب بنجاح', 'success');
-    }
-
-    function toggleUser(phone, status) {
-        update(ref(db, `projects/${currentProject}/users/${phone}`), { active: status });
-    }
-
-    function deleteUser(phone) {
-        Swal.fire({
-            title: 'متأكد؟', text: "ما تقدر تتراجع", icon: 'warning',
-            showCancelButton: true, confirmButtonText: 'نعم احذف'
-        }).then((result) => {
-            if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/users/${phone}`));
-        });
-    }
-    function loadPaymentMethods() {
-        onValue(ref(db, `projects/${currentProject}/paymentMethods`), (snap) => {
-            const tbody = document.getElementById('paymentMethodsTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            if (snap.exists()) {
-                Object.entries(snap.val()).forEach(([id, method]) => {
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4 font-bold">${method.name}</td>
-                            <td class="p-4">${method.account || '-'}</td>
-                            <td class="p-4">
-                                <span class="px-3 py-1 rounded-full text-sm ${method.active? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                    ${method.active? 'نشط' : 'موقوف'}
-                                </span>
-                            </td>
-                            <td class="p-4 no-print">
-                                <button data-action="toggle-payment" data-id="${id}" data-status="${method.active}" class="text-blue-600 hover:underline ml-3">
-                                    ${method.active? 'إيقاف' : 'تفعيل'}
-                                </button>
-                                <button data-action="delete-payment" data-id="${id}" class="text-red-600 hover:underline">حذف</button>
-                            </td>
-                        </tr>`;
-                });
-                document.querySelectorAll('[data-action="toggle-payment"]').forEach(btn => {
-                    btn.addEventListener('click', () => togglePaymentMethod(btn.dataset.id, btn.dataset.status === 'true'));
-                });
-                document.querySelectorAll('[data-action="delete-payment"]').forEach(btn => {
-                    btn.addEventListener('click', () => deletePaymentMethod(btn.dataset.id));
-                });
+            html: `<input id="swal-name" class="swal2-input" placeholder="اسم المندوب">
+                   <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال">
+                   <input id="swal-pass" type="password" class="swal2-input" placeholder="كلمة المرور">`,
+            confirmButtonText: 'حفظ',
+            showCancelButton: true, cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const name = document.getElementById('swal-name').value;
+                const phone = document.getElementById('swal-phone').value;
+                const password = document.getElementById('swal-pass').value;
+                if (!name || !phone || !password) Swal.showValidationMessage('املأ كل الحقول');
+                return { name, phone, password, projectCode: managerData.projectCode }
             }
         });
+        if (form) {
+            await addDoc(collection(db, 'delegates'), form);
+            Swal.fire('تم', 'تم إضافة المندوب', 'success');
+            loadDelegates();
+        }
     }
 
-    async function addPaymentMethod() {
-        const { value: formValues } = await Swal.fire({
-            title: 'إضافة طريقة دفع جديدة',
-            html: `
-                <input id="swal-pm-name" class="swal2-input" placeholder="اسم الطريقة - مثال: كاش, تحويل بنكي">
-                <input id="swal-pm-account" class="swal2-input" placeholder="رقم الحساب / IBAN - اختياري">`,
-            preConfirm: () => ({
-                name: document.getElementById('swal-pm-name').value,
-                account: document.getElementById('swal-pm-account').value
-            })
-        });
-        if (!formValues ||!formValues.name) return Swal.fire('خطأ', 'اكتب اسم الطريقة', 'error');
-        
-        const methodId = Date.now().toString();
-        await set(ref(db, `projects/${currentProject}/paymentMethods/${methodId}`), {
-            id: methodId,
-            name: formValues.name,
-            account: formValues.account,
-            active: true
-        });
-        Swal.fire('تم', 'انضافت طريقة الدفع', 'success');
+    window.logout = () => {
+        localStorage.removeItem('managerData');
+        location.href = './index.html';
     }
 
-    function togglePaymentMethod(id, currentStatus) {
-        update(ref(db, `projects/${currentProject}/paymentMethods/${id}`), { active: !currentStatus });
-    }
-
-    function deletePaymentMethod(id) {
-        Swal.fire({
-            title: 'متأكد؟', text: 'ما تقدر تتراجع', icon: 'warning',
-            showCancelButton: true, confirmButtonText: 'نعم احذف', cancelButtonText: 'إلغاء'
-        }).then((result) => {
-            if (result.isConfirmed) remove(ref(db, `projects/${currentProject}/paymentMethods/${id}`));
-        });
-    }
-    function loadBonds() {
-        onValue(ref(db, `projects/${currentProject}/bonds`), (snap) => {
-            const tbody = document.getElementById('bondsTableBody');
-            tbody.innerHTML = '';
-            if (snap.exists()) {
-                Object.entries(snap.val()).reverse().forEach(([id, bond]) => {
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4 font-bold">${bond.number}</td>
-                            <td class="p-4">${bond.typeName}</td>
-                            <td class="p-4">${bond.client}</td>
-                            <td class="p-4 font-bold ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toFixed(2)}</td>
-                            <td class="p-4">${bond.date}</td>
-                            <td class="p-4">${bond.createdByName}</td>
-                            <td class="p-4 no-print">
-                                <button data-action="print-bond" data-id="${id}" class="text-blue-600 hover:underline">طباعة</button>
-                            </td>
-                        </tr>`;
-                });
-            }
-            // ربط أحداث الطباعة - بدل onclick
-            document.querySelectorAll('[data-action="print-bond"]').forEach(btn => {
-                btn.addEventListener('click', () => printBond(btn.dataset.id));
-            });
-        });
-    }
-
-    async function saveBond() {
-        const typeId = document.getElementById('bondTypeSelect').value;
-        const amount = document.getElementById('bondAmount').value;
-        const date = document.getElementById('bondDate').value;
-        const client = document.getElementById('bondClient').value;
-        const description = document.getElementById('bondDescription').value;
-
-        if (!typeId ||!amount ||!date ||!client) return Swal.fire('خطأ', 'عبي كل الحقول المطلوبة', 'error');
-
-        const typeSnap = await get(ref(db, `projects/${currentProject}/bondTypes/${typeId}`));
-        const typeData = typeSnap.val();
-        const newNumber = (typeData.current || typeData.start);
-        
-        if (newNumber > typeData.end) return Swal.fire('خطأ', 'وصلت لنهاية التسلسل لهذا النوع', 'error');
-
-        const bondId = Date.now().toString();
-        const bondNumber = `${typeData.prefix}-${String(newNumber).padStart(6, '0')}`;
-
-        await set(ref(db, `projects/${currentProject}/bonds/${bondId}`), {
-            id: bondId,
-            number: bondNumber,
-            typeId: typeId,
-            typeName: typeData.name,
-            type: typeData.type,
-            amount: amount,
-            date: date,
-            client: client,
-            description: description,
-            createdBy: currentUser.phone,
-            createdByName: currentUser.name,
-            createdAt: Date.now()
-        });
-
-        await update(ref(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: newNumber + 1 });
-
-        Swal.fire('تم', `انحفظ السند رقم ${bondNumber}`, 'success');
-        document.getElementById('bondAmount').value = '';
-        document.getElementById('bondClient').value = '';
-        document.getElementById('bondDescription').value = '';
-    }
-
-    async function printBond(bondId) {
-        const snap = await get(ref(db, `projects/${currentProject}/bonds/${bondId}`));
-        const bond = snap.val();
-        const printArea = document.getElementById('printArea');
-        printArea.innerHTML = `
-            <div class="bond-print">
-                <div style="text-align:center;margin-bottom:20px">
-                    ${projectData.logo? `<img src="${projectData.logo}" style="width:80px;margin:0 auto">` : ''}
-                    <h1 style="font-size:24px;font-weight:800;margin:10px 0">${projectData.companyName}</h1>
-                    <p>${projectData.address || ''}</p>
-                </div>
-                <div style="border:2px solid #000;padding:15px;margin:20px 0">
-                    <h2 style="text-align:center;font-size:20px;font-weight:700;margin-bottom:15px">سند ${bond.type}</h2>
-                    <table style="width:100%;font-size:14px">
-                        <tr><td style="padding:5px;font-weight:bold">رقم السند:</td><td>${bond.number}</td><td style="font-weight:bold">التاريخ:</td><td>${bond.date}</td></tr>
-                        <tr><td style="padding:5px;font-weight:bold">العميل:</td><td colspan="3">${bond.client}</td></tr>
-                        <tr><td style="padding:5px;font-weight:bold">المبلغ:</td><td colspan="3" style="font-size:18px;font-weight:800">${parseFloat(bond.amount).toFixed(2)} ريال سعودي</td></tr>
-                        <tr><td style="padding:5px;font-weight:bold">البيان:</td><td colspan="3">${bond.description}</td></tr>
-                    </table>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin-top:30px">
-                    <div>المستلم<br><br>__________</div>
-                    <div>المحاسب<br><br>__________</div>
-                    ${projectData.stamp? `<div><img src="${projectData.stamp}" style="width:100px"></div>` : ''}
-                </div>
-            </div>`;
-        window.print();
-    }
-
-    function showChangePassword() {
-        Swal.fire({
-            title: 'تغيير كلمة السر',
-            html: `<input id="swal-old" type="password" class="swal2-input" placeholder="كلمة السر القديمة">
-                   <input id="swal-new" type="password" class="swal2-input" placeholder="كلمة السر الجديدة">`,
-            preConfirm: () => ({
-                old: document.getElementById('swal-old').value,
-                new: document.getElementById('swal-new').value
-            })
-        }).then(async (result) => {
-            if (!result.value) return;
-            if (result.value.old!== currentUser.password) return Swal.fire('خطأ', 'كلمة السر القديمة غلط', 'error');
-            await update(ref(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: result.value.new });
-            Swal.fire('تم', 'تغيرت كلمة السر', 'success');
-        });
-    }
-
-    function exportTableToExcel(tableId, filename) {
-        const wb = XLSX.utils.table_to_book(document.getElementById(tableId));
-        XLSX.writeFile(wb, `${filename}.xlsx`);
-    }
+    loadDelegates();
 </script>
 </body>
 </html>
