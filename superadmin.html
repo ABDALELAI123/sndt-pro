@@ -675,6 +675,150 @@
     // تحميل أولي
     loadAppSettings();
     loadProjects();
+    // حفظ مدير جديد
+    window.saveManager = async () => {
+        const data = {
+            name: document.getElementById('modal_managerName').value,
+            phone: document.getElementById('modal_managerPhone').value,
+            password: document.getElementById('modal_managerPassword').value,
+            projectCode: document.getElementById('modal_managerProject').value,
+            status: 'active',
+            createdAt: new Date()
+        };
+
+        if(!data.name || !data.phone || !data.password || !data.projectCode) {
+            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
+        }
+
+        await addDoc(collection(db, 'managers'), data);
+        closeModal('managerModal');
+        loadManagers();
+        Swal.fire('تم', 'تم إضافة المدير بنجاح', 'success');
+    }
+
+    // حفظ مشروع جديد
+    window.saveProject = async () => {
+        const data = {
+            code: document.getElementById('modal_projectCode').value,
+            name: document.getElementById('modal_projectName').value,
+            status: 'active'
+        };
+
+        if(!data.code || !data.name) {
+            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
+        }
+
+        await addDoc(collection(db, 'projects'), data);
+        closeModal('projectModal');
+        loadProjects();
+        Swal.fire('تم', 'تم إضافة المشروع بنجاح', 'success');
+    }
+
+    // تحميل المدراء
+    window.loadManagers = async () => {
+        const q = query(collection(db, 'managers'));
+        const snap = await getDocs(q);
+        const tbody = document.getElementById('managersTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        
+        snap.forEach(docSnap => {
+            const m = docSnap.data();
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${m.name}</td>
+                    <td class="p-3">${m.projectCode}</td>
+                    <td class="p-3">${m.phone}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded text-sm ${m.status === 'active'? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${m.status === 'active'? 'نشط' : 'متوقف'}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="deleteManager('${docSnap.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    window.deleteManager = async (id) => {
+        if(confirm('متأكد من حذف المدير؟')) {
+            await deleteDoc(doc(db, 'managers', id));
+            loadManagers();
+        }
+    }
+
+    window.showAddManagerModal = () => {
+        document.getElementById('managerModal').classList.remove('hidden');
+        document.getElementById('managerModal').classList.add('flex');
+    }
+
+    window.showAddProjectModal = () => {
+        document.getElementById('projectModal').classList.remove('hidden');
+        document.getElementById('projectModal').classList.add('flex');
+    }
+
+    window.closeModal = (id) => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById(id).classList.remove('flex');
+    }
+
+    // تحميل المشاريع
+    window.loadProjects = async () => {
+        const q = query(collection(db, 'projects'));
+        const snap = await getDocs(q);
+        const tbody = document.getElementById('projectsTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        
+        snap.forEach(docSnap => {
+            const p = docSnap.data();
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${p.code}</td>
+                    <td class="p-3">${p.name}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded text-sm bg-green-100 text-green-800">نشط</span>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="deleteProject('${docSnap.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    window.deleteProject = async (id) => {
+        if(confirm('متأكد من حذف المشروع؟')) {
+            await deleteDoc(doc(db, 'projects', id));
+            loadProjects();
+        }
+    }
+
+    // تبديل اللغة
+    window.toggleLanguage = () => {
+        const current = document.documentElement.lang;
+        if(current === 'ar') {
+            document.documentElement.lang = 'en';
+            document.documentElement.dir = 'ltr';
+            document.getElementById('langText').textContent = 'عربي';
+        } else {
+            document.documentElement.lang = 'ar';
+            document.documentElement.dir = 'rtl';
+            document.getElementById('langText').textContent = 'English';
+        }
+    }
+
+    // تحقق دخول سوبر أدمن
+    if(localStorage.getItem('userRole') !== 'superadmin') {
+        location.href = './index.html';
+    }
+
+    // تحميل أولي
+    loadAppSettings();
+    loadProjects();
+    loadManagers();
 </script>
 </body>
 </html>
