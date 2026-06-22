@@ -7,47 +7,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { font-family: 'Cairo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-       .hidden { display: none!important; }
-    </style>
+    <style> body { font-family: 'Cairo', sans-serif; } </style>
     <script type="module">
         import { t, setLanguage, applyLanguage } from './lang.js';
         window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage;
         applyLanguage();
     </script>
 </head>
-<body class="flex items-center justify-center p-4">
+<body class="bg-gradient-to-br from-blue-900 to-purple-900 min-h-screen flex items-center justify-center p-4">
 
-    <div id="loginScreen" class="w-full max-w-md">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 relative">
-            <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')"
-                    class="absolute top-4 left-4 text-gray-400 hover:text-gray-600 text-2xl">🌍</button>
-
-            <div class="flex justify-center mb-6">
-                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                    <i class="fas fa-file-invoice text-white text-3xl"></i>
-                </div>
-            </div>
-
-            <h1 class="text-3xl font-extrabold text-center mb-2">السندات الذكية</h1>
-            <p class="text-center text-gray-500 mb-8">تسجيل الدخول</p>
-
-            <div class="space-y-4">
-                <input id="projectCode" type="text" class="w-full border border-gray-300 p-3 rounded-xl text-center text-lg" placeholder="كود المشروع" dir="ltr">
-                <input id="phone" type="tel" class="w-full border border-gray-300 p-3 rounded-xl text-center text-lg" placeholder="رقم الجوال" dir="ltr">
-                <input id="password" type="password" class="w-full border border-gray-300 p-3 rounded-xl text-center text-lg" placeholder="كلمة المرور">
-                <button id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">تسجيل الدخول</button>
-            </div>
-        </div>
+<div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-800">السندات الذكية</h1>
+        <p class="text-gray-500">نظام إدارة السندات</p>
     </div>
+
+    <div class="space-y-4">
+        <input id="projectCode" type="text" placeholder="كود المشروع" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-lg">
+        <input id="phone" type="tel" placeholder="رقم الجوال" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-lg">
+        <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-lg">
+        <button onclick="login()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg">
+            تسجيل الدخول
+        </button>
+    </div>
+
+    <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')" class="w-full mt-4 text-gray-500">🌍 تغيير اللغة</button>
+</div>
 
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-    // Firebase Config حقك ركبته لك خلاص
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
       authDomain: "sanadat-pro.firebaseapp.com",
@@ -61,46 +51,40 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // السوبر أدمن الثابت
-    const SUPER_ADMIN = { projectCode: "001122334455", phone: "0597087767", password: "500600" };
-
-    document.getElementById('loginBtn').onclick = async () => {
+    window.login = async () => {
         const projectCode = document.getElementById('projectCode').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const password = document.getElementById('password').value.trim();
 
-        if (!projectCode ||!phone ||!password) return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
-
-        // 1. تحقق سوبر أدمن
-        if (projectCode === SUPER_ADMIN.projectCode && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
-            location.href = './superadmin.html'; 
+        if (!projectCode ||!phone ||!password) {
+            Swal.fire('خطأ', 'املأ كل الحقول', 'error');
             return;
         }
 
-        try {
-            // 2. تحقق مدير من Firebase
-            const q1 = query(collection(db, 'managers'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
-            const snap1 = await getDocs(q1);
-            if (!snap1.empty) {
-                location.href = './manager.html';
-                return;
-            }
-
-            // 3. تحقق مندوب من Firebase
-            const q2 = query(collection(db, 'delegates'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
-            const snap2 = await getDocs(q2);
-            if (!snap2.empty) {
-                location.href = './delegate.html';
-                return;
-            }
-
-            Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
-
-        } catch (error) {
-            console.error(error);
-            Swal.fire('خطأ', 'مشكلة في الاتصال بقاعدة البيانات. تأكد من قواعد Firestore', 'error');
+        // 1. تحقق من السوبر أدمن
+        if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
+            location.href = './superadmin.html';
+            return;
         }
-    };
+
+        // 2. تحقق من المدراء في Firebase
+        const q = query(collection(db, 'managers'),
+            where('projectCode', '==', projectCode),
+            where('phone', '==', phone),
+            where('password', '==', password)
+        );
+
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+        } else {
+            // خزن بيانات المدير
+            const manager = snap.docs[0].data();
+            localStorage.setItem('managerData', JSON.stringify(manager));
+            location.href = './manager.html';
+        }
+    }
 </script>
 </body>
 </html>
