@@ -3,605 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="appName">السندات الذكية - المندوب</title>
+    <title>لوحة تحكم المندوب</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-        .hidden { display: none!important; }
-        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-        .project-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 2px solid white; }
-        @media print {.no-print { display: none!important; }.print-area { display: block!important; } body { background: white; } }
-        .print-area { display: none; }
-        .bond-print { width: 210mm; margin: 0 auto; padding: 15mm; font-family: 'Cairo', sans-serif; }
-        .excel-table input { width: 100%; border: none; background: transparent; padding: 4px; }
-        .excel-table input:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
-    </style>
-
+    <style> body { font-family: 'Cairo', sans-serif; } </style>
     <script type="module">
         import { t, setLanguage, applyLanguage } from './lang.js';
-        window.t = t;
-        window.setLanguage = setLanguage;
-        window.applyLanguage = applyLanguage;
+        window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage;
         applyLanguage();
     </script>
 </head>
-<body class="bg-gray-50">
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg no-print">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <img id="headerLogo" class="project-logo hidden" src="" alt="Logo">
-                <div>
-                    <h1 class="text-2xl font-extrabold" data-i18n="appName">السندات الذكية</h1>
-                    <p class="text-sm opacity-90"><span id="currentProjectName"></span> | <span id="currentUser"></span> | <span class="bg-white/20 px-2 py-1 rounded" data-i18n="delegate">مندوب</span></p>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')" class="bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg font-bold transition text-sm">🌍</button>
-                <button id="changePassBtn" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold transition text-sm" data-i18n="changePassword">تغيير كلمة السر</button>
-                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition text-sm" data-i18n="logout">خروج</button>
-            </div>
+<body class="bg-gradient-to-br from-blue-500 to-indigo-600 min-h-screen p-4">
+
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
+        <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
+        <div class="text-right">
+            <h1 class="text-2xl font-extrabold">لوحة تحكم المندوب</h1>
+            <p class="text-gray-500" id="delegateInfo">مشروع: | المندوب: </p>
+        </div>
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-user text-white text-2xl"></i>
         </div>
     </div>
 
-    <div class="bg-white shadow-md border-b no-print">
-        <div class="flex overflow-x-auto">
-            <button data-tab="dashboard" class="tab-btn px-8 py-4 active" data-i18n="dashboard">الرئيسية</button>
-            <button data-tab="createBond" class="tab-btn px-8 py-4" data-i18n="createBond">إنشاء سند</button>
-            <button data-tab="bondsList" class="tab-btn px-8 py-4" data-i18n="myBonds">سنداتي</button>
-            <button data-tab="printPreview" class="tab-btn px-8 py-4" data-i18n="printPreview">معاينة الطباعة</button>
-            <button data-tab="smartSheet" class="tab-btn px-8 py-4" data-i18n="smartSheet">الصفحة الذكية</button>
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="addBond()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold">
+                <i class="fas fa-plus"></i> إضافة سند جديد
+            </button>
+            <h2 class="text-xl font-bold"><i class="fas fa-file-invoice text-blue-500"></i> سنداتي</h2>
         </div>
+        <div id="bondsList" class="space-y-3"></div>
     </div>
-    <div class="p-6">
-        <div id="dashboard" class="tab-content">
-            <h2 class="text-3xl font-extrabold mb-6 text-gray-800" data-i18n="dashboard">لوحة التحكم</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90" data-i18n="totalIncome">إجمالي قبض سنداتي</p>
-                    <p id="totalIncome" class="text-4xl font-extrabold mt-2">0.00</p>
-                    <p class="text-xs mt-1 opacity-75" data-i18n="currency">ريال سعودي</p>
-                </div>
-                <div class="bg-gradient-to-br from-red-500 to-rose-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90" data-i18n="totalExpense">إجمالي صرف سنداتي</p>
-                    <p id="totalExpense" class="text-4xl font-extrabold mt-2">0.00</p>
-                    <p class="text-xs mt-1 opacity-75" data-i18n="currency">ريال سعودي</p>
-                </div>
-                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-xl shadow-lg text-white">
-                    <p class="text-sm opacity-90" data-i18n="bondsCount">عدد سنداتي</p>
-                    <p id="totalBonds" class="text-4xl font-extrabold mt-2">0</p>
-                    <p class="text-xs mt-1 opacity-75" data-i18n="bond">سند</p>
-                </div>
-            </div>
-            <div id="permissionsWarning" class="hidden bg-yellow-100 border-r-4 border-yellow-500 text-yellow-700 p-4 rounded-lg">
-                <p class="font-bold" data-i18n="noPermission">تنبيه: لا تملك أي صلاحيات لإنشاء سندات. راجع مدير المشروع.</p>
-            </div>
-        </div>
+</div>
 
-        <div id="createBond" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg max-w-3xl">
-                <h2 class="text-3xl font-extrabold mb-6 text-gray-800" data-i18n="createBond">إنشاء سند جديد</h2>
-                <div class="space-y-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700" data-i18n="bondType">نوع السند</label>
-                            <select id="bondTypeSelect" class="w-full p-3 border-2 rounded-lg">
-                                <option value="" data-i18n="selectBondType">اختر نوع السند</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700" data-i18n="amount">المبلغ</label>
-                            <input id="bondAmount" type="number" step="0.01" class="w-full p-3 border-2 rounded-lg" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700" data-i18n="date">التاريخ</label>
-                            <input id="bondDate" type="date" class="w-full p-3 border-2 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700" data-i18n="clientName">اسم العميل</label>
-                            <input id="bondClient" type="text" class="w-full p-3 border-2 rounded-lg" data-i18n-placeholder="clientName" placeholder="اسم العميل أو الجهة">
-                        </div>
-                        <div id="clientPhoneField" class="hidden">
-                            <label class="block mb-2 font-bold text-gray-700"><span data-i18n="clientPhone">جوال العميل</span> <span class="text-red-500">*</span></label>
-                            <input id="bondClientPhone" type="tel" class="w-full p-3 border-2 rounded-lg" placeholder="05xxxxxxxx" dir="ltr">
-                            <p class="text-xs text-gray-500 mt-1" data-i18n="requiredForReceipt">مطلوب لسندات القبض فقط</p>
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-bold text-gray-700" data-i18n="paymentMethod">طريقة الدفع</label>
-                            <select id="bondPaymentMethod" class="w-full p-3 border-2 rounded-lg">
-                                <option value="" data-i18n="selectPaymentMethod">اختر طريقة الدفع</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block mb-2 font-bold text-gray-700" data-i18n="description">البيان</label>
-                        <textarea id="bondDescription" class="w-full p-3 border-2 rounded-lg" rows="3" data-i18n-placeholder="description" placeholder="تفاصيل السند..."></textarea>
-                    </div>
-                    <button id="saveBondBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition" data-i18n="saveBond">حفظ السند</button>
-                </div>
-            </div>
-        </div>
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        <div id="bondsList" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800" data-i18n="myBonds">سنداتي</h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="bondsTable">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="p-4 text-right font-bold" data-i18n="bondNumber">رقم السند</th>
-                            <th class="p-4 text-right font-bold" data-i18n="type">النوع</th>
-                            <th class="p-4 text-right font-bold" data-i18n="client">العميل</th>
-                            <th class="p-4 text-right font-bold" data-i18n="amount">المبلغ</th>
-                            <th class="p-4 text-right font-bold" data-i18n="date">التاريخ</th>
-                            <th class="p-4 text-right font-bold no-print" data-i18n="actions">تحكم</th>
-                        </tr></thead>
-                        <tbody id="bondsTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+      authDomain: "sanadat-pro.firebaseapp.com",
+      databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sanadat-pro",
+      storageBucket: "sanadat-pro.firebasestorage.app",
+      messagingSenderId: "1039476751095",
+      appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+    };
 
-        <div id="printPreview" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <h2 class="text-3xl font-extrabold text-gray-800 mb-6" data-i18n="printPreview">معاينة الطباعة</h2>
-                <div id="noBondSelected" class="text-center py-12 text-gray-500">
-                    <i class="fas fa-file-invoice text-6xl mb-4"></i>
-                    <p class="text-xl" data-i18n="selectBondToPreview">اختر سند من تبويب "سنداتي" واضغط "معاينة" عشان تشوفه هنا</p>
-                </div>
-                <div id="printPreviewArea" class="hidden">
-                    <div id="bondPreviewContent" class="border-2 border-gray-300 p-8 rounded-xl bg-white max-w-2xl mx-auto shadow-xl"></div>
-                    <div class="flex gap-3 justify-center mt-6 no-print flex-wrap">
-                        <button id="printBondBtn" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition">
-                            <i class="fas fa-print ml-2"></i><span data-i18n="print">طباعة</span>
-                        </button>
-                        <button id="whatsappBondBtn" class="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition">
-                            <i class="fab fa-whatsapp ml-2"></i><span data-i18n="sendWhatsapp">إرسال واتساب</span>
-                        </button>
-                        <button id="whatsappClientBtn" class="bg-green-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-600 transition hidden">
-                            <i class="fab fa-whatsapp ml-2"></i><span data-i18n="sendToClient">إرسال للعميل</span>
-                        </button>
-                        <button id="downloadPdfBtn" class="bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition">
-                            <i class="fas fa-file-pdf ml-2"></i><span data-i18n="downloadPdf">تحميل PDF</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const delegateData = JSON.parse(localStorage.getItem('delegateData') || '{}');
 
-        <div id="smartSheet" class="tab-content hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
-                    <h2 class="text-3xl font-extrabold text-gray-800" data-i18n="smartSheet">الصفحة الذكية</h2>
-                    <div class="flex gap-2">
-                        <input id="searchSheet" type="text" data-i18n-placeholder="search" placeholder="بحث..." class="p-2 border-2 rounded-lg">
-                        <button id="exportSheetBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold" data-i18n="exportExcel">تصدير Excel</button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full excel-table" id="smartSheetTable">
-                        <thead class="bg-gray-100"><tr>
-                            <th class="p-3 text-right border" data-i18n="bondNumber">رقم السند</th>
-                            <th class="p-3 text-right border" data-i18n="type">النوع</th>
-                            <th class="p-3 text-right border" data-i18n="client">العميل</th>
-                            <th class="p-3 text-right border" data-i18n="amount">المبلغ</th>
-                            <th class="p-3 text-right border" data-i18n="date">التاريخ</th>
-                            <th class="p-3 text-right border" data-i18n="description">البيان</th>
-                            <th class="p-3 text-right border" data-i18n="paymentMethod">طريقة الدفع</th>
-                        </tr></thead>
-                        <tbody id="smartSheetBody"></tbody>
-                        <tfoot class="bg-blue-50 font-bold">
-                            <tr>
-                                <td colspan="3" class="p-3 border text-left" data-i18n="total">الإجمالي:</td>
-                                <td id="sheetTotal" class="p-3 border">0.00</td>
-                                <td colspan="3" class="p-3 border"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="printArea" class="print-area"></div>
-    <script type="module">
-    import { db } from './firebase.js';
-    import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const role = localStorage.getItem('role');
-    const phone = localStorage.getItem('phone');
-    const currentProject = localStorage.getItem('projectCode');
-
-    if (role!== 'delegate' ||!currentProject || currentProject === 'SUPERADMIN') {
-        window.location.href = 'index.html';
+    if(!delegateData.projectCode || localStorage.getItem('userRole') !== 'delegate') {
+        location.href = './index.html';
     }
+    
+    document.getElementById('delegateInfo').textContent = `مشروع: ${delegateData.projectCode} | المندوب: ${delegateData.name}`;
 
-    let currentUser = null, projectData = null, userPermissions = [], selectedBondForPrint = null, allPaymentMethods = [], currentBondType = null;
-
-    // تحميل بيانات المستخدم والمشروع
-    const userDoc = await getDoc(doc(db, `projects/${currentProject}/users/${phone}`));
-    currentUser = userDoc.data();
-    userPermissions = currentUser.permissions || [];
-    document.getElementById('currentUser').textContent = currentUser.name;
-
-    const projectDoc = await getDoc(doc(db, `projects/${currentProject}`));
-    projectData = projectDoc.data();
-    document.getElementById('currentProjectName').textContent = projectData.companyName;
-    if (projectData.logo) {
-        document.getElementById('headerLogo').src = projectData.logo;
-        document.getElementById('headerLogo').classList.remove('hidden');
-    }
-
-    // الأحداث
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-    document.getElementById('changePassBtn').addEventListener('click', showChangePassword);
-    document.getElementById('saveBondBtn').addEventListener('click', saveBond);
-    document.getElementById('printBondBtn')?.addEventListener('click', () => window.print());
-    document.getElementById('whatsappBondBtn')?.addEventListener('click', sendWhatsApp);
-    document.getElementById('whatsappClientBtn')?.addEventListener('click', sendWhatsAppToClient);
-    document.getElementById('downloadPdfBtn')?.addEventListener('click', downloadPDF);
-    document.getElementById('searchSheet')?.addEventListener('input', filterSheet);
-    document.getElementById('exportSheetBtn')?.addEventListener('click', exportSheet);
-    document.getElementById('bondTypeSelect').addEventListener('change', handleBondTypeChange);
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showTab(e.target.dataset.tab));
-    });
-
-    if(document.getElementById('bondDate')) {
-        document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
-    }
-
-    // تحميل البيانات
-    loadDashboard();
-    loadBondTypes();
-    loadBonds();
-    loadPaymentMethods();
-    loadSmartSheet();
-    checkPermissions();
-
-    async function handleBondTypeChange(e) {
-        if (!e.target.value) {
-            document.getElementById('clientPhoneField').classList.add('hidden');
+    async function loadBonds() {
+        const q = query(collection(db, 'bonds'), 
+            where('projectCode', '==', delegateData.projectCode),
+            where('delegatePhone', '==', delegateData.phone)
+        );
+        const snap = await getDocs(q);
+        const list = document.getElementById('bondsList');
+        list.innerHTML = '';
+        
+        if(snap.empty) {
+            list.innerHTML = '<p class="text-center text-gray-500 py-8">لا توجد سندات حالياً</p>';
             return;
         }
-        const typeDoc = await getDoc(doc(db, `projects/${currentProject}/bondTypes/${e.target.value}`));
-        if (typeDoc.exists()) {
-            currentBondType = typeDoc.data();
-            if (currentBondType.type === 'قبض') {
-                document.getElementById('clientPhoneField').classList.remove('hidden');
-            } else {
-                document.getElementById('clientPhoneField').classList.add('hidden');
+
+        snap.forEach(doc => {
+            const b = doc.data();
+            list.innerHTML += `
+                <div class="border border-gray-200 p-4 rounded-xl">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm">${b.amount} ريال</span>
+                        <p class="font-bold text-lg">${b.customerName}</p>
+                    </div>
+                    <p class="text-gray-600 text-sm text-right">التاريخ: ${b.date || 'غير محدد'}</p>
+                    <p class="text-gray-600 text-sm text-right">ملاحظات: ${b.notes || 'لا يوجد'}</p>
+                </div>`;
+        });
+    }
+
+    window.addBond = async () => {
+        const { value: form } = await Swal.fire({
+            title: 'إضافة سند جديد',
+            html: `<input id="swal-customer" class="swal2-input" placeholder="اسم العميل">
+                   <input id="swal-amount" type="number" class="swal2-input" placeholder="المبلغ">
+                   <input id="swal-date" type="date" class="swal2-input">
+                   <textarea id="swal-notes" class="swal2-textarea" placeholder="ملاحظات"></textarea>`,
+            confirmButtonText: 'حفظ السند',
+            showCancelButton: true, cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const customerName = document.getElementById('swal-customer').value;
+                const amount = document.getElementById('swal-amount').value;
+                const date = document.getElementById('swal-date').value;
+                const notes = document.getElementById('swal-notes').value;
+                if (!customerName || !amount) Swal.showValidationMessage('اسم العميل والمبلغ مطلوب');
+                return { customerName, amount, date, notes }
             }
-        }
-    }
-
-    function checkPermissions() {
-        if (userPermissions.length === 0) {
-            document.getElementById('permissionsWarning').classList.remove('hidden');
-            document.getElementById('saveBondBtn').disabled = true;
-            document.getElementById('saveBondBtn').classList.add('opacity-50', 'cursor-not-allowed');
-        }
-    }
-
-    function showTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName).classList.remove('hidden');
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    }
-
-    function logout() {
-        localStorage.clear();
-        window.location.href = 'index.html';
-    }
-
-    function loadDashboard() {
-        onSnapshot(collection(db, `projects/${currentProject}/bonds`), (snap) => {
-            let income = 0, expense = 0, count = 0;
-            snap.forEach(docSnap => {
-                const b = docSnap.data();
-                if (b.createdBy === currentUser.phone) {
-                    if (b.type === 'قبض') income += parseFloat(b.amount);
-                    if (b.type === 'صرف') expense += parseFloat(b.amount);
-                    count++;
-                }
+        });
+        if (form) {
+            await addDoc(collection(db, 'bonds'), {
+                ...form,
+                projectCode: delegateData.projectCode,
+                delegatePhone: delegateData.phone,
+                delegateName: delegateData.name,
+                createdAt: serverTimestamp()
             });
-            document.getElementById('totalIncome').textContent = income.toFixed(2);
-            document.getElementById('totalExpense').textContent = expense.toFixed(2);
-            document.getElementById('totalBonds').textContent = count;
-        });
-    }
-
-    function loadBondTypes() {
-        onSnapshot(collection(db, `projects/${currentProject}/bondTypes`), (snap) => {
-            const select = document.getElementById('bondTypeSelect');
-            select.innerHTML = `<option value="">${t('selectBondType')}</option>`;
-            snap.forEach(docSnap => {
-                const type = docSnap.data();
-                if (userPermissions.includes(type.type) || userPermissions.includes('all')) {
-                    select.innerHTML += `<option value="${docSnap.id}">${type.name} - ${type.type}</option>`;
-                }
-            });
-        });
-    }
-
-    function loadPaymentMethods() {
-        onSnapshot(collection(db, `projects/${currentProject}/paymentMethods`), (snap) => {
-            const select = document.getElementById('bondPaymentMethod');
-            if (!select) return;
-            select.innerHTML = `<option value="">${t('selectPaymentMethod')}</option>`;
-            allPaymentMethods = [];
-            snap.forEach(docSnap => {
-                const method = docSnap.data();
-                if (method.active) {
-                    allPaymentMethods.push(method);
-                    select.innerHTML += `<option value="${method.name}">${method.name} ${method.account? '- ' + method.account : ''}</option>`;
-                }
-            });
-        });
-    }
-            function loadBonds() {
-        onSnapshot(collection(db, `projects/${currentProject}/bonds`), (snap) => {
-            const tbody = document.getElementById('bondsTableBody');
-            tbody.innerHTML = '';
-            const bonds = [];
-            snap.forEach(docSnap => bonds.push({id: docSnap.id, ...docSnap.data()}));
-            bonds.reverse().forEach(bond => {
-                if (bond.createdBy === currentUser.phone) {
-                    tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-4 font-bold">${bond.number}</td>
-                            <td class="p-4">${bond.typeName}</td>
-                            <td class="p-4">${bond.client}</td>
-                            <td class="p-4 font-bold ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${parseFloat(bond.amount).toFixed(2)}</td>
-                            <td class="p-4">${bond.date}</td>
-                            <td class="p-4 no-print">
-                                <button data-action="preview-bond" data-id="${bond.id}" class="text-purple-600 hover:underline ml-3">${t('preview')}</button>
-                                <button data-action="print-bond" data-id="${bond.id}" class="text-blue-600 hover:underline">${t('print')}</button>
-                            </td>
-                        </tr>`;
-                }
-            });
-            document.querySelectorAll('[data-action="preview-bond"]').forEach(btn => {
-                btn.addEventListener('click', () => previewBond(btn.dataset.id));
-            });
-            document.querySelectorAll('[data-action="print-bond"]').forEach(btn => {
-                btn.addEventListener('click', () => printBond(btn.dataset.id));
-            });
-        });
-    }
-
-    function loadSmartSheet() {
-        onSnapshot(collection(db, `projects/${currentProject}/bonds`), (snap) => {
-            const tbody = document.getElementById('smartSheetBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            let total = 0;
-            snap.forEach(docSnap => {
-                const bond = docSnap.data();
-                if (bond.createdBy === currentUser.phone) {
-                    const amount = parseFloat(bond.amount);
-                    total += bond.type === 'قبض'? amount : -amount;
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-2 border">${bond.number}</td>
-                            <td class="p-2 border">${bond.typeName}</td>
-                            <td class="p-2 border">${bond.client}</td>
-                            <td class="p-2 border ${bond.type === 'قبض'? 'text-green-600' : 'text-red-600'}">${amount.toFixed(2)}</td>
-                            <td class="p-2 border">${bond.date}</td>
-                            <td class="p-2 border">${bond.description || '-'}</td>
-                            <td class="p-2 border">${bond.paymentMethod || '-'}</td>
-                        </tr>`;
-                }
-            });
-            document.getElementById('sheetTotal').textContent = total.toFixed(2);
-        });
-    }
-
-    function filterSheet() {
-        const search = document.getElementById('searchSheet').value.toLowerCase();
-        document.querySelectorAll('#smartSheetBody tr').forEach(row => {
-            row.style.display = row.textContent.toLowerCase().includes(search)? '' : 'none';
-        });
-    }
-
-    function exportSheet() {
-        Swal.fire(t('comingSoon'), t('exportSoon'), 'info');
-    }
-
-    async function saveBond() {
-        const typeId = document.getElementById('bondTypeSelect').value;
-        const amount = parseFloat(document.getElementById('bondAmount').value);
-        const date = document.getElementById('bondDate').value;
-        const client = document.getElementById('bondClient').value;
-        const clientPhone = document.getElementById('bondClientPhone').value;
-        const description = document.getElementById('bondDescription').value;
-        const paymentMethod = document.getElementById('bondPaymentMethod').value;
-
-        if (!typeId ||!amount ||!date ||!client) return Swal.fire(t('error'), t('fillAllFields'), 'error');
-
-        const typeDoc = await getDoc(doc(db, `projects/${currentProject}/bondTypes/${typeId}`));
-        const typeData = typeDoc.data();
-
-        if (typeData.type === 'قبض' && !clientPhone) {
-            return Swal.fire(t('error'), t('phoneRequiredForReceipt'), 'error');
+            Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
+            loadBonds();
         }
-
-        if (clientPhone && !/^05\d{8}$/.test(clientPhone)) {
-            return Swal.fire(t('error'), t('invalidPhone'), 'error');
-        }
-
-        if (!userPermissions.includes(typeData.type) &&!userPermissions.includes('all')) {
-            return Swal.fire(t('rejected'), t('noPermission'), 'error');
-        }
-
-        if (currentUser.amountLimit && amount > parseFloat(currentUser.amountLimit)) {
-            return Swal.fire(t('rejected'), `${t('amountExceeded')} ${currentUser.amountLimit}`, 'error');
-        }
-
-        const bondsQuery = query(collection(db, `projects/${currentProject}/bonds`), where('createdBy', '==', currentUser.phone));
-        const bondsSnap = await getDocs(bondsQuery);
-        const today = new Date().toDateString();
-        let todayCount = 0, totalCount = 0, totalAmount = 0;
-
-        bondsSnap.forEach(docSnap => {
-            const bond = docSnap.data();
-            totalCount++;
-            totalAmount += parseFloat(bond.amount);
-            if (new Date(bond.createdAt).toDateString() === today) todayCount++;
-        });
-
-        if (currentUser.dailyLimit && todayCount >= parseInt(currentUser.dailyLimit)) {
-            return Swal.fire(t('rejected'), `${t('dailyLimitReached')} ${currentUser.dailyLimit}`, 'error');
-        }
-
-        if (currentUser.totalLimit && totalCount >= parseInt(currentUser.totalLimit)) {
-            return Swal.fire(t('rejected'), `${t('totalLimitReached')} ${currentUser.totalLimit}`, 'error');
-        }
-
-        if (currentUser.totalAmountLimit && (totalAmount + amount) > parseFloat(currentUser.totalAmountLimit)) {
-            return Swal.fire(t('rejected'), `${t('totalAmountExceeded')} ${currentUser.totalAmountLimit}`, 'error');
-        }
-
-        const newNumber = (typeData.current || typeData.start);
-        if (newNumber > typeData.end) return Swal.fire(t('error'), t('sequenceEnded'), 'error');
-
-        const bondId = Date.now().toString();
-        const bondNumber = `${typeData.prefix}-${String(newNumber).padStart(6, '0')}`;
-
-        await setDoc(doc(db, `projects/${currentProject}/bonds/${bondId}`), {
-            id: bondId, number: bondNumber, typeId, typeName: typeData.name, type: typeData.type,
-            amount, date, client, clientPhone: clientPhone || '', description, paymentMethod,
-            createdBy: currentUser.phone, createdByName: currentUser.name, createdAt: Date.now()
-        });
-
-        await updateDoc(doc(db, `projects/${currentProject}/bondTypes/${typeId}`), { current: newNumber + 1 });
-
-        Swal.fire(t('done'), `${t('bondSaved')} ${bondNumber}`, 'success');
-        document.getElementById('bondAmount').value = '';
-        document.getElementById('bondClient').value = '';
-        document.getElementById('bondClientPhone').value = '';
-        document.getElementById('bondDescription').value = '';
-        document.getElementById('clientPhoneField').classList.add('hidden');
     }
 
-    async function previewBond(bondId) {
-        const snap = await getDoc(doc(db, `projects/${currentProject}/bonds/${bondId}`));
-        selectedBondForPrint = snap.data();
-        const bond = selectedBondForPrint;
-        
-        document.getElementById('noBondSelected').classList.add('hidden');
-        document.getElementById('printPreviewArea').classList.remove('hidden');
-        
-        if (bond.clientPhone && bond.type === 'قبض') {
-            document.getElementById('whatsappClientBtn').classList.remove('hidden');
-        } else {
-            document.getElementById('whatsappClientBtn').classList.add('hidden');
-        }
-        
-        const previewHTML = `
-            <div style="text-align:center;margin-bottom:20px">
-                ${projectData.logo? `<img src="${projectData.logo}" style="width:80px;margin:0 auto 10px">` : ''}
-                <h1 style="font-size:28px;font-weight:800;color:#1e40af">${projectData.companyName}</h1>
-                <p style="color:#6b7280">${projectData.address || ''} | ${projectData.phone || ''}</p>
-            </div>
-            <div style="border:3px solid #2563eb;border-radius:12px;padding:20px;margin:20px 0;background:linear-gradient(to bottom,#eff6ff,#ffffff)">
-                <h2 style="text-align:center;font-size:24px;font-weight:800;color:#1e40af;margin-bottom:20px">${t('bond')} ${bond.type}</h2>
-                <table style="width:100%;font-size:15px">
-                    <tr><td style="padding:8px;font-weight:700;width:30%">${t('bondNumber')}:</td><td style="font-weight:800;color:#2563eb">${bond.number}</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">${t('date')}:</td><td>${bond.date}</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">${t('client')}:</td><td>${bond.client}</td></tr>
-                    ${bond.clientPhone? `<tr><td style="padding:8px;font-weight:700">${t('clientPhone')}:</td><td dir="ltr">${bond.clientPhone}</td></tr>` : ''}
-                    <tr><td style="padding:8px;font-weight:700">${t('amount')}:</td><td style="font-size:20px;font-weight:800;color:${bond.type === 'قبض'? '#16a34a' : '#dc2626'}">${parseFloat(bond.amount).toFixed(2)} ${t('currency')}</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">${t('paymentMethod')}:</td><td>${bond.paymentMethod || '-'}</td></tr>
-                    <tr><td style="padding:8px;font-weight:700">${t('description')}:</td><td>${bond.description || '-'}</td></tr>
-                </table>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-top:30px;align-items:end">
-                <div style="text-align:center">
-                    <p style="font-weight:700;margin-bottom:40px">${t('receiver')}</p>
-                    <div style="border-top:2px solid #000;width:150px">__________</div>
-                </div>
-                <div id="qrcode" style="padding:10px;background:white;border:2px solid #e5e7eb;border-radius:8px"></div>
-                <div style="text-align:center">
-                    <p style="font-weight:700;margin-bottom:40px">${t('accountant')}</p>
-                    <div style="border-top:2px solid #000;width:150px">__________</div>
-                </div>
-            </div>
-            ${projectData.stamp? `<div style="text-align:center;margin-top:20px"><img src="${projectData.stamp}" style="width:120px;opacity:0.7"></div>` : ''}
-        `;
-        
-        document.getElementById('bondPreviewContent').innerHTML = previewHTML;
-        
-        document.getElementById('qrcode').innerHTML = '';
-        new QRCode(document.getElementById('qrcode'), {
-            text: `${t('bond')} ${bond.type} - ${bond.number}\n${t('amount')}: ${bond.amount} ${t('currency')}\n${t('client')}: ${bond.client}\n${t('date')}: ${bond.date}`,
-            width: 100, height: 100
-        });
-        
-        showTab('printPreview');
-    }
-
-    async function printBond(bondId) {
-        await previewBond(bondId);
-        setTimeout(() => window.print(), 500);
-    }
-
-    function sendWhatsApp() {
-        if (!selectedBondForPrint) return;
-        const bond = selectedBondForPrint;
-        const msg = `*${projectData.companyName}*\n\n*${t('bond')} ${bond.type}*\n${t('bondNumber')}: ${bond.number}\n${t('date')}: ${bond.date}\n${t('client')}: ${bond.client}\n${t('amount')}: ${parseFloat(bond.amount).toFixed(2)} ${t('currency')}\n${t('paymentMethod')}: ${bond.paymentMethod || '-'}\n${t('description')}: ${bond.description || '-'}\n\n${t('thankYou')}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    function sendWhatsAppToClient() {
-        if (!selectedBondForPrint || !selectedBondForPrint.clientPhone) {
-            return Swal.fire(t('alert'), t('noClientPhone'), 'warning');
-        }
-        const bond = selectedBondForPrint;
-        const msg = `*${projectData.companyName}*\n\n${t('dear')} ${bond.client}\n${t('receivedAmount')} *${parseFloat(bond.amount).toFixed(2)} ${t('currency')}*\n\n*${t('bondDetails')}:*\n${t('bondNumber')}: ${bond.number}\n${t('date')}: ${bond.date}\n${t('paymentMethod')}: ${bond.paymentMethod || '-'}\n${bond.description? `${t('description')}: ${bond.description}\n` : ''}\n${t('thankYou')} 🙏`;
-        const phone = selectedBondForPrint.clientPhone.replace(/^0/, '966');
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    async function downloadPDF() {
-        const { jsPDF } = window.jspdf;
-        const element = document.getElementById('bondPreviewContent');
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        pdf.save(`${t('bond')}-${selectedBondForPrint.number}.pdf`);
-    }
-
-    function showChangePassword() {
-        Swal.fire({
-            title: t('changePassword'),
-            html: `<input id="swal-old" type="password" class="swal2-input" placeholder="${t('oldPassword')}">
-                   <input id="swal-new" type="password" class="swal2-input" placeholder="${t('newPassword')}">`,
-            confirmButtonText: t('save'),
-            cancelButtonText: t('cancel'),
-            showCancelButton: true,
-            preConfirm: () => ({
-                old: document.getElementById('swal-old').value,
-                new: document.getElementById('swal-new').value
-            })
-        }).then(async (result) => {
-            if (!result.value) return;
-            if (result.value.old!== currentUser.password) return Swal.fire(t('error'), t('wrongOldPassword'), 'error');
-            await updateDoc(doc(db, `projects/${currentProject}/users/${currentUser.phone}`), { password: result.value.new });
-            Swal.fire(t('done'), t('passwordChanged'), 'success');
-        });
-    }
+    window.logout = () => { localStorage.clear(); location.href = './index.html'; }
+    loadBonds();
 </script>
 </body>
 </html>
