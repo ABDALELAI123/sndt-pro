@@ -20,7 +20,6 @@
 </head>
 <body class="flex items-center justify-center p-4">
 
-    <!-- شاشة دخول واحدة للكل -->
     <div id="loginScreen" class="w-full max-w-md">
         <div class="bg-white rounded-2xl shadow-2xl p-8 relative">
             <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')"
@@ -48,16 +47,21 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-    // ⚠️ ضع Firebase Config حقك هنا
+    // Firebase Config حقك ركبته لك خلاص
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "YOUR_PROJECT_ID"
+      apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+      authDomain: "sanadat-pro.firebaseapp.com",
+      databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sanadat-pro",
+      storageBucket: "sanadat-pro.firebasestorage.app",
+      messagingSenderId: "1039476751095",
+      appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // السوبر أدمن الثابت حقك
+    // السوبر أدمن الثابت
     const SUPER_ADMIN = { projectCode: "001122334455", phone: "0597087767", password: "500600" };
 
     document.getElementById('loginBtn').onclick = async () => {
@@ -69,34 +73,33 @@
 
         // 1. تحقق سوبر أدمن
         if (projectCode === SUPER_ADMIN.projectCode && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
-            Swal.fire('تم', 'دخول سوبر أدمن', 'success').then(()=> {
-                // هنا تحط كود لوحة السوبر أدمن القديمة حقتك
-                location.href = './superadmin.html'; 
-            });
+            location.href = './superadmin.html'; 
             return;
         }
 
-        // 2. تحقق مدير من Firebase
-        const q1 = query(collection(db, 'managers'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
-        const snap1 = await getDocs(q1);
-        if (!snap1.empty) {
-            Swal.fire('تم', 'دخول مدير', 'success').then(()=> {
+        try {
+            // 2. تحقق مدير من Firebase
+            const q1 = query(collection(db, 'managers'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
+            const snap1 = await getDocs(q1);
+            if (!snap1.empty) {
                 location.href = './manager.html';
-            });
-            return;
-        }
+                return;
+            }
 
-        // 3. تحقق مندوب من Firebase
-        const q2 = query(collection(db, 'delegates'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
-        const snap2 = await getDocs(q2);
-        if (!snap2.empty) {
-            Swal.fire('تم', 'دخول مندوب', 'success').then(()=> {
+            // 3. تحقق مندوب من Firebase
+            const q2 = query(collection(db, 'delegates'), where('projectCode', '==', projectCode), where('phone', '==', phone), where('password', '==', password));
+            const snap2 = await getDocs(q2);
+            if (!snap2.empty) {
                 location.href = './delegate.html';
-            });
-            return;
-        }
+                return;
+            }
 
-        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+            Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire('خطأ', 'مشكلة في الاتصال بقاعدة البيانات. تأكد من قواعد Firestore', 'error');
+        }
     };
 </script>
 </body>
