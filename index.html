@@ -79,7 +79,6 @@
         if (snap.empty) {
             Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
         } else {
-            // خزن بيانات المدير
             const manager = snap.docs[0].data();
             localStorage.setItem('managerData', JSON.stringify(manager));
             location.href = './manager.html';
