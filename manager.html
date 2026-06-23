@@ -17,9 +17,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Cairo', sans-serif; }
-       .tab-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
-       .btn-action { padding: 6px 12px; border-radius: 8px; font-size: 14px; margin: 2px; }
-       .field-disabled { background: #f3f4f6; cursor: not-allowed; }
+     .tab-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+     .btn-action { padding: 6px 12px; border-radius: 8px; font-size: 14px; margin: 2px; }
+     .field-disabled { background: #f3f4f6; cursor: not-allowed; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -427,7 +427,7 @@
     let currentManager = null;
     let projectCode = '';
 
-    // 2. التحقق من دخول المدير
+    // 2. التحقق من دخول المدير - مصلح
     document.addEventListener('DOMContentLoaded', async () => {
         const managerData = JSON.parse(localStorage.getItem('currentManager'));
         if (!managerData ||!managerData.id) {
@@ -435,14 +435,16 @@
             return;
         }
         try {
-            const doc = await db.collection('المديرين').doc(managerData.id).get();
+            // ✅ نستخدم 'managers' مو 'المديرين'
+            const doc = await db.collection('managers').doc(managerData.id).get();
             if (!doc.exists) {
                 localStorage.removeItem('currentManager');
                 window.location.href = './index.html';
                 return;
             }
             currentManager = {id: managerData.id,...doc.data()};
-            projectCode = currentManager.projectCode || currentManager.project || '';
+            // ✅ الحقول انجليزي
+            projectCode = currentManager.projectCode || '';
             document.getElementById('projectCode').textContent = projectCode;
             document.getElementById('companyName').textContent = currentManager.projectName || 'لوحة تحكم المدير';
             
@@ -471,14 +473,14 @@
         if(tab === 'reports') loadReports();
     }
 
-    // 4. الرئيسية
+    // 4. الرئيسية - مصلح بأسماء الحقول الصح
     window.loadDashboard = async () => {
-        const delegatesQ = db.collection('المناديب').where('projectCode', '==', projectCode);
+        const delegatesQ = db.collection('delegates').where('projectCode', '==', projectCode);
         const delegatesSnap = await delegatesQ.get();
         document.getElementById('stat_delegates').textContent = delegatesSnap.size;
 
         const today = new Date().toISOString().split('T')[0];
-        const bondsQ = db.collection('السندات').where('projectCode', '==', projectCode).where('date', '==', today);
+        const bondsQ = db.collection('bonds').where('projectCode', '==', projectCode).where('date', '==', today);
         const bondsSnap = await bondsQ.get();
         document.getElementById('stat_bonds_today').textContent = bondsSnap.size;
 
@@ -486,7 +488,7 @@
         const pendingTable = document.getElementById('pendingBondsTable');
         pendingTable.innerHTML = '';
 
-        const allBondsSnap = await db.collection('السندات').where('projectCode', '==', projectCode).get();
+        const allBondsSnap = await db.collection('bonds').where('projectCode', '==', projectCode).get();
         allBondsSnap.forEach(docSnap => {
             const data = docSnap.data();
             totalAmount += data.amount || 0;
@@ -511,11 +513,11 @@
 
     window.approveBond = async (bondId, type) => {
     try {
-        const bondRef = db.collection('السندات').doc(bondId);
+        const bondRef = db.collection('bonds').doc(bondId);
         const bondSnap = await bondRef.get();
         const bondData = bondSnap.data();
         
-        const newStatus = type === 'قبض' ? 'مورد' : 'موثق';
+        const newStatus = type === 'قبض'? 'مورد' : 'موثق';
         
         // 1. حدث حالة السند
         await bondRef.update({ 
@@ -525,8 +527,8 @@
         });
         
         // 2. افتح القيد للمندوب - زود المستخدم
-        await db.collection('المناديب').doc(bondData.delegateId).update({
-            usedAmount: firebase.firestore.FieldValue.increment(bondData.amount),
+        await db.collection('delegates').doc(bondData.delegateId).update({
+         usedAmount: firebase.firestore.FieldValue.increment(bondData.amount),
             usedCount: firebase.firestore.FieldValue.increment(1)
         });
         
@@ -539,6 +541,373 @@
         Swal.fire('خطأ', 'فشل في توريد/توثيق السند', 'error');
     }
 }
-    </script>
+
+    // 5. المناديب
+    window.loadDelegates = async () => {
+        const q = db.collection('delegates').where('projectCode', '==', projectCode);
+        const snap = await q.get();
+        const tbody = document.getElementById('delegatesTableBody');
+        tbody.innerHTML = '';
+        
+        if(snap.empty) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-400">لا يوجد مناديب</td></tr>';
+            return;
+        }
+
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const usedCount = d.usedCount || 0;
+            const usedAmount = d.usedAmount || 0;
+            const remainingCount = (d.limitTotalCount || 0) - usedCount;
+            const remainingAmount = (d.limitTotalAmount || 0) - usedAmount;
+            
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-bold">${d.name}</td>
+                    <td class="p-3">${d.phone}</td>
+                    <td class="p-3">${d.limitDailyCount || 0}</td>
+                    <td class="p-3">${d.limitTotalCount || 0}</td>
+                    <td class="p-3">${d.limitSingleAmount || 0}</td>
+                    <td class="p-3 text-sm">
+                        <div>سندات: ${usedCount} / ${remainingCount}</div>
+                        <div>مبالغ: ${usedAmount.toLocaleString()} / ${remainingAmount.toLocaleString()}</div>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded text-sm ${d.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${d.status === 'active' ? 'نشط' : 'متوقف'}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="editDelegate('${docSnap.id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm btn-action">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteDelegate('${docSnap.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm btn-action">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    window.showAddDelegateModal = () => {
+        document.getElementById('editDelegateId').value = '';
+        document.getElementById('delegateModalTitle').textContent = 'إضافة مندوب جديد';
+        document.getElementById('modal_delegateName').value = '';
+        document.getElementById('modal_delegatePhone').value = '';
+        document.getElementById('modal_delegatePassword').value = '';
+        document.getElementById('modal_delegateStatus').value = 'active';
+        document.getElementById('modal_limitDailyCount').value = '20';
+        document.getElementById('modal_limitTotalCount').value = '1000';
+        document.getElementById('modal_limitSingleAmount').value = '5000';
+        document.getElementById('modal_limitTotalAmount').value = '100000';
+        document.getElementById('delegateModal').classList.remove('hidden');
+        document.getElementById('delegateModal').classList.add('flex');
+        loadPaymentMethodsForDelegate();
+        loadBondTypesForDelegate();
+    }
+
+    window.editDelegate = async (id) => {
+        const doc = await db.collection('delegates').doc(id).get();
+        const d = doc.data();
+        document.getElementById('editDelegateId').value = id;
+        document.getElementById('delegateModalTitle').textContent = 'تعديل مندوب';
+        document.getElementById('modal_delegateName').value = d.name || '';
+        document.getElementById('modal_delegatePhone').value = d.phone || '';
+        document.getElementById('modal_delegatePassword').value = d.password || '';
+        document.getElementById('modal_delegateStatus').value = d.status || 'active';
+        document.getElementById('modal_limitDailyCount').value = d.limitDailyCount || 20;
+        document.getElementById('modal_limitTotalCount').value = d.limitTotalCount || 1000;
+        document.getElementById('modal_limitSingleAmount').value = d.limitSingleAmount || 5000;
+        document.getElementById('modal_limitTotalAmount').value = d.limitTotalAmount || 100000;
+        document.getElementById('delegateModal').classList.remove('hidden');
+        document.getElementById('delegateModal').classList.add('flex');
+    }
+
+    window.saveDelegate = async () => {
+        const id = document.getElementById('editDelegateId').value;
+        const data = {
+            name: document.getElementById('modal_delegateName').value.trim(),
+            phone: document.getElementById('modal_delegatePhone').value.trim(),
+            password: document.getElementById('modal_delegatePassword').value.trim(),
+            projectCode: projectCode,
+            status: document.getElementById('modal_delegateStatus').value,
+            limitDailyCount: Number(document.getElementById('modal_limitDailyCount').value) || 20,
+            limitTotalCount: Number(document.getElementById('modal_limitTotalCount').value) || 1000,
+            limitSingleAmount: Number(document.getElementById('modal_limitSingleAmount').value) || 5000,
+            limitTotalAmount: Number(document.getElementById('modal_limitTotalAmount').value) || 100000,
+            updatedAt: new Date()
+        };
+
+        if(!data.name || !data.phone || !data.password) {
+            return Swal.fire('خطأ', 'املأ البيانات الأساسية', 'error');
+        }
+
+        if(id) {
+            await db.collection('delegates').doc(id).update(data);
+        } else {
+            data.usedCount = 0;
+            data.usedAmount = 0;
+            data.createdAt = new Date();
+            await db.collection('delegates').add(data);
+        }
+        
+        closeModal('delegateModal');
+        loadDelegates();
+        Swal.fire('تم', 'تم حفظ المندوب بنجاح', 'success');
+    }
+
+    window.deleteDelegate = async (id) => {
+        Swal.fire({
+            title: 'متأكد؟',
+            text: "حذف المندوب نهائي",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'نعم، احذف',
+            cancelButtonText: 'إلغاء'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                await db.collection('delegates').doc(id).delete();
+                loadDelegates();
+                Swal.fire('تم الحذف', '', 'success');
+            }
+        });
+    }
+
+    // 6. طرق الدفع والصناديق
+    window.loadPaymentsAndBoxes = async () => {
+        const paymentsSnap = await db.collection('paymentMethods').where('projectCode', '==', projectCode).get();
+        const paymentsList = document.getElementById('paymentsList');
+        paymentsList.innerHTML = '';
+        if(paymentsSnap.empty) {
+            paymentsList.innerHTML = '<p class="text-gray-400 text-center p-4">لا توجد طرق دفع</p>';
+        }
+        paymentsSnap.forEach(docSnap => {
+            const p = docSnap.data();
+            paymentsList.innerHTML += `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span>${p.name}</span>
+                    <button onclick="deletePayment('${docSnap.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+        });
+
+        const boxesSnap = await db.collection('boxes').where('projectCode', '==', projectCode).get();
+        const boxesList = document.getElementById('boxesList');
+        boxesList.innerHTML = '';
+        if(boxesSnap.empty) {
+            boxesList.innerHTML = '<p class="text-gray-400 text-center p-4">لا توجد صناديق</p>';
+        }
+        boxesSnap.forEach(docSnap => {
+            const b = docSnap.data();
+            boxesList.innerHTML += `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span>${b.name}</span>
+                    <button onclick="deleteBox('${docSnap.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+        });
+    }
+
+    window.showAddPaymentModal = () => {
+        document.getElementById('modal_paymentName').value = '';
+        document.getElementById('paymentModal').classList.remove('hidden');
+        document.getElementById('paymentModal').classList.add('flex');
+    }
+
+    window.savePayment = async () => {
+        const name = document.getElementById('modal_paymentName').value.trim();
+        if(!name) return Swal.fire('خطأ', 'اكتب اسم طريقة الدفع', 'error');
+        await db.collection('paymentMethods').add({ name, projectCode, createdAt: new Date() });
+        closeModal('paymentModal');
+        loadPaymentsAndBoxes();
+    }
+
+    window.deletePayment = async (id) => {
+        await db.collection('paymentMethods').doc(id).delete();
+        loadPaymentsAndBoxes();
+    }
+
+    window.showAddBoxModal = () => {
+        document.getElementById('modal_boxName').value = '';
+        document.getElementById('boxModal').classList.remove('hidden');
+        document.getElementById('boxModal').classList.add('flex');
+    }
+
+    window.saveBox = async () => {
+        const name = document.getElementById('modal_boxName').value.trim();
+        if(!name) return Swal.fire('خطأ', 'اكتب اسم الصندوق', 'error');
+        await db.collection('boxes').add({ name, projectCode, createdAt: new Date() });
+        closeModal('boxModal');
+        loadPaymentsAndBoxes();
+    }
+
+    window.deleteBox = async (id) => {
+        await db.collection('boxes').doc(id).delete();
+        loadPaymentsAndBoxes();
+    }
+
+    // 7. إعداد الشركة
+    window.loadCompanyData = async () => {
+        const doc = await db.collection('companies').doc(projectCode).get();
+        if(doc.exists) {
+            const d = doc.data();
+            document.getElementById('company_name').value = d.name || '';
+            document.getElementById('company_tax').value = d.taxNumber || '';
+            document.getElementById('company_address').value = d.address || '';
+            document.getElementById('company_logo').value = d.logo || '';
+            document.getElementById('company_stamp').value = d.stamp || '';
+            document.getElementById('company_signature').value = d.signature || '';
+            if(d.logo) {
+                document.getElementById('companyLogo').src = d.logo;
+                document.getElementById('companyLogo').classList.remove('hidden');
+            }
+        }
+    }
+
+    window.saveCompanyData = async () => {
+        const data = {
+            name: document.getElementById('company_name').value,
+            taxNumber: document.getElementById('company_tax').value,
+            address: document.getElementById('company_address').value,
+            logo: document.getElementById('company_logo').value,
+            stamp: document.getElementById('company_stamp').value,
+            signature: document.getElementById('company_signature').value,
+            updatedAt: new Date()
+        };
+        await db.collection('companies').doc(projectCode).set(data, { merge: true });
+        Swal.fire('تم', 'تم حفظ بيانات الشركة', 'success');
+        loadCompanyData();
+    }
+
+    // 8. إعداد الطباعة
+    window.loadPrintSettings = async () => {
+        const doc = await db.collection('printSettings').doc(projectCode).get();
+        if(doc.exists) {
+            const d = doc.data();
+            document.getElementById('print_headerColor').value = d.headerColor || '#10b981';
+            document.getElementById('print_logoPosition').value = d.logoPosition || 'right';
+            document.getElementById('print_showTax').checked = d.showTax !== false;
+            document.getElementById('print_showAddress').checked = d.showAddress !== false;
+            document.getElementById('print_showStamp').checked = d.showStamp !== false;
+            document.getElementById('print_showSignature').checked = d.showSignature !== false;
+            document.getElementById('print_showQR').checked = d.showQR !== false;
+        }
+    }
+
+    window.savePrintSettings = async () => {
+        const data = {
+            headerColor: document.getElementById('print_headerColor').value,
+            logoPosition: document.getElementById('print_logoPosition').value,
+            showTax: document.getElementById('print_showTax').checked,
+            showAddress: document.getElementById('print_showAddress').checked,
+            showStamp: document.getElementById('print_showStamp').checked,
+            showSignature: document.getElementById('print_showSignature').checked,
+            showQR: document.getElementById('print_showQR').checked
+        };
+        await db.collection('printSettings').doc(projectCode).set(data, { merge: true });
+        Swal.fire('تم', 'تم حفظ إعدادات الطباعة', 'success');
+    }
+
+    // 9. أنواع السندات
+    window.loadBondTypes = async () => {
+        const snap = await db.collection('bondTypes').where('projectCode', '==', projectCode).get();
+        const list = document.getElementById('bondTypesList');
+        list.innerHTML = '';
+        if(snap.empty) {
+            list.innerHTML = '<p class="text-gray-400 text-center p-4">لا توجد أنواع سندات</p>';
+            return;
+        }
+        snap.forEach(docSnap => {
+            const b = docSnap.data();
+            list.innerHTML += `
+                <div class="border-2 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-lg">${b.name}</span>
+                            <span class="text-sm text-gray-500 mr-2">بادئة: ${b.prefix}</span>
+                            <span class="text-sm text-gray-500">يبدأ من: ${b.startNumber}</span>
+                        </div>
+                        <button onclick="deleteBondType('${docSnap.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    window.showAddBondTypeModal = () => {
+        document.getElementById('editBondTypeId').value = '';
+        document.getElementById('modal_bondTypeName').value = '';
+        document.getElementById('modal_bondPrefix').value = '';
+        document.getElementById('modal_bondStartNumber').value = '1';
+        document.getElementById('bondTypeModal').classList.remove('hidden');
+        document.getElementById('bondTypeModal').classList.add('flex');
+    }
+
+    window.saveBondType = async () => {
+        const data = {
+            name: document.getElementById('modal_bondTypeName').value.trim(),
+            prefix: document.getElementById('modal_bondPrefix').value.trim(),
+            startNumber: Number(document.getElementById('modal_bondStartNumber').value) || 1,
+            color: document.getElementById('modal_bondColor').value,
+            projectCode: projectCode,
+            createdAt: new Date()
+        };
+        if(!data.name || !data.prefix) return Swal.fire('خطأ', 'املأ البيانات', 'error');
+        await db.collection('bondTypes').add(data);
+        closeModal('bondTypeModal');
+        loadBondTypes();
+    }
+
+    window.deleteBondType = async (id) => {
+        await db.collection('bondTypes').doc(id).delete();
+        loadBondTypes();
+    }
+
+    // 10. التقارير
+    window.loadReports = async () => {
+        Swal.fire('قريباً', 'التقارير تحت التطوير', 'info');
+    }
+
+    window.exportReportsExcel = () => Swal.fire('قريباً', 'جاري التطوير', 'info');
+    window.exportReportsPDF = () => Swal.fire('قريباً', 'جاري التطوير', 'info');
+
+    // 11. عام
+    window.closeModal = (id) => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById(id).classList.remove('flex');
+    }
+
+    window.logout = () => {
+        localStorage.clear();
+        location.href = './index.html';
+    }
+
+    window.toggleLanguage = () => {
+        Swal.fire('قريباً', 'تغيير اللغة تحت التطوير', 'info');
+    }
+
+    window.exportDelegatesExcel = () => Swal.fire('قريباً', 'جاري التطوير', 'info');
+    
+    window.loadPaymentMethodsForDelegate = async () => {
+        const snap = await db.collection('paymentMethods').where('projectCode', '==', projectCode).get();
+        const div = document.getElementById('allowedPaymentMethods');
+        div.innerHTML = '';
+        snap.forEach(docSnap => {
+            const p = docSnap.data();
+            div.innerHTML += `<label class="flex items-center gap-2"><input type="checkbox" value="${p.name}"> ${p.name}</label>`;
+        });
+    }
+
+    window.loadBondTypesForDelegate = async () => {
+        const snap = await db.collection('bondTypes').where('projectCode', '==', projectCode).get();
+        const div = document.getElementById('allowedBondTypes');
+        div.innerHTML = '';
+        snap.forEach(docSnap => {
+            const b = docSnap.data();
+            div.innerHTML += `<label class="flex items-center gap-2"><input type="checkbox" value="${b.name}"> ${b.name}</label>`;
+        });
+    }
+</script>
 </body>
 </html>
