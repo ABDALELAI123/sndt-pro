@@ -52,19 +52,18 @@
             const phoneRaw = document.getElementById('phone').value;
             const passwordRaw = document.getElementById('password').value;
 
-            // 1. تنظيف البيانات من المسافات
             const projectCode = projectCodeRaw.trim();
             const phone = phoneRaw.trim();
             const password = passwordRaw.trim();
 
-            console.log("1. البيانات بعد التنظيف:", {projectCode, phone, password});
+            console.log("1. البيانات المدخلة بعد التنظيف:", {projectCode, phone, password});
 
             if (!projectCode || !phone || !password) {
                 return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
             }
 
             try {
-                // 2. تحقق سوبر أدمن
+                // سوبر أدمن
                 if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
                     console.log("2. دخول سوبر أدمن ✅");
                     localStorage.setItem('userRole', 'superadmin');
@@ -72,57 +71,64 @@
                     return;
                 }
 
-                // 3. تشخيص: طباعة كل المدراء الموجودين
+                // تشخيص: جيب كل المدراء واطبعهم مع نوع البيانات
                 console.log("3. جاري جلب كل المدراء للتشخيص...");
                 const allManagersSnap = await getDocs(collection(db, 'المديرين'));
                 console.log(`4. عدد كل المدراء في القاعدة: ${allManagersSnap.size}`);
+                
+                let managerFound = null;
                 allManagersSnap.forEach(doc => {
-                    console.log(`   مدير:`, doc.id, doc.data());
+                    const d = doc.data();
+                    console.log(`   مدير: ${doc.id}`);
+                    console.log(`      رمز المشروع: "${d['رمز المشروع']}" | النوع: ${typeof d['رمز المشروع']}`);
+                    console.log(`      هاتف: "${d['هاتف']}" | النوع: ${typeof d['هاتف']}`);
+                    console.log(`      كلمة المرور: "${d['كلمة المرور']}" | النوع: ${typeof d['كلمة المرور']}`);
+                    console.log(`      حالة: "${d['حالة']}"`);
+                    
+                    // مطابقة يدوية عشان نعرف وين المشكلة بالضبط
+                    const codeMatch = String(d['رمز المشروع']) === String(projectCode);
+                    const phoneMatch = String(d['هاتف']) === String(phone);
+                    const passMatch = String(d['كلمة المرور']) === String(password);
+                    
+                    console.log(`      نتيجة المطابقة: كود=${codeMatch}, هاتف=${phoneMatch}, باسورد=${passMatch}`);
+                    
+                    if (codeMatch && phoneMatch && passMatch) {
+                        managerFound = { id: doc.id, ...d };
+                    }
                 });
 
-                // 4. البحث عن المدير - يقبل نص أو رقم في كود المشروع
-                console.log("5. نبحث عن المدير بالشروط...");
-                let q = query(collection(db, 'المديرين'),
-                    where('رمز المشروع', 'in', [projectCode, Number(projectCode)]), // يقبل "1410" أو 1410
-                    where('هاتف', '==', phone),
-                    where('كلمة المرور', '==', password)
-                    // شلنا شرط الحالة عشان نقبل نشط و نشيط
-                );
-                
-                let snap = await getDocs(q);
-                console.log("6. عدد نتائج المدراء بعد الاستعلام:", snap.size);
-                
-                if (!snap.empty) {
-                    const managerDoc = snap.docs[0];
-                    const data = managerDoc.data();
-                    console.log("7. لقينا المدير ✅:", data);
+                if (managerFound) {
+                    console.log("5. لقينا المدير بالمطابقة اليدوية ✅:", managerFound);
                     
-                    // تحقق من الحالة يدوياً
-                    const status = data['حالة'];
-                    if (status !== 'نشط' && status !== 'نشيط') {
-                         console.log("8. المدير غير نشط. الحالة:", status);
+                    const status = managerFound['حالة'];
+                    if (status !== 'نشط' && status !== 'نشيط' && status !== 'active') {
+                         console.log("6. المدير غير نشط. الحالة:", status);
                          return Swal.fire('خطأ', 'حساب المدير غير نشط', 'error');
                     }
 
                     localStorage.setItem('currentManager', JSON.stringify({
-                        id: managerDoc.id,
-                        name: data['اسم'],
-                        phone: data['هاتف'],
-                        projectCode: data['رمز المشروع'],
-                        projectName: data['اسم المشروع'] || ''
+                        id: managerFound.id,
+                        name: managerFound['اسم'],
+                        phone: managerFound['هاتف'],
+                        projectCode: managerFound['رمز المشروع'],
+                        projectName: managerFound['اسم المشروع'] || ''
                     }));
                     localStorage.setItem('userRole', 'manager');
-                    console.log("9. تم التحويل لصفحة المدير");
+                    console.log("7. تم التحويل لصفحة المدير");
                     location.href = './manager.html';
                     return;
                 }
 
-                console.log("10. ما لقينا مدير. ندور في المناديب...");
+                console.log("8. ما لقينا مدير مطابق. ندور في المناديب...");
                 Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
 
             } catch (error) {
-                console.error("11. خطأ فايربيس:", error);
-                Swal.fire('خطأ', `فشل الاتصال: ${error.message}`, 'error');
+                console.error("9. خطأ فايربيس:", error);
+                if (error.code === 'failed-precondition') {
+                    Swal.fire('خطأ', 'تحتاج تسوي فهرس في Firestore. افتح Console واضغط الرابط اللي يطلع لك', 'error');
+                } else {
+                    Swal.fire('خطأ', `فشل الاتصال: ${error.message}`, 'error');
+                }
             }
         }
     </script>
