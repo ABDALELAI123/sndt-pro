@@ -16,7 +16,7 @@
         </div>
         <div class="space-y-4">
             <input id="projectCode" type="text" placeholder="كود المشروع" class="w-full p-4 border-2 rounded-xl text-center font-bold text-lg">
-            <input id="phone" type="text" placeholder="رقم الجوال" class="w-full p-4 border-2 rounded-xl text-center font-bold text-lg">
+            <input id="phone" type="text" placeholder="اسم المستخدم / رقم الجوال" class="w-full p-4 border-2 rounded-xl text-center font-bold text-lg">
             <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-4 border-2 rounded-xl text-center font-bold text-lg">
             <button onclick="login()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg">دخول</button>
         </div>
@@ -48,44 +48,63 @@
             return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
         }
 
-        // 1. تحقق سوبر أدمن
-        if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
-            localStorage.setItem('userRole', 'superadmin');
-            location.href = './superadmin.html';
-            return;
-        }
+        try {
+            // 1. تحقق سوبر أدمن
+            if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
+                localStorage.setItem('userRole', 'superadmin');
+                location.href = './superadmin.html';
+                return;
+            }
 
-        // 2. تحقق من المدراء في Firebase
-        let q = query(collection(db, 'managers'),
-            where('projectCode', '==', projectCode),
-            where('phone', '==', phone),
-            where('password', '==', password)
-        );
-        let snap = await getDocs(q);
-        if (!snap.empty) {
-            const managerData = snap.docs[0].data();
-            localStorage.setItem('userRole', 'manager');
-            localStorage.setItem('managerData', JSON.stringify(managerData));
-            location.href = './manager.html';
-            return;
-        }
+            // 2. تحقق من المدراء - اسم المجموعة عربي + username بدل phone
+            let q = query(collection(db, 'المديرين'),
+                where('projectCode', '==', projectCode),
+                where('username', '==', phone),
+                where('password', '==', password)
+            );
+            let snap = await getDocs(q);
+            if (!snap.empty) {
+                const managerDoc = snap.docs[0];
+                const managerData = managerDoc.data();
+                
+                // هذا السطر يحل مشكلة "يفتح ويقفل"
+                localStorage.setItem('currentManager', JSON.stringify({
+                    id: managerDoc.id,
+                    name: managerData.name,
+                    username: managerData.username,
+                    projectCode: managerData.projectCode,
+                    projectName: managerData.projectName || managerData.project
+                }));
+                localStorage.setItem('userRole', 'manager');
+                location.href = './manager.html';
+                return;
+            }
 
-        // 3. تحقق من المناديب في Firebase ← هذا اللي ناقص عندك
-        q = query(collection(db, 'delegates'),
-            where('projectCode', '==', projectCode),
-            where('phone', '==', phone),
-            where('password', '==', password)
-        );
-        snap = await getDocs(q);
-        if (!snap.empty) {
-            const delegateData = snap.docs[0].data();
-            localStorage.setItem('userRole', 'delegate');
-            localStorage.setItem('delegateData', JSON.stringify(delegateData));
-            location.href = './delegate.html';
-            return;
-        }
+            // 3. تحقق من المناديب
+            q = query(collection(db, 'المناديب'),
+                where('projectCode', '==', projectCode),
+                where('phone', '==', phone),
+                where('password', '==', password),
+                where('status', '==', 'active')
+            );
+            snap = await getDocs(q);
+            if (!snap.empty) {
+                const delegateDoc = snap.docs[0];
+                localStorage.setItem('currentDelegate', JSON.stringify({
+                    id: delegateDoc.id,
+                 ...delegateDoc.data()
+                }));
+                localStorage.setItem('userRole', 'delegate');
+                location.href = './delegate.html';
+                return;
+            }
 
-        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+            Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+
+        } catch (error) {
+            console.error("Login Error:", error);
+            Swal.fire('خطأ', 'فشل الاتصال بقاعدة البيانات', 'error');
+        }
     }
 </script>
 </body>
