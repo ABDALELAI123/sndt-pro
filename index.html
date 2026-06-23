@@ -2,110 +2,99 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>السندات الذكية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السندات الذكية - تسجيل الدخول</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; }</style>
 </head>
-<body class="bg-gradient-to-br from-blue-600 to-purple-700 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-800">السندات الذكية</h1>
-            <p class="text-gray-500 mt-2">نظام إدارة السندات</p>
-        </div>
-        <div class="space-y-4">
-            <input id="projectCode" type="text" placeholder="كود المشروع" class="w-full p-4 border-2 rounded-xl text-center font-bold text-lg">
-            <input id="phone" type="text" placeholder="اسم المستخدم / رقم الجوال" class="w-full p-4 border-2 rounded-xl text-center font-bold text-lg">
-            <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-4 border-2 rounded-xl text-center font-bold text-lg">
-            <button onclick="login()" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg">دخول</button>
+<body class="bg-gradient-to-br from-blue-900 to-indigo-900 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700">
+        <h1 class="text-3xl font-bold text-center text-white mb-8">السندات الذكية</h1>
+        <div class="space-y-6">
+            <div>
+                <label class="block text-gray-300 mb-2">كود المشروع</label>
+                <input type="text" id="projectCode" class="w-full p-3 bg-gray-700/50 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-gray-300 mb-2">اسم المستخدم / رقم الجوال</label>
+                <input type="text" id="phone" class="w-full p-3 bg-gray-700/50 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-gray-300 mb-2">كلمة المرور</label>
+                <input type="password" id="password" class="w-full p-3 bg-gray-700/50 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                تسجيل الدخول
+            </button>
         </div>
     </div>
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
-      authDomain: "sanadat-pro.firebaseapp.com",
-      databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "sanadat-pro",
-      storageBucket: "sanadat-pro.firebasestorage.app",
-      messagingSenderId: "1039476751095",
-      appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
-    };
+        // تأكد ان هذا الكونفق حق مشروعك sanadat-pro
+        const firebaseConfig = {
+            apiKey: "AIzaSyC6Fi7V7m8jH3LsrUFCoA2pvkPxL2hX9Hc",
+            authDomain: "sanadat-pro.firebaseapp.com",
+            projectId: "sanadat-pro",
+            storageBucket: "sanadat-pro.appspot.com",
+            messagingSenderId: "423095997472",
+            appId: "1:423095997472:web:8c59d0f1f75fbd3b9a9b14"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-window.login = async () => {
-    const projectCode = document.getElementById('projectCode').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const password = document.getElementById('password').value.trim();
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        console.log("Firebase شغال ✅");
 
-    if (!projectCode ||!phone ||!password) {
-        return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
-    }
+        window.login = async () => {
+            console.log("زر الدخول انضغط ✅");
+            const projectCode = document.getElementById('projectCode').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value.trim();
+            console.log("البيانات:", {projectCode, phone, password});
 
-    try {
-        // 1. تحقق سوبر أدمن
-        if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
-            localStorage.setItem('userRole', 'superadmin');
-            location.href = './superadmin.html';
-            return;
+            if (!projectCode ||!phone ||!password) {
+                return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
+            }
+
+            try {
+                // سوبر ادمن
+                if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
+                    localStorage.setItem('userRole', 'superadmin');
+                    location.href = './superadmin.html';
+                    return;
+                }
+
+                console.log("ندور في المديرين...");
+                let q = query(collection(db, 'المديرين'),
+                    where('رمز المشروع', '==', projectCode),
+                    where('هاتف', '==', phone),
+                    where('كلمة المرور', '==', password)
+                );
+                let snap = await getDocs(q);
+                console.log("عدد نتائج المدراء:", snap.size);
+
+                if (!snap.empty) {
+                    const data = snap.docs[0].data();
+                    console.log("لقينا المدير:", data);
+                    localStorage.setItem('currentManager', JSON.stringify({
+                        id: snap.docs[0].id,
+                      ...data
+                    }));
+                    localStorage.setItem('userRole', 'manager');
+                    location.href = './manager.html';
+                    return;
+                }
+
+                console.log("ما لقينا مدير، ندور في المناديب...");
+                Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+
+            } catch (error) {
+                console.error("خطأ فايربيس:", error);
+                Swal.fire('خطأ', error.message, 'error');
+            }
         }
-
-        // 2. تحقق من المدراء - بأسماء الحقول العربية حقتك
-        let q = query(collection(db, 'المديرين'),
-            where('رمز المشروع', '==', projectCode),
-            where('هاتف', '==', phone),
-            where('كلمة المرور', '==', password),
-            where('حالة', '==', 'نشيط')
-        );
-        let snap = await getDocs(q);
-        
-        if (!snap.empty) {
-            const managerDoc = snap.docs[0];
-            const managerData = managerDoc.data();
-            
-            localStorage.setItem('currentManager', JSON.stringify({
-                id: managerDoc.id,
-                name: managerData['اسم'],
-                phone: managerData['هاتف'],
-                projectCode: managerData['رمز المشروع'],
-                projectName: managerData['اسم المشروع'] || ''
-            }));
-            localStorage.setItem('userRole', 'manager');
-            location.href = './manager.html';
-            return;
-        }
-
-        // 3. تحقق من المناديب - عدّل الحقول لو كانت عربي عندك
-        q = query(collection(db, 'المندوبون'), // تأكد من اسم المجموعة
-            where('رمز المشروع', '==', projectCode),
-            where('هاتف', '==', phone),
-            where('كلمة المرور', '==', password),
-            where('حالة', '==', 'نشيط')
-        );
-        snap = await getDocs(q);
-        if (!snap.empty) {
-            const delegateDoc = snap.docs[0];
-            localStorage.setItem('currentDelegate', JSON.stringify({
-                id: delegateDoc.id,
-             ...delegateDoc.data()
-            }));
-            localStorage.setItem('userRole', 'delegate');
-            location.href = './delegate.html';
-            return;
-        }
-
-        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
-
-    } catch (error) {
-        console.error("Login Error:", error);
-        Swal.fire('خطأ', 'فشل الاتصال بقاعدة البيانات', 'error');
-    }
-}
-</script>
+    </script>
 </body>
 </html>
