@@ -6,43 +6,77 @@
     <title>لوحة تحكم المندوب</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style> body { font-family: 'Cairo', sans-serif; } </style>
-    <script type="module">
-        import { t, setLanguage, applyLanguage } from './lang.js';
-        window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage;
-        applyLanguage();
-    </script>
+    <style> 
+        body { font-family: 'Cairo', sans-serif; } 
+       .numpad-btn { @apply bg-gray-200 hover:bg-gray-300 text-2xl font-bold py-4 rounded-lg transition; }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-blue-500 to-indigo-600 min-h-screen p-4">
 
 <div class="max-w-4xl mx-auto">
+    <!-- الهيدر -->
     <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
         <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
         <div class="text-right">
             <h1 class="text-2xl font-extrabold">لوحة تحكم المندوب</h1>
             <p class="text-gray-500" id="delegateInfo">مشروع: | المندوب: </p>
+            <div class="text-sm text-blue-600 mt-1" id="limitsInfo"></div>
         </div>
         <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
             <i class="fas fa-user text-white text-2xl"></i>
         </div>
     </div>
 
+    <!-- السندات -->
     <div class="bg-white rounded-2xl shadow-xl p-8">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="addBond()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold">
-                <i class="fas fa-plus"></i> إضافة سند جديد
-            </button>
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
+            <div class="flex gap-2">
+                <button onclick="addBond()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold">
+                    <i class="fas fa-plus"></i> إضافة سند جديد
+                </button>
+                <button onclick="exportExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                </button>
+            </div>
             <h2 class="text-xl font-bold"><i class="fas fa-file-invoice text-blue-500"></i> سنداتي</h2>
         </div>
         <div id="bondsList" class="space-y-3"></div>
     </div>
 </div>
 
+<!-- مودال كيبورد الأرقام -->
+<div id="numpadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4">
+        <h3 class="text-xl font-bold mb-4 text-center">أدخل المبلغ</h3>
+        <input id="numpadDisplay" type="text" readonly class="w-full p-4 border-2 rounded-lg text-3xl text-center mb-4 bg-gray-50">
+        <div class="grid grid-cols-3 gap-2">
+            <button onclick="numpadPress('1')" class="numpad-btn">1</button>
+            <button onclick="numpadPress('2')" class="numpad-btn">2</button>
+            <button onclick="numpadPress('3')" class="numpad-btn">3</button>
+            <button onclick="numpadPress('4')" class="numpad-btn">4</button>
+            <button onclick="numpadPress('5')" class="numpad-btn">5</button>
+            <button onclick="numpadPress('6')" class="numpad-btn">6</button>
+            <button onclick="numpadPress('7')" class="numpad-btn">7</button>
+            <button onclick="numpadPress('8')" class="numpad-btn">8</button>
+            <button onclick="numpadPress('9')" class="numpad-btn">9</button>
+            <button onclick="numpadPress('.')" class="numpad-btn">.</button>
+            <button onclick="numpadPress('0')" class="numpad-btn">0</button>
+            <button onclick="numpadClear()" class="numpad-btn bg-red-200"><i class="fas fa-backspace"></i></button>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button onclick="numpadConfirm()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">تأكيد</button>
+            <button onclick="numpadClose()" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, query, where, getDocs, addDoc, doc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
@@ -57,13 +91,35 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const delegateData = JSON.parse(localStorage.getItem('delegateData') || '{}');
+    let delegateLimits = {};
+    let currentAmountField = null;
 
-    if(!delegateData.projectCode || localStorage.getItem('userRole') !== 'delegate') {
+    if(!delegateData.phone || localStorage.getItem('userRole')!== 'delegate') {
         location.href = './index.html';
     }
     
     document.getElementById('delegateInfo').textContent = `مشروع: ${delegateData.projectCode} | المندوب: ${delegateData.name}`;
 
+    // 1. تحميل قيود المندوب
+    async function loadDelegateLimits() {
+        const q = query(collection(db, 'delegates'), 
+            where('projectCode', '==', delegateData.projectCode),
+            where('phone', '==', delegateData.phone)
+        );
+        const snap = await getDocs(q);
+        if(!snap.empty) {
+            delegateLimits = snap.docs[0].data();
+            const usedCount = delegateLimits.usedCount || 0;
+            const usedAmount = delegateLimits.usedAmount || 0;
+            document.getElementById('limitsInfo').innerHTML = `
+                السندات: ${usedCount}/${delegateLimits.limitTotalCount || 0} | 
+                المبلغ: ${usedAmount.toLocaleString()}/${(delegateLimits.limitTotalAmount || 0).toLocaleString()} |
+                حد السند: ${(delegateLimits.limitSingleAmount || 0).toLocaleString()}
+            `;
+        }
+    }
+
+    // 2. تحميل السندات
     async function loadBonds() {
         const q = query(collection(db, 'bonds'), 
             where('projectCode', '==', delegateData.projectCode),
@@ -80,50 +136,184 @@
 
         snap.forEach(doc => {
             const b = doc.data();
+            const bondId = doc.id;
             list.innerHTML += `
                 <div class="border border-gray-200 p-4 rounded-xl">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm">${b.amount} ريال</span>
-                        <p class="font-bold text-lg">${b.customerName}</p>
+                        <div class="flex gap-2">
+                            <button onclick="shareWhatsApp('${b.customerPhone || ''}', '${b.customerName}', '${b.amount}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fab fa-whatsapp"></i> عميل
+                            </button>
+                            <button onclick="shareWhatsAppGeneral('${b.customerName}', '${b.amount}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-share"></i> مشاركة
+                            </button>
+                            <button onclick="showQR('${bondId}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-qrcode"></i> QR
+                            </button>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm">${b.amount} ريال</span>
+                            <p class="font-bold text-lg mt-1">${b.customerName}</p>
+                        </div>
                     </div>
                     <p class="text-gray-600 text-sm text-right">التاريخ: ${b.date || 'غير محدد'}</p>
                     <p class="text-gray-600 text-sm text-right">ملاحظات: ${b.notes || 'لا يوجد'}</p>
+                    <div id="qr-${bondId}" class="mt-2 hidden"></div>
                 </div>`;
         });
     }
 
+    // 3. إضافة سند مع فحص القيود
     window.addBond = async () => {
+        // فحص الحد اليومي
+        const today = new Date().toISOString().split('T')[0];
+        const todayQ = query(collection(db, 'bonds'), 
+            where('delegatePhone', '==', delegateData.phone),
+            where('date', '==', today)
+        );
+        const todaySnap = await getDocs(todayQ);
+        
+        if(todaySnap.size >= (delegateLimits.limitDailyCount || 0)) {
+            return Swal.fire('عذراً', 'تجاوزت الحد اليومي للسندات', 'error');
+        }
+
+        if((delegateLimits.usedCount || 0) >= (delegateLimits.limitTotalCount || 0)) {
+            return Swal.fire('عذراً', 'تجاوزت الحد الإجمالي للسندات', 'error');
+        }
+
         const { value: form } = await Swal.fire({
             title: 'إضافة سند جديد',
-            html: `<input id="swal-customer" class="swal2-input" placeholder="اسم العميل">
-                   <input id="swal-amount" type="number" class="swal2-input" placeholder="المبلغ">
-                   <input id="swal-date" type="date" class="swal2-input">
-                   <textarea id="swal-notes" class="swal2-textarea" placeholder="ملاحظات"></textarea>`,
+            html: `
+                <input id="swal-customer" class="swal2-input" placeholder="اسم العميل">
+                <input id="swal-customerPhone" class="swal2-input" placeholder="جوال العميل - اختياري">
+                <div class="flex gap-2">
+                    <input id="swal-amount" type="text" readonly class="swal2-input" placeholder="المبلغ" onclick="openNumpad('swal-amount')">
+                    <button type="button" onclick="openNumpad('swal-amount')" class="bg-blue-500 text-white px-4 rounded-lg">
+                        <i class="fas fa-calculator"></i>
+                    </button>
+                </div>
+                <input id="swal-date" type="date" class="swal2-input" value="${today}">
+                <textarea id="swal-notes" class="swal2-textarea" placeholder="ملاحظات"></textarea>`,
             confirmButtonText: 'حفظ السند',
             showCancelButton: true, cancelButtonText: 'إلغاء',
             preConfirm: () => {
                 const customerName = document.getElementById('swal-customer').value;
-                const amount = document.getElementById('swal-amount').value;
+                const customerPhone = document.getElementById('swal-customerPhone').value;
+                const amount = parseFloat(document.getElementById('swal-amount').value);
                 const date = document.getElementById('swal-date').value;
                 const notes = document.getElementById('swal-notes').value;
-                if (!customerName || !amount) Swal.showValidationMessage('اسم العميل والمبلغ مطلوب');
-                return { customerName, amount, date, notes }
+                
+                if (!customerName ||!amount) {
+                    Swal.showValidationMessage('اسم العميل والمبلغ مطلوب');
+                    return false;
+                }
+                if (amount > (delegateLimits.limitSingleAmount || 0)) {
+                    Swal.showValidationMessage(`المبلغ يتجاوز حد السند: ${delegateLimits.limitSingleAmount}`);
+                    return false;
+                }
+                if ((delegateLimits.usedAmount || 0) + amount > (delegateLimits.limitTotalAmount || 0)) {
+                    Swal.showValidationMessage('تجاوزت الحد الإجمالي للمبالغ');
+                    return false;
+                }
+                return { customerName, customerPhone, amount, date, notes }
             }
         });
+        
         if (form) {
             await addDoc(collection(db, 'bonds'), {
-                ...form,
+               ...form,
                 projectCode: delegateData.projectCode,
                 delegatePhone: delegateData.phone,
                 delegateName: delegateData.name,
+                delegateId: delegateData.id || '',
+                status: 'غير مورد',
                 createdAt: serverTimestamp()
             });
             Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
             loadBonds();
+            loadDelegateLimits();
         }
     }
 
+    // 4. كيبورد الأرقام
+    window.openNumpad = (fieldId) => {
+        currentAmountField = fieldId;
+        document.getElementById('numpadDisplay').value = document.getElementById(fieldId).value || '';
+        document.getElementById('numpadModal').classList.remove('hidden');
+        document.getElementById('numpadModal').classList.add('flex');
+    }
+    window.numpadPress = (val) => {
+        const display = document.getElementById('numpadDisplay');
+        if(val === '.' && display.value.includes('.')) return;
+        display.value += val;
+    }
+    window.numpadClear = () => {
+        const display = document.getElementById('numpadDisplay');
+        display.value = display.value.slice(0, -1);
+    }
+    window.numpadConfirm = () => {
+        if(currentAmountField) {
+            document.getElementById(currentAmountField).value = document.getElementById('numpadDisplay').value;
+        }
+        numpadClose();
+    }
+    window.numpadClose = () => {
+        document.getElementById('numpadModal').classList.add('hidden');
+        document.getElementById('numpadModal').classList.remove('flex');
+    }
+
+    // 5. واتساب
+    window.shareWhatsApp = (phone, name, amount) => {
+        if(!phone) return Swal.fire('تنبيه', 'رقم العميل غير مسجل', 'warning');
+        const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nشكراً لتعاملكم معنا`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+    window.shareWhatsAppGeneral = (name, amount) => {
+        const msg = `سند للعميل: ${name}\nالمبلغ: ${amount} ريال`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // 6. QR Code
+    window.showQR = (bondId) => {
+        const qrDiv = document.getElementById(`qr-${bondId}`);
+        if(qrDiv.innerHTML) {
+            qrDiv.classList.toggle('hidden');
+            return;
+        }
+        qrDiv.classList.remove('hidden');
+        new QRCode(qrDiv, {
+            text: `${window.location.origin}/bond/${bondId}`,
+            width: 128,
+            height: 128
+        });
+    }
+
+    // 7. تصدير Excel
+    window.exportExcel = async () => {
+        const q = query(collection(db, 'bonds'), 
+            where('projectCode', '==', delegateData.projectCode),
+            where('delegatePhone', '==', delegateData.phone)
+        );
+        const snap = await getDocs(q);
+        const data = [];
+        snap.forEach(doc => {
+            const b = doc.data();
+            data.push({
+                'اسم العميل': b.customerName,
+                'المبلغ': b.amount,
+                'التاريخ': b.date,
+                'الملاحظات': b.notes || ''
+            });
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'السندات');
+        XLSX.writeFile(wb, `سندات_${delegateData.name}.xlsx`);
+    }
+
     window.logout = () => { localStorage.clear(); location.href = './index.html'; }
+    
+    loadDelegateLimits();
     loadBonds();
 </script>
 </body>
