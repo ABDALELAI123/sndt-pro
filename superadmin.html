@@ -336,345 +336,65 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    let allProjects = [], allManagers = [], currentTab = 'projects';
+       const db = getFirestore(app);
 
-    // تبديل التبويبات
-    window.showTab = (tab) => {
-        currentTab = tab;
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
-        document.getElementById(`content-${tab}`).classList.remove('hidden');
-        document.getElementById(`tab-${tab}`).classList.add('tab-active');
-        if(tab === 'projects') loadProjects();
-        if(tab === 'managers') loadManagers();
-        if(tab === 'stats') loadStats();
-        if(tab === 'settings') loadAppSettings();
-    }
-
-    // تحميل الإعدادات
-    window.loadAppSettings = async () => {
-        const docRef = doc(db, 'app_settings', 'config');
-        const snap = await getDoc(docRef);
-        if(snap.exists()) {
-            const data = snap.data();
-            document.getElementById('setting_appName').value = data.appName || '';
-            document.getElementById('setting_color').value = data.color || '#667eea';
-            document.getElementById('setting_lang').value = data.lang || 'ar';
-            document.getElementById('show_taxNumber').checked = data.showTax!== false;
-            document.getElementById('show_address').checked = data.showAddress!== false;
-            document.getElementById('show_stamp').checked = data.showStamp!== false;
-            document.getElementById('show_signature').checked = data.showSignature!== false;
-            document.getElementById('show_qr').checked = data.showQr!== false;
-            if(data.icon) {
-                document.getElementById('preview_icon').src = data.icon;
-                document.getElementById('preview_icon').classList.remove('hidden');
-                document.getElementById('appIcon').src = data.icon;
-                document.getElementById('appIcon').classList.remove('hidden');
-            }
-            document.getElementById('appName').textContent = data.appName || 'السندات الذكية';
-        }
-    }
-
-    // حفظ الإعدادات
-    window.saveAppSettings = async () => {
-        const iconFile = document.getElementById('setting_icon').files[0];
-        let iconBase64 = document.getElementById('preview_icon').src;
-
-        if(iconFile) {
-            iconBase64 = await toBase64(iconFile);
-        }
-
-        const settings = {
-            appName: document.getElementById('setting_appName').value,
-            icon: iconBase64,
-            color: document.getElementById('setting_color').value,
-            lang: document.getElementById('setting_lang').value,
-            showTax: document.getElementById('show_taxNumber').checked,
-            showAddress: document.getElementById('show_address').checked,
-            showStamp: document.getElementById('show_stamp').checked,
-            showSignature: document.getElementById('show_signature').checked,
-            showQr: document.getElementById('show_qr').checked,
-            updatedAt: new Date().toISOString()
-        };
-
-        await setDoc(doc(db, 'app_settings', 'config'), settings);
-        Swal.fire('تم', 'تم حفظ الإعدادات بنجاح', 'success');
-        loadAppSettings();
-    }
-
-    // تحويل صورة لـ Base64
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-
-    document.getElementById('setting_icon').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if(file) {
-            const base64 = await toBase64(file);
-            document.getElementById('preview_icon').src = base64;
-            document.getElementById('preview_icon').classList.remove('hidden');
-        }
-    });
-
-    // تحميل المشاريع
+    // تحميل المشاريع في الجدول
     window.loadProjects = async () => {
-        const snap = await getDocs(collection(db, 'projects'));
-        allProjects = snap.docs.map(d => ({id: d.id,...d.data()}));
-        const managersSnap = await getDocs(collection(db, 'managers'));
-        const managers = managersSnap.docs.map(d => d.data());
-
+        const q = query(collection(db, 'projects'));
+        const snap = await getDocs(q);
         const tbody = document.getElementById('projectsTableBody');
-        tbody.innerHTML = allProjects.map(p => {
-            const currentManagers = managers.filter(m => m.projectCode === p.projectCode).length;
-            const statusBadge = p.active!== false?
-                '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">نشط</span>' :
-                '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">موقوف</span>';
-
-            return `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="p-3 font-bold">${p.projectName}</td>
-                <td class="p-3 text-center">${p.projectCode}</td>
-                <td class="p-3 text-center">${p.managerCount || 1}</td>
-                <td class="p-3 text-center font-bold ${currentManagers >= p.managerCount? 'text-red-600' : 'text-green-600'}">${currentManagers} / ${p.managerCount || 1}</td>
-                <td class="p-3 text-center">${statusBadge}</td>
-                <td class="p-3 text-center">
-                    <button onclick="editProject('${p.id}')" class="btn-action bg-blue-500 text-white hover:bg-blue-600"><i class="fas fa-edit"></i></button>
-                    <button onclick="toggleProject('${p.id}', ${p.active!== false})" class="btn-action bg-yellow-500 text-white hover:bg-yellow-600">
-                        <i class="fas fa-${p.active!== false? 'pause' : 'play'}"></i>
-                    </button>
-                    <button onclick="deleteProject('${p.id}')" class="btn-action bg-red-500 text-white hover:bg-red-600"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>`;
-        }).join('') || '<tr><td colspan="6" class="text-center p-8 text-gray-400">لا توجد مشاريع</td></tr>';
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        
+        snap.forEach(docSnap => {
+            const p = docSnap.data();
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${p.name}</td>
+                    <td class="p-3">${p.code}</td>
+                    <td class="p-3">0</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded text-sm bg-green-100 text-green-800">نشط</span></td>
+                    <td class="p-3">
+                        <button onclick="deleteProject('${docSnap.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
+                    </td>
+                </tr>
+            `;
+        });
+        document.getElementById('stat_projects').textContent = snap.size;
     }
 
-    // تحميل المدراء
-    window.loadManagers = async () => {
-        const snap = await getDocs(collection(db, 'managers'));
-        allManagers = snap.docs.map(d => ({id: d.id,...d.data()}));
-
-        const tbody = document.getElementById('managersTableBody');
-        tbody.innerHTML = allManagers.map(m => {
-            const statusBadge = m.active!== false?
-                '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">نشط</span>' :
-                '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">موقوف</span>';
-
-            return `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="p-3 font-bold">${m.managerName}</td>
-                <td class="p-3 text-center">${m.projectCode}</td>
-                <td class="p-3 text-center">${m.phone}
-                    <a href="https://wa.me/${m.phone}" target="_blank" class="text-green-600 hover:text-green-700">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
-                </td>
-                <td class="p-3 text-center">${m.password}</td>
-                <td class="p-3 text-center">${statusBadge}</td>
-                <td class="p-3 text-center">
-                    <button onclick="editManager('${m.id}')" class="btn-action bg-blue-500 text-white hover:bg-blue-600"><i class="fas fa-edit"></i></button>
-                    <button onclick="toggleManager('${m.id}', ${m.active!== false})" class="btn-action bg-yellow-500 text-white hover:bg-yellow-600">
-                        <i class="fas fa-${m.active!== false? 'pause' : 'play'}"></i>
-                    </button>
-                    <button onclick="deleteManager('${m.id}')" class="btn-action bg-red-500 text-white hover:bg-red-600"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>`;
-        }).join('') || '<tr><td colspan="6" class="text-center p-8 text-gray-400">لا يوجد مدراء</td></tr>';
-    }
-
-    // الإحصائيات
-    window.loadStats = async () => {
-        const [projects, managers, delegates, bonds] = await Promise.all([
-            getDocs(collection(db, 'projects')),
-            getDocs(collection(db, 'managers')),
-            getDocs(collection(db, 'delegates')),
-            getDocs(collection(db, 'bonds'))
-        ]);
-
-        document.getElementById('stat_projects').textContent = projects.size;
-        document.getElementById('stat_managers').textContent = managers.size;
-        document.getElementById('stat_delegates').textContent = delegates.size;
-        document.getElementById('stat_bonds').textContent = bonds.size;
-    }
-
-    // النوافذ
-    window.showAddProjectModal = () => {
-        document.getElementById('editProjectId').value = '';
-        document.getElementById('projectModalTitle').textContent = 'إضافة مشروع جديد';
-        document.getElementById('modal_projectName').value = '';
-        document.getElementById('modal_projectCode').value = '';
-        document.getElementById('modal_managerCount').value = '1';
-        document.getElementById('projectModal').classList.remove('hidden');
-        document.getElementById('projectModal').classList.add('flex');
-    }
-
-    window.showAddManagerModal = async () => {
-        await loadProjects();
+    // تحميل المشاريع في القائمة المنسدلة - هذا اللي كان ناقص
+    window.loadProjectsToSelect = async () => {
+        const q = query(collection(db, 'projects'));
+        const snap = await getDocs(q);
         const select = document.getElementById('modal_managerProject');
-        select.innerHTML = '<option value="">اختر المشروع</option>' +
-            allProjects.map(p => `<option value="${p.projectCode}">${p.projectName} - ${p.projectCode}</option>`).join('');
-        document.getElementById('managerModal').classList.remove('hidden');
-        document.getElementById('managerModal').classList.add('flex');
+        select.innerHTML = '<option value="">اختر المشروع</option>';
+        
+        snap.forEach(docSnap => {
+            const p = docSnap.data();
+            select.innerHTML += `<option value="${p.code}">${p.name} - ${p.code}</option>`;
+        });
     }
 
-    window.closeModal = (id) => {
-        document.getElementById(id).classList.add('hidden');
-        document.getElementById(id).classList.remove('flex');
-    }
-
-    // حفظ مشروع
+    // حفظ مشروع جديد
     window.saveProject = async () => {
-        const id = document.getElementById('editProjectId').value;
         const data = {
-            projectName: document.getElementById('modal_projectName').value,
-            projectCode: document.getElementById('modal_projectCode').value,
-            managerCount: parseInt(document.getElementById('modal_managerCount').value) || 1,
-            active: true,
-            createdAt: new Date().toISOString()
+            code: document.getElementById('modal_projectCode').value,
+            name: document.getElementById('modal_projectName').value,
+            status: 'active',
+            createdAt: new Date()
         };
 
-        if(!data.projectName ||!data.projectCode) {
+        if(!data.code || !data.name) {
             return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
         }
 
-        if(id) {
-            await updateDoc(doc(db, 'projects', id), data);
-        } else {
-            await addDoc(collection(db, 'projects'), data);
-        }
-
+        await addDoc(collection(db, 'projects'), data);
         closeModal('projectModal');
         loadProjects();
-        Swal.fire('تم', 'تم الحفظ بنجاح', 'success');
+        Swal.fire('تم', 'تم إضافة المشروع بنجاح', 'success');
     }
 
-    // حفظ مدير
-    window.saveManager = async () => {
-        const projectCode = document.getElementById('modal_managerProject').value;
-        const project = allProjects.find(p => p.projectCode === projectCode);
-        const currentManagers = allManagers.filter(m => m.projectCode === projectCode).length;
-
-        if(currentManagers >= (project?.managerCount || 1)) {
-            return Swal.fire('خطأ', `وصلت للحد الأقصى للمدراء في هذا المشروع: ${project?.managerCount}`, 'error');
-        }
-
-        const data = {
-            projectCode: projectCode,
-            managerName: document.getElementById('modal_managerName').value,
-            phone: document.getElementById('modal_managerPhone').value,
-            password: document.getElementById('modal_managerPassword').value,
-            active: true,
-            createdAt: new Date().toISOString()
-        };
-
-        if(!data.projectCode ||!data.managerName ||!data.phone ||!data.password) {
-            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
-        }
-
-        await addDoc(collection(db, 'managers'), data);
-        closeModal('managerModal');
-        loadManagers();
-        Swal.fire('تم', 'تم إضافة المدير بنجاح', 'success');
-    }
-
-    // حذف وتعديل
-    window.deleteProject = async (id) => {
-        const result = await Swal.fire({
-            title: 'متأكد؟',
-            text: 'سيتم حذف المشروع وكل المدراء والمناديب التابعين له',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'نعم، احذف',
-            cancelButtonText: 'إلغاء'
-        });
-        if(result.isConfirmed) {
-            await deleteDoc(doc(db, 'projects', id));
-            loadProjects();
-            Swal.fire('تم الحذف', '', 'success');
-        }
-    }
-
-    window.toggleProject = async (id, current) => {
-        await updateDoc(doc(db, 'projects', id), {active:!current});
-        loadProjects();
-    }
-
-    window.deleteManager = async (id) => {
-        const result = await Swal.fire({title: 'متأكد؟', icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم', cancelButtonText: 'إلغاء'});
-        if(result.isConfirmed) {
-            await deleteDoc(doc(db, 'managers', id));
-            loadManagers();
-            Swal.fire('تم الحذف', '', 'success');
-        }
-    }
-
-    window.toggleManager = async (id, current) => {
-        await updateDoc(doc(db, 'managers', id), {active:!current});
-        loadManagers();
-    }
-
-    // تصدير Excel
-    window.exportProjectsExcel = () => {
-        const ws = XLSX.utils.json_to_sheet(allProjects);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'المشاريع');
-        XLSX.writeFile(wb, 'المشاريع.xlsx');
-    }
-
-    window.exportManagersExcel = () => {
-        const ws = XLSX.utils.json_to_sheet(allManagers);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'المدراء');
-        XLSX.writeFile(wb, 'المدراء.xlsx');
-    }
-
-    window.exportFullReportExcel = async () => {
-        const [projects, managers, delegates, bonds] = await Promise.all([
-            getDocs(collection(db, 'projects')),
-            getDocs(collection(db, 'managers')),
-            getDocs(collection(db, 'delegates')),
-            getDocs(collection(db, 'bonds'))
-        ]);
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(projects.docs.map(d => d.data())), 'المشاريع');
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(managers.docs.map(d => d.data())), 'المدراء');
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(delegates.docs.map(d => d.data())), 'المناديب');
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(bonds.docs.map(d => d.data())), 'السندات');
-        XLSX.writeFile(wb, 'تقرير_شامل.xlsx');
-    }
-
-    // خروج
-    window.logout = () => {
-        localStorage.clear();
-        location.href = './index.html';
-    }
-
-    // تبديل اللغة
-    window.toggleLanguage = () => {
-        const current = document.documentElement.lang;
-        if(current === 'ar') {
-            document.documentElement.lang = 'en';
-            document.documentElement.dir = 'ltr';
-            document.getElementById('langText').textContent = 'عربي';
-        } else {
-            document.documentElement.lang = 'ar';
-            document.documentElement.dir = 'rtl';
-            document.getElementById('langText').textContent = 'English';
-        }
-    }
-
-    // تحقق دخول سوبر أدمن
-    if(localStorage.getItem('userRole')!== 'superadmin') {
-        location.href = './index.html';
-    }
-
-    // تحميل أولي
-    loadAppSettings();
-    loadProjects();
     // حفظ مدير جديد
     window.saveManager = async () => {
         const data = {
@@ -694,24 +414,6 @@
         closeModal('managerModal');
         loadManagers();
         Swal.fire('تم', 'تم إضافة المدير بنجاح', 'success');
-    }
-
-    // حفظ مشروع جديد
-    window.saveProject = async () => {
-        const data = {
-            code: document.getElementById('modal_projectCode').value,
-            name: document.getElementById('modal_projectName').value,
-            status: 'active'
-        };
-
-        if(!data.code || !data.name) {
-            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
-        }
-
-        await addDoc(collection(db, 'projects'), data);
-        closeModal('projectModal');
-        loadProjects();
-        Swal.fire('تم', 'تم إضافة المشروع بنجاح', 'success');
     }
 
     // تحميل المدراء
@@ -740,6 +442,7 @@
                 </tr>
             `;
         });
+        document.getElementById('stat_managers').textContent = snap.size;
     }
 
     window.deleteManager = async (id) => {
@@ -749,7 +452,15 @@
         }
     }
 
+    window.deleteProject = async (id) => {
+        if(confirm('متأكد من حذف المشروع؟')) {
+            await deleteDoc(doc(db, 'projects', id));
+            loadProjects();
+        }
+    }
+
     window.showAddManagerModal = () => {
+        loadProjectsToSelect();
         document.getElementById('managerModal').classList.remove('hidden');
         document.getElementById('managerModal').classList.add('flex');
     }
@@ -762,38 +473,6 @@
     window.closeModal = (id) => {
         document.getElementById(id).classList.add('hidden');
         document.getElementById(id).classList.remove('flex');
-    }
-
-    // تحميل المشاريع
-    window.loadProjects = async () => {
-        const q = query(collection(db, 'projects'));
-        const snap = await getDocs(q);
-        const tbody = document.getElementById('projectsTableBody');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-        
-        snap.forEach(docSnap => {
-            const p = docSnap.data();
-            tbody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3">${p.code}</td>
-                    <td class="p-3">${p.name}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-1 rounded text-sm bg-green-100 text-green-800">نشط</span>
-                    </td>
-                    <td class="p-3">
-                        <button onclick="deleteProject('${docSnap.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm">حذف</button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-    window.deleteProject = async (id) => {
-        if(confirm('متأكد من حذف المشروع؟')) {
-            await deleteDoc(doc(db, 'projects', id));
-            loadProjects();
-        }
     }
 
     // تبديل اللغة
@@ -816,7 +495,6 @@
     }
 
     // تحميل أولي
-    loadAppSettings();
     loadProjects();
     loadManagers();
 </script>
