@@ -13,7 +13,7 @@
 
 <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
     <h1 class="text-3xl font-extrabold text-center mb-8 text-gray-800">السندات الذكية</h1>
-    
+
     <div class="space-y-4">
         <input id="projectCode" type="text" placeholder="كود المشروع" class="w-full p-3 border-2 rounded-lg text-center">
         <input id="username" type="text" placeholder="اسم المستخدم / الجوال" class="w-full p-3 border-2 rounded-lg text-center">
@@ -67,7 +67,7 @@
         Swal.fire({ title: 'جاري التحقق...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
         // 1. افحص المدراء
-        const managersQ = query(collection(db, 'managers'), 
+        const managersQ = query(collection(db, 'managers'),
             where('projectCode', '==', projectCode),
             where('username', '==', username),
             where('password', '==', password)
@@ -76,14 +76,20 @@
 
         if(!managersSnap.empty) {
             const managerDoc = managersSnap.docs[0];
-            localStorage.setItem('currentManager', JSON.stringify({id: managerDoc.id,...managerDoc.data()}));
+            const managerData = managerDoc.data();
+            // هنا التعديل الوحيد: نحفظ كل البيانات + role
+            localStorage.setItem('currentManager', JSON.stringify({
+                id: managerDoc.id,
+               ...managerData
+            }));
             localStorage.setItem('userRole', 'manager');
+            Swal.close();
             location.replace('./manager.html');
             return;
         }
 
         // 2. افحص المناديب
-        const delegatesQ = query(collection(db, 'delegates'), 
+        const delegatesQ = query(collection(db, 'delegates'),
             where('projectCode', '==', projectCode),
             where('phone', '==', username),
             where('password', '==', password),
@@ -95,6 +101,7 @@
             const delegateDoc = delegatesSnap.docs[0];
             localStorage.setItem('delegateData', JSON.stringify({id: delegateDoc.id,...delegateDoc.data()}));
             localStorage.setItem('userRole', 'delegate');
+            Swal.close();
             location.replace('./delegate.html');
             return;
         }
