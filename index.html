@@ -30,16 +30,18 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+        // ✅ نفس إعدادات superadmin.html بالضبط
         const firebaseConfig = {
-            apiKey: "AIzaSyC6Fi7V7m8jH3LsrUFCoA2pvkPxL2hX9Hc",
+            apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
             authDomain: "sanadat-pro.firebaseapp.com",
+            databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "sanadat-pro",
-            storageBucket: "sanadat-pro.appspot.com",
-            messagingSenderId: "423095997472",
-            appId: "1:423095997472:web:8c59d0f1f75fbd3b9a9b14"
+            storageBucket: "sanadat-pro.firebasestorage.app",
+            messagingSenderId: "1039476751095",
+            appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -48,15 +50,11 @@
 
         window.login = async () => {
             console.log("====== بداية تسجيل الدخول ======");
-            const projectCodeRaw = document.getElementById('projectCode').value;
-            const phoneRaw = document.getElementById('phone').value;
-            const passwordRaw = document.getElementById('password').value;
+            const projectCode = document.getElementById('projectCode').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value.trim();
 
-            const projectCode = projectCodeRaw.trim();
-            const phone = phoneRaw.trim();
-            const password = passwordRaw.trim();
-
-            console.log("1. البيانات المدخلة بعد التنظيف:", {projectCode, phone, password});
+            console.log("1. البيانات المدخلة:", {projectCode, phone, password});
 
             if (!projectCode || !phone || !password) {
                 return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
@@ -71,26 +69,22 @@
                     return;
                 }
 
-                // تشخيص: جيب كل المدراء واطبعهم مع نوع البيانات
-                console.log("3. جاري جلب كل المدراء للتشخيص...");
-                const allManagersSnap = await getDocs(collection(db, 'المديرين'));
+                // ✅ نقرأ من 'managers' مو 'المديرين'
+                console.log("3. جاري جلب المدراء من managers...");
+                const allManagersSnap = await getDocs(collection(db, 'managers'));
                 console.log(`4. عدد كل المدراء في القاعدة: ${allManagersSnap.size}`);
                 
                 let managerFound = null;
                 allManagersSnap.forEach(doc => {
                     const d = doc.data();
-                    console.log(`   مدير: ${doc.id}`);
-                    console.log(`      رمز المشروع: "${d['رمز المشروع']}" | النوع: ${typeof d['رمز المشروع']}`);
-                    console.log(`      هاتف: "${d['هاتف']}" | النوع: ${typeof d['هاتف']}`);
-                    console.log(`      كلمة المرور: "${d['كلمة المرور']}" | النوع: ${typeof d['كلمة المرور']}`);
-                    console.log(`      حالة: "${d['حالة']}"`);
+                    console.log(`   مدير:`, doc.id, d);
                     
-                    // مطابقة يدوية عشان نعرف وين المشكلة بالضبط
-                    const codeMatch = String(d['رمز المشروع']) === String(projectCode);
-                    const phoneMatch = String(d['هاتف']) === String(phone);
-                    const passMatch = String(d['كلمة المرور']) === String(password);
+                    // ✅ أسماء الحقول انجليزي نفس superadmin.html
+                    const codeMatch = String(d['projectCode']) === String(projectCode);
+                    const phoneMatch = String(d['phone']) === String(phone);
+                    const passMatch = String(d['password']) === String(password);
                     
-                    console.log(`      نتيجة المطابقة: كود=${codeMatch}, هاتف=${phoneMatch}, باسورد=${passMatch}`);
+                    console.log(`      مطابقة: كود=${codeMatch}, هاتف=${phoneMatch}, باسورد=${passMatch}`);
                     
                     if (codeMatch && phoneMatch && passMatch) {
                         managerFound = { id: doc.id, ...d };
@@ -98,20 +92,18 @@
                 });
 
                 if (managerFound) {
-                    console.log("5. لقينا المدير بالمطابقة اليدوية ✅:", managerFound);
+                    console.log("5. لقينا المدير ✅:", managerFound);
                     
-                    const status = managerFound['حالة'];
-                    if (status !== 'نشط' && status !== 'نشيط' && status !== 'active') {
-                         console.log("6. المدير غير نشط. الحالة:", status);
+                    if (managerFound['status'] !== 'active') {
+                         console.log("6. المدير غير نشط. الحالة:", managerFound['status']);
                          return Swal.fire('خطأ', 'حساب المدير غير نشط', 'error');
                     }
 
                     localStorage.setItem('currentManager', JSON.stringify({
                         id: managerFound.id,
-                        name: managerFound['اسم'],
-                        phone: managerFound['هاتف'],
-                        projectCode: managerFound['رمز المشروع'],
-                        projectName: managerFound['اسم المشروع'] || ''
+                        name: managerFound['name'],
+                        phone: managerFound['phone'],
+                        projectCode: managerFound['projectCode']
                     }));
                     localStorage.setItem('userRole', 'manager');
                     console.log("7. تم التحويل لصفحة المدير");
@@ -119,16 +111,12 @@
                     return;
                 }
 
-                console.log("8. ما لقينا مدير مطابق. ندور في المناديب...");
+                console.log("8. ما لقينا مدير مطابق");
                 Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
 
             } catch (error) {
                 console.error("9. خطأ فايربيس:", error);
-                if (error.code === 'failed-precondition') {
-                    Swal.fire('خطأ', 'تحتاج تسوي فهرس في Firestore. افتح Console واضغط الرابط اللي يطلع لك', 'error');
-                } else {
-                    Swal.fire('خطأ', `فشل الاتصال: ${error.message}`, 'error');
-                }
+                Swal.fire('خطأ', `فشل الاتصال: ${error.message}`, 'error');
             }
         }
     </script>
