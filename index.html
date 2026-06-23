@@ -33,7 +33,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // تأكد ان هذا الكونفق حق مشروعك sanadat-pro
         const firebaseConfig = {
             apiKey: "AIzaSyC6Fi7V7m8jH3LsrUFCoA2pvkPxL2hX9Hc",
             authDomain: "sanadat-pro.firebaseapp.com",
@@ -48,51 +47,82 @@
         console.log("Firebase شغال ✅");
 
         window.login = async () => {
-            console.log("زر الدخول انضغط ✅");
-            const projectCode = document.getElementById('projectCode').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const password = document.getElementById('password').value.trim();
-            console.log("البيانات:", {projectCode, phone, password});
+            console.log("====== بداية تسجيل الدخول ======");
+            const projectCodeRaw = document.getElementById('projectCode').value;
+            const phoneRaw = document.getElementById('phone').value;
+            const passwordRaw = document.getElementById('password').value;
 
-            if (!projectCode ||!phone ||!password) {
+            // 1. تنظيف البيانات من المسافات
+            const projectCode = projectCodeRaw.trim();
+            const phone = phoneRaw.trim();
+            const password = passwordRaw.trim();
+
+            console.log("1. البيانات بعد التنظيف:", {projectCode, phone, password});
+
+            if (!projectCode || !phone || !password) {
                 return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
             }
 
             try {
-                // سوبر ادمن
+                // 2. تحقق سوبر أدمن
                 if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
+                    console.log("2. دخول سوبر أدمن ✅");
                     localStorage.setItem('userRole', 'superadmin');
                     location.href = './superadmin.html';
                     return;
                 }
 
-                console.log("ندور في المديرين...");
+                // 3. تشخيص: طباعة كل المدراء الموجودين
+                console.log("3. جاري جلب كل المدراء للتشخيص...");
+                const allManagersSnap = await getDocs(collection(db, 'المديرين'));
+                console.log(`4. عدد كل المدراء في القاعدة: ${allManagersSnap.size}`);
+                allManagersSnap.forEach(doc => {
+                    console.log(`   مدير:`, doc.id, doc.data());
+                });
+
+                // 4. البحث عن المدير - يقبل نص أو رقم في كود المشروع
+                console.log("5. نبحث عن المدير بالشروط...");
                 let q = query(collection(db, 'المديرين'),
-                    where('رمز المشروع', '==', projectCode),
+                    where('رمز المشروع', 'in', [projectCode, Number(projectCode)]), // يقبل "1410" أو 1410
                     where('هاتف', '==', phone),
                     where('كلمة المرور', '==', password)
+                    // شلنا شرط الحالة عشان نقبل نشط و نشيط
                 );
+                
                 let snap = await getDocs(q);
-                console.log("عدد نتائج المدراء:", snap.size);
-
+                console.log("6. عدد نتائج المدراء بعد الاستعلام:", snap.size);
+                
                 if (!snap.empty) {
-                    const data = snap.docs[0].data();
-                    console.log("لقينا المدير:", data);
+                    const managerDoc = snap.docs[0];
+                    const data = managerDoc.data();
+                    console.log("7. لقينا المدير ✅:", data);
+                    
+                    // تحقق من الحالة يدوياً
+                    const status = data['حالة'];
+                    if (status !== 'نشط' && status !== 'نشيط') {
+                         console.log("8. المدير غير نشط. الحالة:", status);
+                         return Swal.fire('خطأ', 'حساب المدير غير نشط', 'error');
+                    }
+
                     localStorage.setItem('currentManager', JSON.stringify({
-                        id: snap.docs[0].id,
-                      ...data
+                        id: managerDoc.id,
+                        name: data['اسم'],
+                        phone: data['هاتف'],
+                        projectCode: data['رمز المشروع'],
+                        projectName: data['اسم المشروع'] || ''
                     }));
                     localStorage.setItem('userRole', 'manager');
+                    console.log("9. تم التحويل لصفحة المدير");
                     location.href = './manager.html';
                     return;
                 }
 
-                console.log("ما لقينا مدير، ندور في المناديب...");
+                console.log("10. ما لقينا مدير. ندور في المناديب...");
                 Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
 
             } catch (error) {
-                console.error("خطأ فايربيس:", error);
-                Swal.fire('خطأ', error.message, 'error');
+                console.error("11. خطأ فايربيس:", error);
+                Swal.fire('خطأ', `فشل الاتصال: ${error.message}`, 'error');
             }
         }
     </script>
