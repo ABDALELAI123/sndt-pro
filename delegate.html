@@ -13,11 +13,13 @@
     <style> 
         body { font-family: 'Cairo', sans-serif; } 
       .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
+      .swal2-popup { font-family: 'Cairo', sans-serif; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-500 to-indigo-600 min-h-screen p-4">
 
 <div class="max-w-4xl mx-auto">
+    <!-- الهيدر -->
     <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
         <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
         <div class="text-right">
@@ -30,6 +32,7 @@
         </div>
     </div>
 
+    <!-- السندات -->
     <div class="bg-white rounded-2xl shadow-xl p-8">
         <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
             <div class="flex gap-2">
@@ -48,6 +51,7 @@
     </div>
 </div>
 
+<!-- مودال كيبورد الأرقام -->
 <div id="numpadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999]">
     <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4">
         <h3 class="text-xl font-bold mb-4 text-center">أدخل المبلغ</h3>
@@ -90,7 +94,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     
-    // ✅ الحل: نفحص البيانات صح قبل ما نكمل
     const delegateData = JSON.parse(localStorage.getItem('delegateData') || '{}');
     const userRole = localStorage.getItem('userRole');
     
@@ -202,7 +205,6 @@
             confirmButtonText: 'حفظ السند',
             showCancelButton: true, cancelButtonText: 'إلغاء',
             didOpen: () => {
-                // نضمن ان الزر يشتغل
                 document.querySelector('.swal2-container').style.zIndex = '9998';
             },
             preConfirm: () => {
@@ -230,7 +232,7 @@
         
         if (form) {
             await addDoc(collection(db, 'bonds'), {
-             ...form,
+            ...form,
                 projectCode: delegateData.projectCode,
                 delegatePhone: delegateData.phone,
                 delegateName: delegateData.name,
