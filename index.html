@@ -55,43 +55,44 @@ window.login = async () => {
             return;
         }
 
-        // 2. تحقق من المدراء - الاسم عربي + username
+        // 2. تحقق من المدراء - بأسماء الحقول العربية حقتك
         let q = query(collection(db, 'المديرين'),
-            where('projectCode', '==', projectCode),
-            where('username', '==', phone), // خانة الجوال نحط فيها يوزر المدير
-            where('password', '==', password)
+            where('رمز المشروع', '==', projectCode),
+            where('هاتف', '==', phone),
+            where('كلمة المرور', '==', password),
+            where('حالة', '==', 'نشيط')
         );
         let snap = await getDocs(q);
+        
         if (!snap.empty) {
             const managerDoc = snap.docs[0];
             const managerData = managerDoc.data();
             
-            // هذا السطر هو اللي يحل مشكلة "يفتح ويقفل"
             localStorage.setItem('currentManager', JSON.stringify({
                 id: managerDoc.id,
-                name: managerData.name,
-                username: managerData.username,
-                projectCode: managerData.projectCode,
-                projectName: managerData.projectName || managerData.project
+                name: managerData['اسم'],
+                phone: managerData['هاتف'],
+                projectCode: managerData['رمز المشروع'],
+                projectName: managerData['اسم المشروع'] || ''
             }));
             localStorage.setItem('userRole', 'manager');
             location.href = './manager.html';
             return;
         }
 
-        // 3. تحقق من المناديب
-        q = query(collection(db, 'المناديب'),
-            where('projectCode', '==', projectCode),
-            where('phone', '==', phone),
-            where('password', '==', password),
-            where('status', '==', 'active')
+        // 3. تحقق من المناديب - عدّل الحقول لو كانت عربي عندك
+        q = query(collection(db, 'المندوبون'), // تأكد من اسم المجموعة
+            where('رمز المشروع', '==', projectCode),
+            where('هاتف', '==', phone),
+            where('كلمة المرور', '==', password),
+            where('حالة', '==', 'نشيط')
         );
         snap = await getDocs(q);
         if (!snap.empty) {
             const delegateDoc = snap.docs[0];
             localStorage.setItem('currentDelegate', JSON.stringify({
                 id: delegateDoc.id,
-              ...delegateDoc.data()
+             ...delegateDoc.data()
             }));
             localStorage.setItem('userRole', 'delegate');
             location.href = './delegate.html';
