@@ -38,74 +38,73 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+window.login = async () => {
+    const projectCode = document.getElementById('projectCode').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value.trim();
 
-    window.login = async () => {
-        const projectCode = document.getElementById('projectCode').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const password = document.getElementById('password').value.trim();
-
-        if (!projectCode ||!phone ||!password) {
-            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
-        }
-
-        try {
-            // 1. تحقق سوبر أدمن
-            if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
-                localStorage.setItem('userRole', 'superadmin');
-                location.href = './superadmin.html';
-                return;
-            }
-
-            // 2. تحقق من المدراء - اسم المجموعة عربي + username بدل phone
-            let q = query(collection(db, 'المديرين'),
-                where('projectCode', '==', projectCode),
-                where('username', '==', phone),
-                where('password', '==', password)
-            );
-            let snap = await getDocs(q);
-            if (!snap.empty) {
-                const managerDoc = snap.docs[0];
-                const managerData = managerDoc.data();
-                
-                // هذا السطر يحل مشكلة "يفتح ويقفل"
-                localStorage.setItem('currentManager', JSON.stringify({
-                    id: managerDoc.id,
-                    name: managerData.name,
-                    username: managerData.username,
-                    projectCode: managerData.projectCode,
-                    projectName: managerData.projectName || managerData.project
-                }));
-                localStorage.setItem('userRole', 'manager');
-                location.href = './manager.html';
-                return;
-            }
-
-            // 3. تحقق من المناديب
-            q = query(collection(db, 'المناديب'),
-                where('projectCode', '==', projectCode),
-                where('phone', '==', phone),
-                where('password', '==', password),
-                where('status', '==', 'active')
-            );
-            snap = await getDocs(q);
-            if (!snap.empty) {
-                const delegateDoc = snap.docs[0];
-                localStorage.setItem('currentDelegate', JSON.stringify({
-                    id: delegateDoc.id,
-                 ...delegateDoc.data()
-                }));
-                localStorage.setItem('userRole', 'delegate');
-                location.href = './delegate.html';
-                return;
-            }
-
-            Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
-
-        } catch (error) {
-            console.error("Login Error:", error);
-            Swal.fire('خطأ', 'فشل الاتصال بقاعدة البيانات', 'error');
-        }
+    if (!projectCode ||!phone ||!password) {
+        return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
     }
+
+    try {
+        // 1. تحقق سوبر أدمن
+        if (projectCode === '001122334455' && phone === '0597087767' && password === '500600') {
+            localStorage.setItem('userRole', 'superadmin');
+            location.href = './superadmin.html';
+            return;
+        }
+
+        // 2. تحقق من المدراء - الاسم عربي + username
+        let q = query(collection(db, 'المديرين'),
+            where('projectCode', '==', projectCode),
+            where('username', '==', phone), // خانة الجوال نحط فيها يوزر المدير
+            where('password', '==', password)
+        );
+        let snap = await getDocs(q);
+        if (!snap.empty) {
+            const managerDoc = snap.docs[0];
+            const managerData = managerDoc.data();
+            
+            // هذا السطر هو اللي يحل مشكلة "يفتح ويقفل"
+            localStorage.setItem('currentManager', JSON.stringify({
+                id: managerDoc.id,
+                name: managerData.name,
+                username: managerData.username,
+                projectCode: managerData.projectCode,
+                projectName: managerData.projectName || managerData.project
+            }));
+            localStorage.setItem('userRole', 'manager');
+            location.href = './manager.html';
+            return;
+        }
+
+        // 3. تحقق من المناديب
+        q = query(collection(db, 'المناديب'),
+            where('projectCode', '==', projectCode),
+            where('phone', '==', phone),
+            where('password', '==', password),
+            where('status', '==', 'active')
+        );
+        snap = await getDocs(q);
+        if (!snap.empty) {
+            const delegateDoc = snap.docs[0];
+            localStorage.setItem('currentDelegate', JSON.stringify({
+                id: delegateDoc.id,
+              ...delegateDoc.data()
+            }));
+            localStorage.setItem('userRole', 'delegate');
+            location.href = './delegate.html';
+            return;
+        }
+
+        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+
+    } catch (error) {
+        console.error("Login Error:", error);
+        Swal.fire('خطأ', 'فشل الاتصال بقاعدة البيانات', 'error');
+    }
+}
 </script>
 </body>
 </html>
