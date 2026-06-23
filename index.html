@@ -28,7 +28,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-    // حل مشكلة الغمزة: امسح البيانات لو الرابط فيه clear=1
+    // حل الغمزة: لو الرابط فيه clear=1 امسح كل شي
     if(new URLSearchParams(window.location.search).get('clear') === '1') {
         localStorage.clear();
         history.replaceState(null, '', './index.html');
