@@ -28,7 +28,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-    // ✅ حل الغمزة: لو فيه clear=1 امسح كل شي
+    // حل مشكلة الغمزة: امسح البيانات لو الرابط فيه clear=1
     if(new URLSearchParams(window.location.search).get('clear') === '1') {
         localStorage.clear();
         history.replaceState(null, '', './index.html');
@@ -47,12 +47,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ✅ لا تسوي لوب: لو مسجل خلاص روح لصفحتك
+    // لو مسجل دخول من قبل، روح صفحتك مباشرة بدون لوب
     const userRole = localStorage.getItem('userRole');
     if(userRole === 'manager' && localStorage.getItem('currentManager')) {
-        location.href = './manager.html';
+        location.replace('./manager.html');
     } else if(userRole === 'delegate' && localStorage.getItem('delegateData')) {
-        location.href = './delegate.html';
+        location.replace('./delegate.html');
     }
 
     window.login = async () => {
@@ -64,7 +64,9 @@
             return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
         }
 
-        // 1. جرب المدير
+        Swal.fire({ title: 'جاري التحقق...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+        // 1. افحص المدراء
         const managersQ = query(collection(db, 'managers'), 
             where('projectCode', '==', projectCode),
             where('username', '==', username),
@@ -76,11 +78,11 @@
             const managerDoc = managersSnap.docs[0];
             localStorage.setItem('currentManager', JSON.stringify({id: managerDoc.id,...managerDoc.data()}));
             localStorage.setItem('userRole', 'manager');
-            location.href = './manager.html';
+            location.replace('./manager.html');
             return;
         }
 
-        // 2. جرب المندوب
+        // 2. افحص المناديب
         const delegatesQ = query(collection(db, 'delegates'), 
             where('projectCode', '==', projectCode),
             where('phone', '==', username),
@@ -93,11 +95,11 @@
             const delegateDoc = delegatesSnap.docs[0];
             localStorage.setItem('delegateData', JSON.stringify({id: delegateDoc.id,...delegateDoc.data()}));
             localStorage.setItem('userRole', 'delegate');
-            location.href = './delegate.html';
+            location.replace('./delegate.html');
             return;
         }
 
-        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة أو الحساب غير مفعل', 'error');
     }
 </script>
 </body>
