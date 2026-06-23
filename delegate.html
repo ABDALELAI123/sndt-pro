@@ -3,36 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية - تسجيل الدخول</title>
+    <title>لوحة تحكم المندوب</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; }</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style> 
+        body { font-family: 'Cairo', sans-serif; } 
+      .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-900 to-blue-900 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gradient-to-br from-blue-500 to-indigo-600 min-h-screen p-4">
 
-<div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-    <h1 class="text-3xl font-extrabold text-center mb-8 text-gray-800">السندات الذكية</h1>
-    
-    <div class="space-y-4">
-        <input id="projectCode" type="text" placeholder="كود المشروع" class="w-full p-3 border-2 rounded-lg text-center">
-        <input id="username" type="text" placeholder="اسم المستخدم / الجوال" class="w-full p-3 border-2 rounded-lg text-center">
-        <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-3 border-2 rounded-lg text-center">
-        <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold text-lg hover:bg-blue-700">
-            تسجيل الدخول
-        </button>
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
+        <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
+        <div class="text-right">
+            <h1 class="text-2xl font-extrabold">لوحة تحكم المندوب</h1>
+            <p class="text-gray-500" id="delegateInfo">جاري التحميل...</p>
+            <div class="text-sm text-blue-600 mt-1" id="limitsInfo"></div>
+        </div>
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-user text-white text-2xl"></i>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
+            <div class="flex gap-2">
+                <button onclick="addBond()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold">
+                    <i class="fas fa-plus"></i> إضافة سند جديد
+                </button>
+                <button onclick="exportExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                </button>
+            </div>
+            <h2 class="text-xl font-bold"><i class="fas fa-file-invoice text-blue-500"></i> سنداتي</h2>
+        </div>
+        <div id="bondsList" class="space-y-3">
+            <p class="text-center text-gray-400 py-8">جاري التحميل...</p>
+        </div>
+    </div>
+</div>
+
+<div id="numpadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999]">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4">
+        <h3 class="text-xl font-bold mb-4 text-center">أدخل المبلغ</h3>
+        <input id="numpadDisplay" type="text" readonly class="w-full p-4 border-2 rounded-lg text-3xl text-center mb-4 bg-gray-50">
+        <div class="grid grid-cols-3 gap-2">
+            <button onclick="numpadPress('1')" class="numpad-btn">1</button>
+            <button onclick="numpadPress('2')" class="numpad-btn">2</button>
+            <button onclick="numpadPress('3')" class="numpad-btn">3</button>
+            <button onclick="numpadPress('4')" class="numpad-btn">4</button>
+            <button onclick="numpadPress('5')" class="numpad-btn">5</button>
+            <button onclick="numpadPress('6')" class="numpad-btn">6</button>
+            <button onclick="numpadPress('7')" class="numpad-btn">7</button>
+            <button onclick="numpadPress('8')" class="numpad-btn">8</button>
+            <button onclick="numpadPress('9')" class="numpad-btn">9</button>
+            <button onclick="numpadPress('.')" class="numpad-btn">.</button>
+            <button onclick="numpadPress('0')" class="numpad-btn">0</button>
+            <button onclick="numpadClear()" class="numpad-btn bg-red-200 hover:bg-red-500"><i class="fas fa-backspace"></i></button>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button onclick="numpadConfirm()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">تأكيد</button>
+            <button onclick="numpadClose()" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
+        </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-    // ✅ حل مشكلة الغمزة: لو الرابط فيه clear=1 امسح كل شي
-    if(new URLSearchParams(window.location.search).get('clear') === '1') {
-        localStorage.clear();
-        history.replaceState(null, '', './index.html');
-    }
+    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
@@ -46,59 +89,239 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
-    // ✅ لو مسجل دخول من قبل، لا تسوي لوب
+    
+    // ✅ الحل: نفحص البيانات صح قبل ما نكمل
+    const delegateData = JSON.parse(localStorage.getItem('delegateData') || '{}');
     const userRole = localStorage.getItem('userRole');
-    if(userRole === 'manager' && localStorage.getItem('currentManager')) {
-        location.href = './manager.html';
-    } else if(userRole === 'delegate' && localStorage.getItem('delegateData')) {
-        location.href = './delegate.html';
+    
+    if(!delegateData.phone || userRole!== 'delegate' ||!delegateData.projectCode) {
+        localStorage.clear();
+        location.href = './index.html';
+    }
+    
+    let delegateLimits = {};
+    let currentAmountField = null;
+    
+    document.getElementById('delegateInfo').textContent = `مشروع: ${delegateData.projectCode} | المندوب: ${delegateData.name}`;
+
+    async function loadDelegateLimits() {
+        const q = query(collection(db, 'delegates'), 
+            where('projectCode', '==', delegateData.projectCode),
+            where('phone', '==', delegateData.phone)
+        );
+        const snap = await getDocs(q);
+        if(!snap.empty) {
+            delegateLimits = snap.docs[0].data();
+            delegateLimits.id = snap.docs[0].id;
+            const usedCount = delegateLimits.usedCount || 0;
+            const usedAmount = delegateLimits.usedAmount || 0;
+            document.getElementById('limitsInfo').innerHTML = `
+                السندات: ${usedCount}/${delegateLimits.limitTotalCount || 0} | 
+                المبلغ: ${usedAmount.toLocaleString()}/${(delegateLimits.limitTotalAmount || 0).toLocaleString()} |
+                حد السند: ${(delegateLimits.limitSingleAmount || 0).toLocaleString()}
+            `;
+        } else {
+            Swal.fire('خطأ', 'حساب المندوب غير موجود', 'error');
+            logout();
+        }
     }
 
-    window.login = async () => {
-        const projectCode = document.getElementById('projectCode').value.trim();
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-
-        if(!projectCode ||!username ||!password) {
-            return Swal.fire('خطأ', 'املأ كل الحقول', 'error');
-        }
-
-        // 1. جرب المدير
-        const managersQ = query(collection(db, 'managers'), 
-            where('projectCode', '==', projectCode),
-            where('username', '==', username),
-            where('password', '==', password)
+    async function loadBonds() {
+        const q = query(collection(db, 'bonds'), 
+            where('projectCode', '==', delegateData.projectCode),
+            where('delegatePhone', '==', delegateData.phone)
         );
-        const managersSnap = await getDocs(managersQ);
-
-        if(!managersSnap.empty) {
-            const managerDoc = managersSnap.docs[0];
-            localStorage.setItem('currentManager', JSON.stringify({id: managerDoc.id,...managerDoc.data()}));
-            localStorage.setItem('userRole', 'manager');
-            location.href = './manager.html';
+        const snap = await getDocs(q);
+        const list = document.getElementById('bondsList');
+        list.innerHTML = '';
+        
+        if(snap.empty) {
+            list.innerHTML = '<p class="text-center text-gray-500 py-8">لا توجد سندات حالياً</p>';
             return;
         }
 
-        // 2. جرب المندوب
-        const delegatesQ = query(collection(db, 'delegates'), 
-            where('projectCode', '==', projectCode),
-            where('phone', '==', username),
-            where('password', '==', password),
-            where('status', '==', 'active')
-        );
-        const delegatesSnap = await getDocs(delegatesQ);
+        snap.forEach(doc => {
+            const b = doc.data();
+            const bondId = doc.id;
+            list.innerHTML += `
+                <div class="border border-gray-200 p-4 rounded-xl">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="shareWhatsApp('${b.customerPhone || ''}', '${b.customerName}', '${b.amount}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fab fa-whatsapp"></i> واتساب العميل
+                            </button>
+                            <button onclick="shareWhatsAppGeneral('${b.customerName}', '${b.amount}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-share"></i> مشاركة
+                            </button>
+                            <button onclick="showQR('${bondId}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-qrcode"></i> QR
+                            </button>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm">${b.amount} ريال</span>
+                            <p class="font-bold text-lg mt-1">${b.customerName}</p>
+                            <span class="text-xs px-2 py-1 rounded ${b.status === 'مورد' || b.status === 'موثق'? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${b.status || 'غير مورد'}</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm text-right">التاريخ: ${b.date || 'غير محدد'}</p>
+                    <p class="text-gray-600 text-sm text-right">ملاحظات: ${b.notes || 'لا يوجد'}</p>
+                    <div id="qr-${bondId}" class="mt-2 hidden"></div>
+                </div>`;
+        });
+    }
 
-        if(!delegatesSnap.empty) {
-            const delegateDoc = delegatesSnap.docs[0];
-            localStorage.setItem('delegateData', JSON.stringify({id: delegateDoc.id,...delegateDoc.data()}));
-            localStorage.setItem('userRole', 'delegate');
-            location.href = './delegate.html';
-            return;
+    window.addBond = async () => {
+        const today = new Date().toISOString().split('T')[0];
+        const todayQ = query(collection(db, 'bonds'), 
+            where('delegatePhone', '==', delegateData.phone),
+            where('date', '==', today)
+        );
+        const todaySnap = await getDocs(todayQ);
+        
+        if(todaySnap.size >= (delegateLimits.limitDailyCount || 0)) {
+            return Swal.fire('عذراً', 'تجاوزت الحد اليومي للسندات', 'error');
         }
 
-        Swal.fire('خطأ', 'بيانات الدخول غير صحيحة', 'error');
+        if((delegateLimits.usedCount || 0) >= (delegateLimits.limitTotalCount || 0)) {
+            return Swal.fire('عذراً', 'تجاوزت الحد الإجمالي للسندات', 'error');
+        }
+
+        const { value: form } = await Swal.fire({
+            title: 'إضافة سند جديد',
+            html: `
+                <input id="swal-customer" class="swal2-input" placeholder="اسم العميل">
+                <input id="swal-customerPhone" class="swal2-input" placeholder="جوال العميل - اختياري">
+                <div class="relative">
+                    <input id="swal-amount" type="text" readonly class="swal2-input pr-12" placeholder="المبلغ">
+                    <button type="button" onclick="window.openNumpad('swal-amount')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white px-3 py-2 rounded-lg">
+                        <i class="fas fa-calculator"></i>
+                    </button>
+                </div>
+                <input id="swal-date" type="date" class="swal2-input" value="${today}">
+                <textarea id="swal-notes" class="swal2-textarea" placeholder="ملاحظات"></textarea>`,
+            confirmButtonText: 'حفظ السند',
+            showCancelButton: true, cancelButtonText: 'إلغاء',
+            didOpen: () => {
+                // نضمن ان الزر يشتغل
+                document.querySelector('.swal2-container').style.zIndex = '9998';
+            },
+            preConfirm: () => {
+                const customerName = document.getElementById('swal-customer').value;
+                const customerPhone = document.getElementById('swal-customerPhone').value;
+                const amount = parseFloat(document.getElementById('swal-amount').value);
+                const date = document.getElementById('swal-date').value;
+                const notes = document.getElementById('swal-notes').value;
+                
+                if (!customerName ||!amount) {
+                    Swal.showValidationMessage('اسم العميل والمبلغ مطلوب');
+                    return false;
+                }
+                if (amount > (delegateLimits.limitSingleAmount || 0)) {
+                    Swal.showValidationMessage(`المبلغ يتجاوز حد السند: ${delegateLimits.limitSingleAmount}`);
+                    return false;
+                }
+                if ((delegateLimits.usedAmount || 0) + amount > (delegateLimits.limitTotalAmount || 0)) {
+                    Swal.showValidationMessage('تجاوزت الحد الإجمالي للمبالغ');
+                    return false;
+                }
+                return { customerName, customerPhone, amount, date, notes }
+            }
+        });
+        
+        if (form) {
+            await addDoc(collection(db, 'bonds'), {
+             ...form,
+                projectCode: delegateData.projectCode,
+                delegatePhone: delegateData.phone,
+                delegateName: delegateData.name,
+                delegateId: delegateLimits.id || '',
+                status: 'غير مورد',
+                createdAt: serverTimestamp()
+            });
+            Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
+            loadBonds();
+            loadDelegateLimits();
+        }
     }
+
+    window.openNumpad = (fieldId) => {
+        currentAmountField = fieldId;
+        document.getElementById('numpadDisplay').value = document.getElementById(fieldId).value || '';
+        document.getElementById('numpadModal').classList.remove('hidden');
+        document.getElementById('numpadModal').classList.add('flex');
+    }
+    window.numpadPress = (val) => {
+        const display = document.getElementById('numpadDisplay');
+        if(val === '.' && display.value.includes('.')) return;
+        display.value += val;
+    }
+    window.numpadClear = () => {
+        const display = document.getElementById('numpadDisplay');
+        display.value = display.value.slice(0, -1);
+    }
+    window.numpadConfirm = () => {
+        if(currentAmountField) {
+            document.getElementById(currentAmountField).value = document.getElementById('numpadDisplay').value;
+        }
+        numpadClose();
+    }
+    window.numpadClose = () => {
+        document.getElementById('numpadModal').classList.add('hidden');
+        document.getElementById('numpadModal').classList.remove('flex');
+    }
+
+    window.shareWhatsApp = (phone, name, amount) => {
+        if(!phone) return Swal.fire('تنبيه', 'رقم العميل غير مسجل', 'warning');
+        const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nشكراً لتعاملكم معنا`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+    window.shareWhatsAppGeneral = (name, amount) => {
+        const msg = `سند للعميل: ${name}\nالمبلغ: ${amount} ريال`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    window.showQR = (bondId) => {
+        const qrDiv = document.getElementById(`qr-${bondId}`);
+        if(qrDiv.innerHTML) {
+            qrDiv.classList.toggle('hidden');
+            return;
+        }
+        qrDiv.classList.remove('hidden');
+        new QRCode(qrDiv, {
+            text: `${window.location.origin}/bond/${bondId}`,
+            width: 128,
+            height: 128
+        });
+    }
+
+    window.exportExcel = async () => {
+        const q = query(collection(db, 'bonds'), 
+            where('projectCode', '==', delegateData.projectCode),
+            where('delegatePhone', '==', delegateData.phone)
+        );
+        const snap = await getDocs(q);
+        const data = [];
+        snap.forEach(doc => {
+            const b = doc.data();
+            data.push({
+                'اسم العميل': b.customerName,
+                'جوال العميل': b.customerPhone || '',
+                'المبلغ': b.amount,
+                'التاريخ': b.date,
+                'الحالة': b.status || 'غير مورد',
+                'الملاحظات': b.notes || ''
+            });
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'السندات');
+        XLSX.writeFile(wb, `سندات_${delegateData.name}.xlsx`);
+    }
+
+    window.logout = () => { localStorage.clear(); location.href = './index.html'; }
+    
+    loadDelegateLimits();
+    loadBonds();
 </script>
 </body>
 </html>
