@@ -12,15 +12,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style> 
         body { font-family: 'Cairo', sans-serif; } 
-      .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
-      .swal2-popup { font-family: 'Cairo', sans-serif; }
+       .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
+       .tab-active { @apply bg-blue-600 text-white; }
+       .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
+       .swal2-popup { font-family: 'Cairo', sans-serif; }
+        @media print {.no-print { display: none!important; } }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-500 to-indigo-600 min-h-screen p-4">
 
-<div class="max-w-4xl mx-auto">
+<div class="max-w-5xl mx-auto">
     <!-- الهيدر -->
-    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center">
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center no-print">
         <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
         <div class="text-right">
             <h1 class="text-2xl font-extrabold">لوحة تحكم المندوب</h1>
@@ -32,26 +35,97 @@
         </div>
     </div>
 
-    <!-- السندات -->
-    <div class="bg-white rounded-2xl shadow-xl p-8">
+    <!-- التبويبات -->
+    <div class="bg-white rounded-2xl shadow-xl p-2 mb-6 flex gap-2 no-print">
+        <button onclick="switchTab('bonds')" id="tab-bonds" class="flex-1 py-3 rounded-xl font-bold tab-active">
+            <i class="fas fa-file-invoice"></i> سنداتي
+        </button>
+        <button onclick="switchTab('create')" id="tab-create" class="flex-1 py-3 rounded-xl font-bold tab-inactive">
+            <i class="fas fa-plus"></i> إنشاء سند
+        </button>
+        <button onclick="switchTab('print')" id="tab-print" class="flex-1 py-3 rounded-xl font-bold tab-inactive">
+            <i class="fas fa-print"></i> طباعة السند
+        </button>
+    </div>
+
+    <!-- تبويب سنداتي -->
+    <div id="tabContent-bonds" class="bg-white rounded-2xl shadow-xl p-8">
         <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
-            <div class="flex gap-2">
-                <button onclick="addBond()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold">
-                    <i class="fas fa-plus"></i> إضافة سند جديد
-                </button>
-                <button onclick="exportExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold">
-                    <i class="fas fa-file-excel"></i> تصدير Excel
-                </button>
+            <button onclick="exportExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold">
+                <i class="fas fa-file-excel"></i> تصدير Excel
+            </button>
+            <h2 class="text-xl font-bold">قائمة السندات</h2>
+        </div>
+        <div id="bondsList" class="space-y-3"></div>
+    </div>
+
+    <!-- تبويب انشاء سند -->
+    <div id="tabContent-create" class="bg-white rounded-2xl shadow-xl p-8 hidden">
+        <h2 class="text-xl font-bold mb-6"><i class="fas fa-plus text-blue-500"></i> إنشاء سند جديد</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <label class="font-bold text-gray-700">نوع السند *</label>
+                <select id="bondType" class="w-full p-3 border-2 rounded-lg mt-1">
+                    <option value="قبض">سند قبض</option>
+                    <option value="صرف">سند صرف</option>
+                    <option value="تحويل">سند تحويل</option>
+                </select>
             </div>
-            <h2 class="text-xl font-bold"><i class="fas fa-file-invoice text-blue-500"></i> سنداتي</h2>
+            <div>
+                <label class="font-bold text-gray-700">رقم السند</label>
+                <input id="bondNumber" type="text" class="w-full p-3 border-2 rounded-lg mt-1 bg-gray-100" readonly>
+            </div>
+            <div>
+                <label class="font-bold text-gray-700">اسم العميل *</label>
+                <input id="customerName" type="text" class="w-full p-3 border-2 rounded-lg mt-1" placeholder="اسم العميل">
+            </div>
+            <div>
+                <label class="font-bold text-gray-700">جوال العميل</label>
+                <input id="customerPhone" type="text" class="w-full p-3 border-2 rounded-lg mt-1" placeholder="05xxxxxxxx">
+            </div>
+            <div class="md:col-span-2">
+                <label class="font-bold text-gray-700">المبلغ *</label>
+                <div class="relative">
+                    <input id="amount" type="text" oninput="updateTafqeet()" class="w-full p-3 border-2 rounded-lg mt-1 pr-16" placeholder="0">
+                    <button type="button" onclick="openNumpad('amount')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-calculator"></i>
+                    </button>
+                </div>
+                <p id="tafqeet" class="text-sm text-green-600 font-bold mt-1 h-6"></p>
+            </div>
+            <div>
+                <label class="font-bold text-gray-700">التاريخ *</label>
+                <input id="bondDate" type="date" class="w-full p-3 border-2 rounded-lg mt-1">
+            </div>
+            <div class="md:col-span-2">
+                <label class="font-bold text-gray-700">ملاحظات</label>
+                <textarea id="notes" class="w-full p-3 border-2 rounded-lg mt-1" rows="3" placeholder="ملاحظات اختيارية"></textarea>
+            </div>
         </div>
-        <div id="bondsList" class="space-y-3">
-            <p class="text-center text-gray-400 py-8">جاري التحميل...</p>
+        <button onclick="saveBond()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold text-lg mt-6 hover:bg-blue-700">
+            <i class="fas fa-save"></i> حفظ السند
+        </button>
+    </div>
+
+    <!-- تبويب الطباعة -->
+    <div id="tabContent-print" class="bg-white rounded-2xl shadow-xl p-8 hidden">
+        <h2 class="text-xl font-bold mb-6 no-print"><i class="fas fa-print text-blue-500"></i> طباعة السند</h2>
+        <div class="no-print mb-4">
+            <label class="font-bold text-gray-700">اختر السند للطباعة</label>
+            <select id="printBondSelect" onchange="loadPrintPreview()" class="w-full p-3 border-2 rounded-lg mt-1">
+                <option value="">-- اختر سند --</option>
+            </select>
         </div>
+        <div id="printArea" class="border-2 border-dashed border-gray-300 p-8 rounded-xl">
+            <p class="text-center text-gray-400">اختر سند لعرض المعاينة</p>
+        </div>
+        <button onclick="window.print()" class="w-full bg-green-600 text-white p-4 rounded-xl font-bold text-lg mt-6 hover:bg-green-700 no-print">
+            <i class="fas fa-print"></i> طباعة
+        </button>
     </div>
 </div>
 
-<!-- مودال كيبورد الأرقام -->
+<!-- كيبورد الأرقام -->
 <div id="numpadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999]">
     <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4">
         <h3 class="text-xl font-bold mb-4 text-center">أدخل المبلغ</h3>
@@ -94,18 +168,85 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     
-    const delegateData = JSON.parse(localStorage.getItem('delegateData') || '{}');
-    const userRole = localStorage.getItem('userRole');
+    let delegateData;
+    try {
+        delegateData = JSON.parse(localStorage.getItem('delegateData') || '{}');
+    } catch(e) { delegateData = {}; }
     
-    if(!delegateData.phone || userRole!== 'delegate' ||!delegateData.projectCode) {
+    const userRole = localStorage.getItem('userRole');
+    if(!delegateData.phone ||!delegateData.projectCode ||!delegateData.name || userRole!== 'delegate') {
         localStorage.clear();
-        location.href = './index.html';
+        location.replace('./index.html');
     }
     
     let delegateLimits = {};
     let currentAmountField = null;
+    let allBonds = [];
     
     document.getElementById('delegateInfo').textContent = `مشروع: ${delegateData.projectCode} | المندوب: ${delegateData.name}`;
+    document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
+
+    // تفقيط الأرقام
+    function tafqeet(num) {
+        if(!num || isNaN(num)) return '';
+        const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+        const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+        const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+        
+        num = Math.floor(num);
+        if(num === 0) return 'صفر ريال';
+        
+        let result = '';
+        if(num >= 1000) {
+            const thousands = Math.floor(num / 1000);
+            result += thousands === 1? 'ألف ' : thousands === 2? 'ألفان ' : ones[thousands] + ' آلاف ';
+            num %= 1000;
+        }
+        if(num >= 100) {
+            result += hundreds[Math.floor(num / 100)] + ' ';
+            num %= 100;
+        }
+        if(num >= 20) {
+            result += tens[Math.floor(num / 10)] + ' ';
+            num %= 10;
+        } else if(num >= 10) {
+            if(num === 10) result += 'عشرة ';
+            else if(num === 11) result += 'أحد عشر ';
+            else if(num === 12) result += 'اثنا عشر ';
+            else result += ones[num - 10] + ' عشر ';
+            num = 0;
+        }
+        if(num > 0) result += ones[num] + ' ';
+        
+        return result.trim() + ' ريال فقط لا غير';
+    }
+
+    window.updateTafqeet = () => {
+        const amount = parseFloat(document.getElementById('amount').value);
+        document.getElementById('tafqeet').textContent = tafqeet(amount);
+    }
+
+    // تبديل التبويبات
+    window.switchTab = (tab) => {
+        ['bonds', 'create', 'print'].forEach(t => {
+            document.getElementById(`tabContent-${t}`).classList.add('hidden');
+            document.getElementById(`tab-${t}`).classList.remove('tab-active');
+            document.getElementById(`tab-${t}`).classList.add('tab-inactive');
+        });
+        document.getElementById(`tabContent-${tab}`).classList.remove('hidden');
+        document.getElementById(`tab-${tab}`).classList.add('tab-active');
+        document.getElementById(`tab-${tab}`).classList.remove('tab-inactive');
+        
+        if(tab === 'print') loadPrintBonds();
+        if(tab === 'create') generateBondNumber();
+    }
+
+    async function generateBondNumber() {
+        const q = query(collection(db, 'bonds'), where('projectCode', '==', delegateData.projectCode));
+        const snap = await getDocs(q);
+        const nextNum = (snap.size + 1).toString().padStart(6, '0');
+        document.getElementById('bondNumber').value = `${delegateData.projectCode}-${nextNum}`;
+    }
 
     async function loadDelegateLimits() {
         const q = query(collection(db, 'delegates'), 
@@ -135,6 +276,7 @@
             where('delegatePhone', '==', delegateData.phone)
         );
         const snap = await getDocs(q);
+        allBonds = [];
         const list = document.getElementById('bondsList');
         list.innerHTML = '';
         
@@ -144,8 +286,8 @@
         }
 
         snap.forEach(doc => {
-            const b = doc.data();
-            const bondId = doc.id;
+            const b = {...doc.data(), id: doc.id};
+            allBonds.push(b);
             list.innerHTML += `
                 <div class="border border-gray-200 p-4 rounded-xl">
                     <div class="flex justify-between items-start mb-2">
@@ -156,24 +298,44 @@
                             <button onclick="shareWhatsAppGeneral('${b.customerName}', '${b.amount}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
                                 <i class="fas fa-share"></i> مشاركة
                             </button>
-                            <button onclick="showQR('${bondId}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm">
+                            <button onclick="showQR('${b.id}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm">
                                 <i class="fas fa-qrcode"></i> QR
                             </button>
                         </div>
                         <div class="text-right">
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm">${b.amount} ريال</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${b.bondType || 'قبض'}</span>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm mr-1">${b.amount} ريال</span>
                             <p class="font-bold text-lg mt-1">${b.customerName}</p>
+                            <p class="text-xs text-gray-500">رقم: ${b.bondNumber || '---'}</p>
                             <span class="text-xs px-2 py-1 rounded ${b.status === 'مورد' || b.status === 'موثق'? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${b.status || 'غير مورد'}</span>
                         </div>
                     </div>
                     <p class="text-gray-600 text-sm text-right">التاريخ: ${b.date || 'غير محدد'}</p>
                     <p class="text-gray-600 text-sm text-right">ملاحظات: ${b.notes || 'لا يوجد'}</p>
-                    <div id="qr-${bondId}" class="mt-2 hidden"></div>
+                    <div id="qr-${b.id}" class="mt-2 hidden"></div>
                 </div>`;
         });
     }
 
-    window.addBond = async () => {
+    window.saveBond = async () => {
+        const bondType = document.getElementById('bondType').value;
+        const bondNumber = document.getElementById('bondNumber').value;
+        const customerName = document.getElementById('customerName').value.trim();
+        const customerPhone = document.getElementById('customerPhone').value.trim();
+        const amount = parseFloat(document.getElementById('amount').value);
+        const date = document.getElementById('bondDate').value;
+        const notes = document.getElementById('notes').value.trim();
+        
+        if (!customerName ||!amount ||!date) {
+            return Swal.fire('خطأ', 'اسم العميل والمبلغ والتاريخ مطلوبة', 'error');
+        }
+        if (amount > (delegateLimits.limitSingleAmount || 0)) {
+            return Swal.fire('خطأ', `المبلغ يتجاوز حد السند: ${delegateLimits.limitSingleAmount}`, 'error');
+        }
+        if ((delegateLimits.usedAmount || 0) + amount > (delegateLimits.limitTotalAmount || 0)) {
+            return Swal.fire('خطأ', 'تجاوزت الحد الإجمالي للمبالغ', 'error');
+        }
+        
         const today = new Date().toISOString().split('T')[0];
         const todayQ = query(collection(db, 'bonds'), 
             where('delegatePhone', '==', delegateData.phone),
@@ -185,65 +347,63 @@
             return Swal.fire('عذراً', 'تجاوزت الحد اليومي للسندات', 'error');
         }
 
-        if((delegateLimits.usedCount || 0) >= (delegateLimits.limitTotalCount || 0)) {
-            return Swal.fire('عذراً', 'تجاوزت الحد الإجمالي للسندات', 'error');
-        }
-
-        const { value: form } = await Swal.fire({
-            title: 'إضافة سند جديد',
-            html: `
-                <input id="swal-customer" class="swal2-input" placeholder="اسم العميل">
-                <input id="swal-customerPhone" class="swal2-input" placeholder="جوال العميل - اختياري">
-                <div class="relative">
-                    <input id="swal-amount" type="text" readonly class="swal2-input pr-12" placeholder="المبلغ">
-                    <button type="button" onclick="window.openNumpad('swal-amount')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white px-3 py-2 rounded-lg">
-                        <i class="fas fa-calculator"></i>
-                    </button>
-                </div>
-                <input id="swal-date" type="date" class="swal2-input" value="${today}">
-                <textarea id="swal-notes" class="swal2-textarea" placeholder="ملاحظات"></textarea>`,
-            confirmButtonText: 'حفظ السند',
-            showCancelButton: true, cancelButtonText: 'إلغاء',
-            didOpen: () => {
-                document.querySelector('.swal2-container').style.zIndex = '9998';
-            },
-            preConfirm: () => {
-                const customerName = document.getElementById('swal-customer').value;
-                const customerPhone = document.getElementById('swal-customerPhone').value;
-                const amount = parseFloat(document.getElementById('swal-amount').value);
-                const date = document.getElementById('swal-date').value;
-                const notes = document.getElementById('swal-notes').value;
-                
-                if (!customerName ||!amount) {
-                    Swal.showValidationMessage('اسم العميل والمبلغ مطلوب');
-                    return false;
-                }
-                if (amount > (delegateLimits.limitSingleAmount || 0)) {
-                    Swal.showValidationMessage(`المبلغ يتجاوز حد السند: ${delegateLimits.limitSingleAmount}`);
-                    return false;
-                }
-                if ((delegateLimits.usedAmount || 0) + amount > (delegateLimits.limitTotalAmount || 0)) {
-                    Swal.showValidationMessage('تجاوزت الحد الإجمالي للمبالغ');
-                    return false;
-                }
-                return { customerName, customerPhone, amount, date, notes }
-            }
+        await addDoc(collection(db, 'bonds'), {
+            bondType, bondNumber, customerName, customerPhone, amount, date, notes,
+            projectCode: delegateData.projectCode,
+            delegatePhone: delegateData.phone,
+            delegateName: delegateData.name,
+            delegateId: delegateLimits.id || '',
+            status: 'غير مورد',
+            createdAt: serverTimestamp()
         });
         
-        if (form) {
-            await addDoc(collection(db, 'bonds'), {
-            ...form,
-                projectCode: delegateData.projectCode,
-                delegatePhone: delegateData.phone,
-                delegateName: delegateData.name,
-                delegateId: delegateLimits.id || '',
-                status: 'غير مورد',
-                createdAt: serverTimestamp()
-            });
-            Swal.fire('تم', 'تم إضافة السند بنجاح', 'success');
-            loadBonds();
-            loadDelegateLimits();
+        Swal.fire('تم', 'تم حفظ السند بنجاح', 'success');
+        document.getElementById('customerName').value = '';
+        document.getElementById('customerPhone').value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('notes').value = '';
+        document.getElementById('tafqeet').textContent = '';
+        generateBondNumber();
+        loadBonds();
+        loadDelegateLimits();
+        switchTab('bonds');
+    }
+
+    function loadPrintBonds() {
+        const select = document.getElementById('printBondSelect');
+        select.innerHTML = '<option value="">-- اختر سند --</option>';
+        allBonds.forEach(b => {
+            select.innerHTML += `<option value="${b.id}">${b.bondNumber} - ${b.customerName} - ${b.amount} ريال</option>`;
+        });
+    }
+
+    window.loadPrintPreview = () => {
+        const bondId = document.getElementById('printBondSelect').value;
+        if(!bondId) {
+            document.getElementById('printArea').innerHTML = '<p class="text-center text-gray-400">اختر سند لعرض المعاينة</p>';
+            return;
         }
+        const b = allBonds.find(x => x.id === bondId);
+        document.getElementById('printArea').innerHTML = `
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-extrabold">سند ${b.bondType}</h1>
+                <p class="text-gray-600">مشروع: ${delegateData.projectCode}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-lg">
+                <div><strong>رقم السند:</strong> ${b.bondNumber}</div>
+                <div><strong>التاريخ:</strong> ${b.date}</div>
+                <div><strong>اسم العميل:</strong> ${b.customerName}</div>
+                <div><strong>جوال العميل:</strong> ${b.customerPhone || '---'}</div>
+                <div class="col-span-2"><strong>المبلغ:</strong> ${b.amount.toLocaleString()} ريال</div>
+                <div class="col-span-2"><strong>المبلغ تفقيط:</strong> ${tafqeet(b.amount)}</div>
+                <div class="col-span-2"><strong>المندوب:</strong> ${b.delegateName}</div>
+                <div class="col-span-2"><strong>ملاحظات:</strong> ${b.notes || 'لا يوجد'}</div>
+            </div>
+            <div class="mt-12 grid grid-cols-2 gap-8 text-center">
+                <div><div class="border-t-2 border-gray-400 pt-2">توقيع المستلم</div></div>
+                <div><div class="border-t-2 border-gray-400 pt-2">توقيع المندوب</div></div>
+            </div>
+        `;
     }
 
     window.openNumpad = (fieldId) => {
@@ -264,6 +424,7 @@
     window.numpadConfirm = () => {
         if(currentAmountField) {
             document.getElementById(currentAmountField).value = document.getElementById('numpadDisplay').value;
+            updateTafqeet();
         }
         numpadClose();
     }
@@ -306,9 +467,12 @@
         snap.forEach(doc => {
             const b = doc.data();
             data.push({
+                'رقم السند': b.bondNumber || '',
+                'نوع السند': b.bondType || '',
                 'اسم العميل': b.customerName,
                 'جوال العميل': b.customerPhone || '',
                 'المبلغ': b.amount,
+                'المبلغ تفقيط': tafqeet(b.amount),
                 'التاريخ': b.date,
                 'الحالة': b.status || 'غير مورد',
                 'الملاحظات': b.notes || ''
@@ -320,10 +484,11 @@
         XLSX.writeFile(wb, `سندات_${delegateData.name}.xlsx`);
     }
 
-    window.logout = () => { localStorage.clear(); location.href = './index.html'; }
+    window.logout = () => { localStorage.clear(); location.replace('./index.html'); }
     
     loadDelegateLimits();
     loadBonds();
+    generateBondNumber();
 </script>
 </body>
 </html>
