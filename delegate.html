@@ -12,10 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-     .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
-     .tab-active { @apply bg-blue-600 text-white; }
-     .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
-     .swal2-popup { font-family: 'Cairo', sans-serif; }
+    .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
+    .tab-active { @apply bg-blue-600 text-white; }
+    .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
+    .swal2-popup { font-family: 'Cairo', sans-serif; }
         @media print {.no-print { display: none!important; } }
     </style>
 </head>
@@ -66,9 +66,8 @@
             <div>
                 <label class="font-bold text-gray-700">نوع السند *</label>
                 <select id="bondType" class="w-full p-3 border-2 rounded-lg mt-1">
-                    <option value="قبض">سند قبض</option>
                     <option value="صرف">سند صرف</option>
-                    <option value="تحويل">سند تحويل</option>
+                    <option value="قبض">سند قبض</option>
                 </select>
             </div>
             <div>
@@ -101,7 +100,6 @@
                 <label class="font-bold text-gray-700">ملاحظات</label>
                 <textarea id="notes" class="w-full p-3 border-2 rounded-lg mt-1" rows="3" placeholder="ملاحظات اختيارية"></textarea>
             </div>
-        </div>
         <button onclick="saveBond()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold text-lg mt-6 hover:bg-blue-700">
             <i class="fas fa-save"></i> حفظ السند
         </button>
@@ -153,7 +151,8 @@
 
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, collection, query, where, getDocs, doc, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
@@ -167,6 +166,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
     let delegateData;
     try {
@@ -182,9 +182,30 @@
     let delegateLimits = {};
     let currentAmountField = null;
     let allBonds = [];
+    let currentUser = null;
+
+    // 1. تسجيل دخول مجهول تلقائي
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            console.log("Delegate signed in anonymously:", user.uid);
+            initPage();
+        } else {
+            signInAnonymously(auth).catch((error) => {
+                console.error("Auth Error:", error);
+                Swal.fire('خطأ مصادقة', 'فشل تسجيل الدخول. تأكد من تفعيل Anonymous في Firebase', 'error');
+            });
+        }
+    });
 
     document.getElementById('delegateInfo').textContent = `مشروع: ${delegateData.projectCode} | المندوب: ${delegateData.name}`;
     document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
+
+    async function initPage() {
+        await loadDelegateLimits();
+        await loadBonds();
+        await generateBondNumber();
+    }
 
     // تفقيط الأرقام
     function tafqeet(num) {
@@ -259,9 +280,10 @@
             delegateLimits.id = snap.docs[0].id;
             const usedCount = delegateLimits.usedCount || 0;
             const usedAmount = delegateLimits.usedAmount || 0;
+            const currentBalance = delegateLimits.currentBalance || 0;
             document.getElementById('limitsInfo').innerHTML = `
-                السندات: ${usedCount}/${delegateLimits.limitTotalCount || 0} |
-                المبلغ: ${usedAmount.toLocaleString()}/${(delegateLimits.limitTotalAmount || 0).toLocaleString()} |
+                العهدة: ${currentBalance.toLocaleString()} ريال |
+                السندات اليوم: ${usedCount}/${delegateLimits.limitDailyCount || 0} |
                 حد السند: ${(delegateLimits.limitSingleAmount || 0).toLocaleString()}
             `;
         } else {
@@ -293,17 +315,14 @@
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex gap-2 flex-wrap">
                             <button onclick="shareWhatsApp('${b.customerPhone || ''}', '${b.customerName}', '${b.amount}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm">
-                                <i class="fab fa-whatsapp"></i> واتساب العميل
-                            </button>
-                            <button onclick="shareWhatsAppGeneral('${b.customerName}', '${b.amount}', '${b.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
-                                <i class="fas fa-share"></i> مشاركة
+                                <i class="fab fa-whatsapp"></i> واتساب
                             </button>
                             <button onclick="showQR('${b.id}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm">
                                 <i class="fas fa-qrcode"></i> QR
                             </button>
                         </div>
                         <div class="text-right">
-                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${b.bondType || 'قبض'}</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${b.bondType || 'صرف'}</span>
                             <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm mr-1">${b.amount} ريال</span>
                             <p class="font-bold text-lg mt-1">${b.customerName}</p>
                             <p class="text-xs text-gray-500">رقم: ${b.bondNumber || '---'}</p>
@@ -312,14 +331,17 @@
                     </div>
                     <p class="text-gray-600 text-sm text-right">التاريخ: ${b.date || 'غير محدد'}</p>
                     <p class="text-gray-600 text-sm text-right">ملاحظات: ${b.notes || 'لا يوجد'}</p>
-                    <!-- بداية تعديل الكيو ار -->
                     <div id="qr-${b.id}" class="mt-3 hidden text-center"></div>
-                    <!-- نهاية تعديل الكيو ار -->
                 </div>`;
         });
     }
 
+    // 2. حفظ السند مع التأثير المحاسبي الكامل
     window.saveBond = async () => {
+        if (!currentUser) {
+            return Swal.fire('خطأ', 'جاري تسجيل الدخول... حاول مرة أخرى', 'error');
+        }
+
         const bondType = document.getElementById('bondType').value;
         const bondNumber = document.getElementById('bondNumber').value;
         const customerName = document.getElementById('customerName').value.trim();
@@ -331,11 +353,18 @@
         if (!customerName ||!amount ||!date) {
             return Swal.fire('خطأ', 'اسم العميل والمبلغ والتاريخ مطلوبة', 'error');
         }
-        if (amount > (delegateLimits.limitSingleAmount || 0)) {
-            return Swal.fire('خطأ', `المبلغ يتجاوز حد السند: ${delegateLimits.limitSingleAmount}`, 'error');
+        if (amount <= 0) {
+            return Swal.fire('خطأ', 'المبلغ يجب أن يكون أكبر من صفر', 'error');
         }
-        if ((delegateLimits.usedAmount || 0) + amount > (delegateLimits.limitTotalAmount || 0)) {
-            return Swal.fire('خطأ', 'تجاوزت الحد الإجمالي للمبالغ', 'error');
+
+        // التحققات المحاسبية
+        if (bondType === 'صرف') {
+            if (amount > (delegateLimits.currentBalance || 0)) {
+                return Swal.fire('رصيد غير كافي', `عهدتك الحالية ${(delegateLimits.currentBalance || 0).toLocaleString()} ريال`, 'error');
+            }
+            if (amount > (delegateLimits.limitSingleAmount || 0)) {
+                return Swal.fire('خطأ', `المبلغ يتجاوز حد السند: ${delegateLimits.limitSingleAmount}`, 'error');
+            }
         }
 
         const today = new Date().toISOString().split('T')[0];
@@ -349,26 +378,72 @@
             return Swal.fire('عذراً', 'تجاوزت الحد اليومي للسندات', 'error');
         }
 
-        await addDoc(collection(db, 'bonds'), {
-            bondType, bondNumber, customerName, customerPhone, amount, date, notes,
-            projectCode: delegateData.projectCode,
-            delegatePhone: delegateData.phone,
-            delegateName: delegateData.name,
-            delegateId: delegateLimits.id || '',
-            status: 'غير مورد',
-            createdAt: serverTimestamp()
-        });
+        try {
+            await runTransaction(db, async (transaction) => {
+                // 1. نقرأ بيانات المندوب
+                const delegateRef = doc(db, 'delegates', delegateLimits.id);
+                const delegateDoc = await transaction.get(delegateRef);
+                if (!delegateDoc.exists()) throw "المندوب غير موجود";
 
-        Swal.fire('تم', 'تم حفظ السند بنجاح', 'success');
-        document.getElementById('customerName').value = '';
-        document.getElementById('customerPhone').value = '';
-        document.getElementById('amount').value = '';
-        document.getElementById('notes').value = '';
-        document.getElementById('tafqeet').textContent = '';
-        generateBondNumber();
-        loadBonds();
-        loadDelegateLimits();
-        switchTab('bonds');
+                const currentData = delegateDoc.data();
+                const newBalance = bondType === 'صرف'
+                   ? (currentData.currentBalance || 0) - amount
+                    : (currentData.currentBalance || 0) + amount;
+
+                if (newBalance < 0) throw "الرصيد لا يكفي";
+
+                // 2. ننشئ السند
+                const newBondRef = doc(collection(db, 'bonds'));
+                transaction.set(newBondRef, {
+                    bondType, bondNumber, customerName, customerPhone, amount, date, notes,
+                    projectCode: delegateData.projectCode,
+                    delegatePhone: delegateData.phone,
+                    delegateName: delegateData.name,
+                    delegateId: delegateLimits.id,
+                    status: 'غير مورد',
+                    createdAt: serverTimestamp(),
+                    createdBy: currentUser.uid
+                });
+
+                // 3. نحدث رصيد المندوب والحدود
+                transaction.update(delegateRef, {
+                    currentBalance: newBalance,
+                    usedCount: (currentData.usedCount || 0) + 1,
+                    usedAmount: (currentData.usedAmount || 0) + amount,
+                    lastTransaction: serverTimestamp()
+                });
+
+                // 4. نسجل القيد المحاسبي
+                const journalRef = doc(collection(db, 'journal_entries'));
+                transaction.set(journalRef, {
+                    bondId: newBondRef.id,
+                    bondNumber: bondNumber,
+                    type: bondType,
+                    amount: amount,
+                    debitAccount: bondType === 'صرف'? 'مصروفات المندوب' : 'عهدة المندوب',
+                    creditAccount: bondType === 'صرف'? 'عهدة المندوب' : 'إيرادات',
+                    description: `${bondType} - ${customerName} - ${notes}`,
+                    delegateId: delegateLimits.id,
+                    delegateName: delegateData.name,
+                    projectCode: delegateData.projectCode,
+                    createdAt: serverTimestamp(),
+                    createdBy: currentUser.uid
+                });
+            });
+
+            Swal.fire('تم', 'تم حفظ السند وتحديث العهدة بنجاح', 'success');
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('tafqeet').textContent = '';
+            await initPage();
+            switchTab('bonds');
+
+        } catch (e) {
+            console.error("Transaction failed: ", e);
+            Swal.fire('خطأ', typeof e === 'string'? e : 'فشل حفظ السند. حاول مرة أخرى', 'error');
+        }
     }
 
     function loadPrintBonds() {
@@ -440,13 +515,6 @@
         const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nشكراً لتعاملكم معنا`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
-    
-    // بداية تعديل الكيو ار والواتساب - النسخة الصحيحة الوحيدة
-    window.shareWhatsAppGeneral = (name, amount, bondId) => {
-        const receiptUrl = `${window.location.origin}/sndt-pro/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
-        const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nلمتابعة حالة السند: ${receiptUrl}\nشكراً لتعاملكم معنا`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    }
 
     window.showQR = (bondId) => {
         const qrDiv = document.getElementById(`qr-${bondId}`);
@@ -456,9 +524,9 @@
         }
         qrDiv.classList.remove('hidden');
         qrDiv.innerHTML = '';
-        
+
         const receiptUrl = `${window.location.origin}/sndt-pro/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
-        
+
         new QRCode(qrDiv, {
             text: receiptUrl,
             width: 140,
@@ -467,7 +535,7 @@
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
-        
+
         setTimeout(() => {
             const printBtn = document.createElement('button');
             printBtn.innerHTML = '<i class="fas fa-print"></i> طباعة الكيو ار';
@@ -480,7 +548,7 @@
     window.printQR = (bondId) => {
         const canvas = document.querySelector(`#qr-${bondId} canvas`);
         if (!canvas) return Swal.fire('خطأ', 'الكيو ار غير موجود', 'error');
-        
+
         const bond = allBonds.find(b => b.id === bondId);
         const win = window.open('', '_blank');
         win.document.write(`
@@ -497,7 +565,6 @@
             </html>
         `);
     }
-    // نهاية تعديل الكيو ار والواتساب
 
     window.exportExcel = async () => {
         const q = query(collection(db, 'bonds'),
@@ -528,9 +595,6 @@
 
     window.logout = () => { localStorage.clear(); location.replace('./index.html'); }
 
-    loadDelegateLimits();
-    loadBonds();
-    generateBondNumber();
 </script>
 </body>
 </html>
