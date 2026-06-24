@@ -10,12 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style> 
-        body { font-family: 'Cairo', sans-serif; } 
-       .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
-       .tab-active { @apply bg-blue-600 text-white; }
-       .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
-       .swal2-popup { font-family: 'Cairo', sans-serif; }
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+      .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
+      .tab-active { @apply bg-blue-600 text-white; }
+      .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
+      .swal2-popup { font-family: 'Cairo', sans-serif; }
         @media print {.no-print { display: none!important; } }
     </style>
 </head>
@@ -167,22 +167,22 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    
+
     let delegateData;
     try {
         delegateData = JSON.parse(localStorage.getItem('delegateData') || '{}');
     } catch(e) { delegateData = {}; }
-    
+
     const userRole = localStorage.getItem('userRole');
     if(!delegateData.phone ||!delegateData.projectCode ||!delegateData.name || userRole!== 'delegate') {
         localStorage.clear();
         location.replace('./index.html');
     }
-    
+
     let delegateLimits = {};
     let currentAmountField = null;
     let allBonds = [];
-    
+
     document.getElementById('delegateInfo').textContent = `مشروع: ${delegateData.projectCode} | المندوب: ${delegateData.name}`;
     document.getElementById('bondDate').value = new Date().toISOString().split('T')[0];
 
@@ -192,10 +192,10 @@
         const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
         const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
         const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
-        
+
         num = Math.floor(num);
         if(num === 0) return 'صفر ريال';
-        
+
         let result = '';
         if(num >= 1000) {
             const thousands = Math.floor(num / 1000);
@@ -217,7 +217,7 @@
             num = 0;
         }
         if(num > 0) result += ones[num] + ' ';
-        
+
         return result.trim() + ' ريال فقط لا غير';
     }
 
@@ -236,7 +236,7 @@
         document.getElementById(`tabContent-${tab}`).classList.remove('hidden');
         document.getElementById(`tab-${tab}`).classList.add('tab-active');
         document.getElementById(`tab-${tab}`).classList.remove('tab-inactive');
-        
+
         if(tab === 'print') loadPrintBonds();
         if(tab === 'create') generateBondNumber();
     }
@@ -249,7 +249,7 @@
     }
 
     async function loadDelegateLimits() {
-        const q = query(collection(db, 'delegates'), 
+        const q = query(collection(db, 'delegates'),
             where('projectCode', '==', delegateData.projectCode),
             where('phone', '==', delegateData.phone)
         );
@@ -260,7 +260,7 @@
             const usedCount = delegateLimits.usedCount || 0;
             const usedAmount = delegateLimits.usedAmount || 0;
             document.getElementById('limitsInfo').innerHTML = `
-                السندات: ${usedCount}/${delegateLimits.limitTotalCount || 0} | 
+                السندات: ${usedCount}/${delegateLimits.limitTotalCount || 0} |
                 المبلغ: ${usedAmount.toLocaleString()}/${(delegateLimits.limitTotalAmount || 0).toLocaleString()} |
                 حد السند: ${(delegateLimits.limitSingleAmount || 0).toLocaleString()}
             `;
@@ -271,7 +271,7 @@
     }
 
     async function loadBonds() {
-        const q = query(collection(db, 'bonds'), 
+        const q = query(collection(db, 'bonds'),
             where('projectCode', '==', delegateData.projectCode),
             where('delegatePhone', '==', delegateData.phone)
         );
@@ -279,7 +279,7 @@
         allBonds = [];
         const list = document.getElementById('bondsList');
         list.innerHTML = '';
-        
+
         if(snap.empty) {
             list.innerHTML = '<p class="text-center text-gray-500 py-8">لا توجد سندات حالياً</p>';
             return;
@@ -295,7 +295,7 @@
                             <button onclick="shareWhatsApp('${b.customerPhone || ''}', '${b.customerName}', '${b.amount}')" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm">
                                 <i class="fab fa-whatsapp"></i> واتساب العميل
                             </button>
-                            <button onclick="shareWhatsAppGeneral('${b.customerName}', '${b.amount}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
+                            <button onclick="shareWhatsAppGeneral('${b.customerName}', '${b.amount}', '${b.id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm">
                                 <i class="fas fa-share"></i> مشاركة
                             </button>
                             <button onclick="showQR('${b.id}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg text-sm">
@@ -312,7 +312,9 @@
                     </div>
                     <p class="text-gray-600 text-sm text-right">التاريخ: ${b.date || 'غير محدد'}</p>
                     <p class="text-gray-600 text-sm text-right">ملاحظات: ${b.notes || 'لا يوجد'}</p>
-                    <div id="qr-${b.id}" class="mt-2 hidden"></div>
+                    <!-- بداية تعديل الكيو ار -->
+                    <div id="qr-${b.id}" class="mt-3 hidden text-center"></div>
+                    <!-- نهاية تعديل الكيو ار -->
                 </div>`;
         });
     }
@@ -325,7 +327,7 @@
         const amount = parseFloat(document.getElementById('amount').value);
         const date = document.getElementById('bondDate').value;
         const notes = document.getElementById('notes').value.trim();
-        
+
         if (!customerName ||!amount ||!date) {
             return Swal.fire('خطأ', 'اسم العميل والمبلغ والتاريخ مطلوبة', 'error');
         }
@@ -335,14 +337,14 @@
         if ((delegateLimits.usedAmount || 0) + amount > (delegateLimits.limitTotalAmount || 0)) {
             return Swal.fire('خطأ', 'تجاوزت الحد الإجمالي للمبالغ', 'error');
         }
-        
+
         const today = new Date().toISOString().split('T')[0];
-        const todayQ = query(collection(db, 'bonds'), 
+        const todayQ = query(collection(db, 'bonds'),
             where('delegatePhone', '==', delegateData.phone),
             where('date', '==', today)
         );
         const todaySnap = await getDocs(todayQ);
-        
+
         if(todaySnap.size >= (delegateLimits.limitDailyCount || 0)) {
             return Swal.fire('عذراً', 'تجاوزت الحد اليومي للسندات', 'error');
         }
@@ -356,7 +358,7 @@
             status: 'غير مورد',
             createdAt: serverTimestamp()
         });
-        
+
         Swal.fire('تم', 'تم حفظ السند بنجاح', 'success');
         document.getElementById('customerName').value = '';
         document.getElementById('customerPhone').value = '';
@@ -438,8 +440,10 @@
         const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nشكراً لتعاملكم معنا`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
-    window.shareWhatsAppGeneral = (name, amount) => {
-        const msg = `سند للعميل: ${name}\nالمبلغ: ${amount} ريال`;
+    // بداية تعديل الكيو ار والواتساب
+    window.shareWhatsAppGeneral = (name, amount, bondId) => {
+        const receiptUrl = `${window.location.origin}/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
+        const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nلمتابعة حالة السند: ${receiptUrl}\nشكراً لتعاملكم معنا`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
@@ -450,15 +454,56 @@
             return;
         }
         qrDiv.classList.remove('hidden');
+        qrDiv.innerHTML = ''; // تنظيف
+        
+        // الرابط الصح اللي يروح لصفحة view-receipt.html
+        const receiptUrl = `${window.location.origin}/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
+        
+        // توليد الكيو ار
         new QRCode(qrDiv, {
-            text: `${window.location.origin}/bond/${bondId}`,
-            width: 128,
-            height: 128
+            text: receiptUrl,
+            width: 140,
+            height: 140,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
         });
+        
+        // ضيف زر طباعة الكيو ار تحت الكيو ار
+        setTimeout(() => {
+            const printBtn = document.createElement('button');
+            printBtn.innerHTML = '<i class="fas fa-print"></i> طباعة الكيو ار';
+            printBtn.className = 'mt-2 bg-gray-700 text-white px-3 py-1 rounded text-sm hover:bg-black';
+            printBtn.onclick = () => printQR(bondId);
+            qrDiv.appendChild(printBtn);
+        }, 100);
     }
 
+    // دالة طباعة الكيو ار فقط
+    window.printQR = (bondId) => {
+        const canvas = document.querySelector(`#qr-${bondId} canvas`);
+        if (!canvas) return Swal.fire('خطأ', 'الكيو ار غير موجود', 'error');
+        
+        const bond = allBonds.find(b => b.id === bondId);
+        const win = window.open('', '_blank');
+        win.document.write(`
+            <html>
+                <head><title>طباعة الكيو ار - ${bond?.bondNumber || ''}</title></head>
+                <body style="text-align:center; font-family: Cairo, sans-serif; margin-top:50px">
+                    <h2>سند رقم: ${bond?.bondNumber || bondId}</h2>
+                    <p>العميل: ${bond?.customerName || ''}</p>
+                    <p>المبلغ: ${bond?.amount || ''} ريال</p>
+                    <img src="${canvas.toDataURL()}" style="margin:20px 0" />
+                    <p style="font-size:12px; color:#666">امسح الكيو ار لمتابعة حالة السند</p>
+                    <script>window.onload = function() { window.print(); setTimeout(()=>window.close(), 500); }<\/script>
+                </body>
+            </html>
+        `);
+    }
+    // نهاية تعديل الكيو ار والواتساب
+
     window.exportExcel = async () => {
-        const q = query(collection(db, 'bonds'), 
+        const q = query(collection(db, 'bonds'),
             where('projectCode', '==', delegateData.projectCode),
             where('delegatePhone', '==', delegateData.phone)
         );
@@ -485,7 +530,7 @@
     }
 
     window.logout = () => { localStorage.clear(); location.replace('./index.html'); }
-    
+
     loadDelegateLimits();
     loadBonds();
     generateBondNumber();
