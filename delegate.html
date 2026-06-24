@@ -12,17 +12,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-    .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
-    .tab-active { @apply bg-blue-600 text-white; }
-    .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
-    .swal2-popup { font-family: 'Cairo', sans-serif; }
-        @media print {.no-print { display: none!important; } }
+       .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
+       .tab-active { @apply bg-blue-600 text-white; }
+       .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
+       .swal2-popup { font-family: 'Cairo', sans-serif; }
+        @media print {
+           .no-print { display: none!important; }
+           .print-only { display: block!important; }
+           .bond-type-print { font-size: 48px!important; font-weight: 900!important; text-align: center!important; margin: 20px 0!important; }
+        }
+       .print-only { display: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-500 to-indigo-600 min-h-screen p-4">
 
 <div class="max-w-5xl mx-auto">
-    <!-- الهيدر -->
     <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 flex justify-between items-center no-print">
         <button onclick="logout()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">خروج</button>
         <div class="text-right">
@@ -35,7 +39,6 @@
         </div>
     </div>
 
-    <!-- التبويبات -->
     <div class="bg-white rounded-2xl shadow-xl p-2 mb-6 flex gap-2 no-print">
         <button onclick="switchTab('bonds')" id="tab-bonds" class="flex-1 py-3 rounded-xl font-bold tab-active">
             <i class="fas fa-file-invoice"></i> سنداتي
@@ -48,7 +51,6 @@
         </button>
     </div>
 
-    <!-- تبويب سنداتي -->
     <div id="tabContent-bonds" class="bg-white rounded-2xl shadow-xl p-8">
         <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
             <button onclick="exportExcel()" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold">
@@ -59,7 +61,6 @@
         <div id="bondsList" class="space-y-3"></div>
     </div>
 
-    <!-- تبويب انشاء سند -->
     <div id="tabContent-create" class="bg-white rounded-2xl shadow-xl p-8 hidden">
         <h2 class="text-xl font-bold mb-6"><i class="fas fa-plus text-blue-500"></i> إنشاء سند جديد</h2>
         <div class="grid md:grid-cols-2 gap-4">
@@ -100,12 +101,12 @@
                 <label class="font-bold text-gray-700">ملاحظات</label>
                 <textarea id="notes" class="w-full p-3 border-2 rounded-lg mt-1" rows="3" placeholder="ملاحظات اختيارية"></textarea>
             </div>
+        </div>
         <button onclick="saveBond()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold text-lg mt-6 hover:bg-blue-700">
             <i class="fas fa-save"></i> حفظ السند
         </button>
     </div>
 
-    <!-- تبويب الطباعة -->
     <div id="tabContent-print" class="bg-white rounded-2xl shadow-xl p-8 hidden">
         <h2 class="text-xl font-bold mb-6 no-print"><i class="fas fa-print text-blue-500"></i> طباعة السند</h2>
         <div class="no-print mb-4">
@@ -123,7 +124,6 @@
     </div>
 </div>
 
-<!-- كيبورد الأرقام -->
 <div id="numpadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[9999]">
     <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4">
         <h3 class="text-xl font-bold mb-4 text-center">أدخل المبلغ</h3>
@@ -148,7 +148,6 @@
         </div>
     </div>
 </div>
-
 <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, collection, query, where, getDocs, doc, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -184,7 +183,6 @@
     let allBonds = [];
     let currentUser = null;
 
-    // 1. تسجيل دخول مجهول تلقائي
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
@@ -207,7 +205,6 @@
         await generateBondNumber();
     }
 
-    // تفقيط الأرقام
     function tafqeet(num) {
         if(!num || isNaN(num)) return '';
         const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
@@ -247,7 +244,6 @@
         document.getElementById('tafqeet').textContent = tafqeet(amount);
     }
 
-    // تبديل التبويبات
     window.switchTab = (tab) => {
         ['bonds', 'create', 'print'].forEach(t => {
             document.getElementById(`tabContent-${t}`).classList.add('hidden');
@@ -336,7 +332,6 @@
         });
     }
 
-    // 2. حفظ السند مع التأثير المحاسبي الكامل
     window.saveBond = async () => {
         if (!currentUser) {
             return Swal.fire('خطأ', 'جاري تسجيل الدخول... حاول مرة أخرى', 'error');
@@ -357,7 +352,6 @@
             return Swal.fire('خطأ', 'المبلغ يجب أن يكون أكبر من صفر', 'error');
         }
 
-        // التحققات المحاسبية
         if (bondType === 'صرف') {
             if (amount > (delegateLimits.currentBalance || 0)) {
                 return Swal.fire('رصيد غير كافي', `عهدتك الحالية ${(delegateLimits.currentBalance || 0).toLocaleString()} ريال`, 'error');
@@ -380,19 +374,17 @@
 
         try {
             await runTransaction(db, async (transaction) => {
-                // 1. نقرأ بيانات المندوب
                 const delegateRef = doc(db, 'delegates', delegateLimits.id);
                 const delegateDoc = await transaction.get(delegateRef);
                 if (!delegateDoc.exists()) throw "المندوب غير موجود";
 
                 const currentData = delegateDoc.data();
                 const newBalance = bondType === 'صرف'
-                   ? (currentData.currentBalance || 0) - amount
+                  ? (currentData.currentBalance || 0) - amount
                     : (currentData.currentBalance || 0) + amount;
 
                 if (newBalance < 0) throw "الرصيد لا يكفي";
 
-                // 2. ننشئ السند
                 const newBondRef = doc(collection(db, 'bonds'));
                 transaction.set(newBondRef, {
                     bondType, bondNumber, customerName, customerPhone, amount, date, notes,
@@ -405,7 +397,6 @@
                     createdBy: currentUser.uid
                 });
 
-                // 3. نحدث رصيد المندوب والحدود
                 transaction.update(delegateRef, {
                     currentBalance: newBalance,
                     usedCount: (currentData.usedCount || 0) + 1,
@@ -413,7 +404,6 @@
                     lastTransaction: serverTimestamp()
                 });
 
-                // 4. نسجل القيد المحاسبي
                 const journalRef = doc(collection(db, 'journal_entries'));
                 transaction.set(journalRef, {
                     bondId: newBondRef.id,
@@ -463,6 +453,7 @@
         const b = allBonds.find(x => x.id === bondId);
         document.getElementById('printArea').innerHTML = `
             <div class="text-center mb-6">
+                <div class="bond-type-print print-only">${b.bondType || 'سند'}</div>
                 <h1 class="text-3xl font-extrabold">سند ${b.bondType}</h1>
                 <p class="text-gray-600">مشروع: ${delegateData.projectCode}</p>
             </div>
@@ -555,6 +546,7 @@
             <html>
                 <head><title>طباعة الكيو ار - ${bond?.bondNumber || ''}</title></head>
                 <body style="text-align:center; font-family: Cairo, sans-serif; margin-top:50px">
+                    <div class="bond-type-print" style="font-size:48px; font-weight:900; margin:20px 0">${bond?.bondType || 'سند'}</div>
                     <h2>سند رقم: ${bond?.bondNumber || bondId}</h2>
                     <p>العميل: ${bond?.customerName || ''}</p>
                     <p>المبلغ: ${bond?.amount || ''} ريال</p>
