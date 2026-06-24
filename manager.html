@@ -118,7 +118,6 @@
                     <div class="text-3xl font-bold" id="stat_total_amount">0</div>
                     <div class="text-sm opacity-90">صافي المبالغ</div>
                 </div>
-            </div>
             <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
                 <h3 class="text-xl font-bold mb-4">السندات المعلقة</h3>
                 <div class="overflow-x-auto">
@@ -164,6 +163,7 @@
                             <tr>
                                 <th class="p-3">اسم المندوب</th>
                                 <th class="p-3">الجوال</th>
+                                <th class="p-3">العهدة الحالية</th>
                                 <th class="p-3">الحد اليومي</th>
                                 <th class="p-3">الحد الإجمالي</th>
                                 <th class="p-3">حد السند</th>
@@ -173,13 +173,13 @@
                             </tr>
                         </thead>
                         <tbody id="delegatesTableBody">
-                            <tr><td colspan="8" class="text-center p-8 text-gray-400">جاري التحميل...</td></tr>
+                            <tr><td colspan="9" class="text-center p-8 text-gray-400">جاري التحميل...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-// === نهاية الجزء 1 ===
+
         <!-- تبويب سند جديد للمدير -->
         <div id="content-bondEntry" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
@@ -281,6 +281,7 @@
                             <label class="block font-bold text-gray-700 mb-2">عنوان الشركة</label>
                             <textarea id="company_address" rows="3" class="w-full p-3 border-2 rounded-lg"></textarea>
                         </div>
+                    </div>
                     <div class="space-y-4">
                         <div>
                             <label class="block font-bold text-gray-700 mb-2">شعار الشركة</label>
@@ -343,16 +344,20 @@
             </div>
         </div>
 
-        <!-- تبويب إعداد السند -->
+        <!-- تبويب إعداد السند - رجعناه كامل -->
         <div id="content-bonds" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">
-                        <i class="fas fa-file-invoice text-green-600"></i> أنواع السندات والحقول الإضافية
+                        <i class="fas fa-file-invoice text-green-600"></i> أنواع السندات والأثر المحاسبي
                     </h2>
                     <button onclick="showAddBondTypeModal()" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold">
                         <i class="fas fa-plus"></i> نوع سند جديد
                     </button>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg mb-4 text-sm">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                    <strong>الأثر المحاسبي:</strong> حدد لكل نوع سند: الحساب المدين + الحساب الدائن. مثال: سند صرف = مدين: مصروفات | دائن: عهدة المندوب
                 </div>
                 <div id="bondTypesList" class="space-y-4"></div>
             </div>
@@ -414,7 +419,11 @@
                     </select>
                 </div>
                 <div class="space-y-3">
-                    <h4 class="font-bold text-blue-700 border-b pb-2">قيود العدد</h4>
+                    <h4 class="font-bold text-blue-700 border-b pb-2">العهدة والقيود</h4>
+                    <div>
+                        <label class="text-sm text-gray-600">العهدة الافتتاحية *</label>
+                        <input id="modal_initialBalance" type="number" value="0" class="w-full p-3 border-2 rounded-lg font-bold text-green-600">
+                    </div>
                     <div><label class="text-sm text-gray-600">الحد اليومي للسندات</label><input id="modal_limitDailyCount" type="number" value="20" class="w-full p-3 border-2 rounded-lg"></div>
                     <div><label class="text-sm text-gray-600">الحد الإجمالي للسندات</label><input id="modal_limitTotalCount" type="number" value="1000" class="w-full p-3 border-2 rounded-lg"></div>
                 </div>
@@ -431,7 +440,7 @@
             </div>
             <div class="bg-yellow-50 p-3 rounded-lg mt-4 text-sm">
                 <i class="fas fa-info-circle text-yellow-600"></i>
-                <strong>ملاحظة:</strong> القيود تفتح تلقائياً بعد "توريد" القبض أو "توثيق" الصرف.
+                <strong>ملاحظة:</strong> العهدة الافتتاحية تنضاف لـ currentBalance. القيود تفتح تلقائياً بعد "توريد" القبض أو "توثيق" الصرف.
             </div>
             <div class="flex gap-2 mt-6">
                 <button onclick="saveDelegate()" id="saveDelegateBtn" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">
@@ -452,7 +461,7 @@
             </div>
         </div>
     </div>
-// === نهاية الجزء 2 ===
+
     <div id="boxModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
             <h3 class="text-xl font-bold mb-4">إضافة صندوق</h3>
@@ -478,6 +487,29 @@
                     <option value="blue">أزرق - تحويل</option>
                 </select>
             </div>
+            <h4 class="font-bold text-red-700 border-b pb-2 mb-3">الأثر المحاسبي - مهم</h4>
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block font-bold text-gray-700 mb-2">الحساب المدين</label>
+                    <select id="modal_debitAccount" class="w-full p-3 border-2 rounded-lg">
+                        <option value="عهدة المندوب">عهدة المندوب</option>
+                        <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
+                        <option value="مصروفات">مصروفات</option>
+                        <option value="البنك">البنك</option>
+                        <option value="العملاء">العملاء</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-700 mb-2">الحساب الدائن</label>
+                    <select id="modal_creditAccount" class="w-full p-3 border-2 rounded-lg">
+                        <option value="عهدة المندوب">عهدة المندوب</option>
+                        <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
+                        <option value="الإيرادات">الإيرادات</option>
+                        <option value="البنك">البنك</option>
+                        <option value="العملاء">العملاء</option>
+                    </select>
+                </div>
+            </div>
             <h4 class="font-bold text-purple-700 border-b pb-2 mb-3">الحقول الإضافية - مفتوحة بلا عدد</h4>
             <div id="customFieldsContainer" class="space-y-2 mb-3"></div>
             <button onclick="addCustomField()" class="w-full bg-blue-100 text-blue-700 p-2 rounded-lg font-bold mb-4">
@@ -489,7 +521,6 @@
             </div>
         </div>
     </div>
-
 <script>
     // 1. Firebase Config
     const firebaseConfig = {
@@ -512,9 +543,8 @@
     let allBondTypes = [];
     let allPaymentMethods = [];
 
-    // 2. التحقق من دخول المدير + تسجيل دخول مجهول للـ Firestore
+    // 2. التحقق من دخول المدير + تسجيل دخول مجهول
     document.addEventListener('DOMContentLoaded', async () => {
-        // تسجيل دخول مجهول عشان الـ Rules تشتغل
         try {
             await auth.signInAnonymously();
             console.log('تم تسجيل الدخول المجهول بنجاح');
@@ -569,44 +599,7 @@
         allPaymentMethods = paymentsSnap.docs.map(d => ({id: d.id,...d.data()}));
     }
 
-    // 3. دوال المدير العام
-    window.showAdminProjects = () => {
-        Swal.fire({
-            title: 'إدارة المشاريع',
-            html: `
-                <div class="text-right">
-                    <button onclick="addNewProject()" class="bg-green-600 text-white px-4 py-2 rounded-lg mb-3">
-                        <i class="fas fa-plus"></i> مشروع جديد
-                    </button>
-                    <div id="projectsList" class="text-right">جاري التحميل...</div>
-                </div>
-            `,
-            width: '800px',
-            showConfirmButton: false,
-            showCloseButton: true,
-            didOpen: () => loadProjectsList()
-        });
-    }
-
-    window.showAdminManagers = () => {
-        Swal.fire({
-            title: 'إدارة المدراء',
-            html: `
-                <div class="text-right">
-                    <button onclick="addNewManager()" class="bg-green-600 text-white px-4 py-2 rounded-lg mb-3">
-                        <i class="fas fa-user-plus"></i> مدير جديد
-                    </button>
-                    <div id="managersList" class="text-right">جاري التحميل...</div>
-                </div>
-            `,
-            width: '800px',
-            showConfirmButton: false,
-            showCloseButton: true,
-            didOpen: () => loadManagersList()
-        });
-    }
-
-    // 4. التبويبات
+    // 3. التبويبات
     window.showTab = (tab) => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
@@ -620,191 +613,7 @@
         if(tab === 'bondEntry') loadBondEntryDropdowns();
     }
 
-    // 5. دوال إدارة المشاريع
-    window.loadProjectsList = async () => {
-        const list = document.getElementById('projectsList');
-        const snap = await db.collection('projects').get();
-        list.innerHTML = '';
-        if(snap.empty) {
-            list.innerHTML = '<p class="text-gray-400 p-4">لا توجد مشاريع</p>';
-            return;
-        }
-        snap.forEach(docSnap => {
-            const p = docSnap.data();
-            list.innerHTML += `
-                <div class="border-2 rounded-lg p-4 mb-2 flex justify-between items-center">
-                    <div>
-                        <div class="font-bold text-lg">${p.name || 'غير محدد'}</div>
-                        <div class="text-sm text-gray-600">كود: ${p.projectCode || 'غير محدد'}</div>
-                        <div class="text-sm text-gray-500">عدد المدراء: ${p.managersCount || 0}</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="editProject('${docSnap.id}')" class="bg-blue-500 text-white px-3 py-1 rounded">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteProject('${docSnap.id}')" class="bg-red-500 text-white px-3 py-1 rounded">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    window.addNewProject = () => {
-        Swal.fire({
-            title: 'مشروع جديد',
-            html: `
-                <input id="newProjectCode" class="swal2-input" placeholder="كود المشروع: 001122334455">
-                <input id="newProjectName" class="swal2-input" placeholder="اسم المشروع">
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'إنشاء',
-            cancelButtonText: 'إلغاء',
-            preConfirm: () => {
-                const code = document.getElementById('newProjectCode').value.trim();
-                const name = document.getElementById('newProjectName').value.trim();
-                if(!code ||!name) Swal.showValidationMessage('املأ جميع الحقول');
-                return {code, name};
-            }
-        }).then(async (result) => {
-            if(result.isConfirmed) {
-                await db.collection('projects').add({
-                    projectCode: result.value.code,
-                    name: result.value.name,
-                    managersCount: 0,
-                    createdAt: new Date()
-                });
-                Swal.fire('تم', 'تم إنشاء المشروع', 'success');
-                loadProjectsList();
-            }
-        });
-    }
-
-    window.deleteProject = async (id) => {
-        const confirm = await Swal.fire({
-            title: 'متأكد؟',
-            text: "حذف المشروع يحذف كل المدراء والمناديب التابعين له",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'نعم، احذف',
-            cancelButtonText: 'إلغاء'
-        });
-        if(confirm.isConfirmed) {
-            await db.collection('projects').doc(id).delete();
-            Swal.fire('تم الحذف', '', 'success');
-            loadProjectsList();
-        }
-    }
-
-    window.editProject = (id) => {
-        Swal.fire('قريباً', 'تعديل المشروع تحت التطوير', 'info');
-    }
-
-    // 6. دوال إدارة المدراء
-    window.loadManagersList = async () => {
-        const list = document.getElementById('managersList');
-        const snap = await db.collection('managers').get();
-        list.innerHTML = '';
-        if(snap.empty) {
-            list.innerHTML = '<p class="text-gray-400 p-4">لا يوجد مدراء</p>';
-            return;
-        }
-        snap.forEach(docSnap => {
-            const m = docSnap.data();
-            const isAdmin = m.role === 'admin';
-            list.innerHTML += `
-                <div class="border-2 rounded-lg p-4 mb-2 flex justify-between items-center ${isAdmin? 'bg-red-50 border-red-300' : ''}">
-                    <div>
-                        <div class="font-bold text-lg">
-                            ${m.username}
-                            ${isAdmin? '<span class="bg-red-600 text-white px-2 py-1 rounded text-xs mr-2"><i class="fas fa-crown"></i> مدير عام</span>' : ''}
-                        </div>
-                        <div class="text-sm text-gray-600">المشروع: ${m.projectCode}</div>
-                        <div class="text-sm text-gray-500">كلمة المرور: ${m.password}</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="editManager('${docSnap.id}')" class="bg-blue-500 text-white px-3 py-1 rounded">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteManager('${docSnap.id}')" class="bg-red-500 text-white px-3 py-1 rounded">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    window.addNewManager = async () => {
-        const projectsSnap = await db.collection('projects').get();
-        let projectOptions = '';
-        projectsSnap.forEach(doc => {
-            const p = doc.data();
-            projectOptions += `<option value="${p.projectCode}">${p.name} - ${p.projectCode}</option>`;
-        });
-        Swal.fire({
-            title: 'مدير جديد',
-            html: `
-                <select id="newManagerProject" class="swal2-select mb-3">
-                    <option value="">اختر المشروع</option>
-                    ${projectOptions}
-                </select>
-                <input id="newManagerUsername" class="swal2-input" placeholder="اسم المستخدم: 0597087767">
-                <input id="newManagerPassword" class="swal2-input" placeholder="كلمة المرور: 500600">
-                <select id="newManagerRole" class="swal2-select mt-3">
-                    <option value="manager">مدير مشروع</option>
-                    <option value="admin">مدير عام</option>
-                </select>
-            `,
-            showCancelButton: true,
-            confirmButtonText: 'إنشاء',
-            cancelButtonText: 'إلغاء',
-            preConfirm: () => {
-                const projectCode = document.getElementById('newManagerProject').value;
-                const username = document.getElementById('newManagerUsername').value.trim();
-                const password = document.getElementById('newManagerPassword').value.trim();
-                const role = document.getElementById('newManagerRole').value;
-                if(!projectCode ||!username ||!password) Swal.showValidationMessage('املأ جميع الحقول');
-                return {projectCode, username, password, role};
-            }
-        }).then(async (result) => {
-            if(result.isConfirmed) {
-                await db.collection('managers').add({
-                    projectCode: result.value.projectCode,
-                    username: result.value.username,
-                    password: result.value.password,
-                    role: result.value.role,
-                    status: 'active',
-                    createdAt: new Date()
-                });
-                Swal.fire('تم', 'تم إنشاء المدير', 'success');
-                loadManagersList();
-            }
-        });
-    }
-
-    window.deleteManager = async (id) => {
-        const confirm = await Swal.fire({
-            title: 'متأكد؟',
-            text: "حذف المدير نهائي",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'نعم، احذف',
-            cancelButtonText: 'إلغاء'
-        });
-        if(confirm.isConfirmed) {
-            await db.collection('managers').doc(id).delete();
-            Swal.fire('تم الحذف', '', 'success');
-            loadManagersList();
-        }
-    }
-
-    window.editManager = (id) => {
-        Swal.fire('قريباً', 'تعديل المدير تحت التطوير', 'info');
-    }
-
-    // 7. الرئيسية
+    // 4. الرئيسية
     window.loadDashboard = async () => {
         const delegatesQ = db.collection('delegates').where('projectCode', '==', projectCode);
         const delegatesSnap = await delegatesQ.get();
@@ -859,7 +668,6 @@
                 approvedAt: new Date()
             });
 
-            // تحديث قيود المندوب: الصرف سالب، القبض موجب
             const amountChange = type === 'صرف'? -(bondData.amount) : bondData.amount;
             await db.collection('delegates').doc(bondData.delegateId).update({
                 usedAmount: firebase.firestore.FieldValue.increment(amountChange),
@@ -875,27 +683,30 @@
         }
     }
 
-    // 8. المناديب
+    // 5. المناديب - مع العهدة الافتتاحية
     window.loadDelegates = async () => {
         const q = db.collection('delegates').where('projectCode', '==', projectCode);
         const snap = await q.get();
         const tbody = document.getElementById('delegatesTableBody');
         tbody.innerHTML = '';
         if(snap.empty) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-gray-400">لا يوجد مناديب</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center p-8 text-gray-400">لا يوجد مناديب</td></tr>';
             return;
         }
         snap.forEach(docSnap => {
             const d = docSnap.data();
+            const currentBalance = d.currentBalance || 0;
             const usedCount = d.usedCount || 0;
             const usedAmount = d.usedAmount || 0;
             const remainingCount = (d.limitTotalCount || 0) - usedCount;
             const remainingAmount = (d.limitTotalAmount || 0) - usedAmount;
             const amountClass = usedAmount < 0? 'amount-negative' : 'amount-positive';
+            const balanceClass = currentBalance < 0? 'amount-negative' : 'amount-positive';
             tbody.innerHTML += `
                 <tr class="border-b hover:bg-gray-50">
                     <td class="p-3 font-bold">${d.name}</td>
                     <td class="p-3">${d.phone}</td>
+                    <td class="p-3 font-bold ${balanceClass}">${currentBalance.toLocaleString()} ريال</td>
                     <td class="p-3">${d.limitDailyCount || 0}</td>
                     <td class="p-3">${d.limitTotalCount || 0}</td>
                     <td class="p-3">${d.limitSingleAmount || 0}</td>
@@ -928,6 +739,7 @@
         document.getElementById('modal_delegatePhone').value = '';
         document.getElementById('modal_delegatePassword').value = '';
         document.getElementById('modal_delegateStatus').value = 'active';
+        document.getElementById('modal_initialBalance').value = '0';
         document.getElementById('modal_limitDailyCount').value = '20';
         document.getElementById('modal_limitTotalCount').value = '1000';
         document.getElementById('modal_limitSingleAmount').value = '5000';
@@ -947,6 +759,7 @@
         document.getElementById('modal_delegatePhone').value = d.phone || '';
         document.getElementById('modal_delegatePassword').value = d.password || '';
         document.getElementById('modal_delegateStatus').value = d.status || 'active';
+        document.getElementById('modal_initialBalance').value = d.currentBalance || 0;
         document.getElementById('modal_limitDailyCount').value = d.limitDailyCount || 20;
         document.getElementById('modal_limitTotalCount').value = d.limitTotalCount || 1000;
         document.getElementById('modal_limitSingleAmount').value = d.limitSingleAmount || 5000;
@@ -961,6 +774,7 @@
         const id = document.getElementById('editDelegateId').value;
         const allowedPayments = Array.from(document.querySelectorAll('#allowedPaymentMethods input:checked')).map(i => i.value);
         const allowedBonds = Array.from(document.querySelectorAll('#allowedBondTypes input:checked')).map(i => i.value);
+        const initialBalance = Number(document.getElementById('modal_initialBalance').value) || 0;
 
         const data = {
             name: document.getElementById('modal_delegateName').value.trim(),
@@ -968,6 +782,7 @@
             password: document.getElementById('modal_delegatePassword').value.trim(),
             projectCode: projectCode,
             status: document.getElementById('modal_delegateStatus').value,
+            currentBalance: initialBalance,
             limitDailyCount: Number(document.getElementById('modal_limitDailyCount').value) || 20,
             limitTotalCount: Number(document.getElementById('modal_limitTotalCount').value) || 1000,
             limitSingleAmount: Number(document.getElementById('modal_limitSingleAmount').value) || 5000,
@@ -989,6 +804,7 @@
             } else {
                 data.usedCount = 0;
                 data.usedAmount = 0;
+                data.totalReceived = initialBalance;
                 data.createdAt = new Date();
                 await db.collection('delegates').add(data);
             }
@@ -1021,7 +837,7 @@
         });
     }
 
-    // 9. سند جديد من المدير
+    // 6. سند جديد من المدير
     window.loadBondEntryDropdowns = async () => {
         const delegateSelect = document.getElementById('bond_delegateId');
         const paymentSelect = document.getElementById('bond_paymentMethod');
@@ -1050,7 +866,6 @@
         const delegate = allDelegates.find(d => d.id === delegateId);
         if(!delegate) return Swal.fire('خطأ', 'المندوب غير موجود', 'error');
 
-        // فحص القيود الأربعة
         if(amount > delegate.limitSingleAmount) {
             return Swal.fire('مرفوض', `المبلغ يتجاوز حد السند الواحد: ${delegate.limitSingleAmount}`, 'error');
         }
@@ -1059,13 +874,11 @@
         document.getElementById('saveBondBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // إنشاء رقم السند
             const bondType = allBondTypes.find(b => b.name === type);
             const prefix = bondType? bondType.prefix : 'BND-';
             const bondsCount = await db.collection('bonds').where('projectCode', '==', projectCode).where('type', '==', type).get();
             const bondNumber = prefix + String((bondType?.startNumber || 1) + bondsCount.size).padStart(6, '0');
 
-            // الأثر المحاسبي: صرف سالب، قبض موجب
             const signedAmount = type === 'صرف'? -amount : amount;
 
             const bondData = {
@@ -1088,7 +901,6 @@
 
             await db.collection('bonds').add(bondData);
 
-            // تفريغ الحقول
             document.getElementById('bond_delegateId').value = '';
             document.getElementById('bond_type').value = '';
             document.getElementById('bond_paymentMethod').value = '';
@@ -1108,7 +920,7 @@
         }
     }
 
-    // 10. طرق الدفع والصناديق
+    // 7. طرق الدفع والصناديق
     window.loadPaymentsAndBoxes = async () => {
         const paymentsSnap = await db.collection('paymentMethods').where('projectCode', '==', projectCode).get();
         const paymentsList = document.getElementById('paymentsList');
@@ -1182,7 +994,7 @@
         loadPaymentsAndBoxes();
     }
 
-    // 11. إعداد الشركة
+    // 8. إعداد الشركة
     window.loadCompanyData = async () => {
         const doc = await db.collection('companies').doc(projectCode).get();
         if(doc.exists) {
@@ -1190,7 +1002,7 @@
             document.getElementById('company_name').value = d.name || '';
             document.getElementById('company_tax').value = d.taxNumber || '';
             document.getElementById('company_address').value = d.address || '';
-                       document.getElementById('company_logo').value = d.logo || '';
+            document.getElementById('company_logo').value = d.logo || '';
             document.getElementById('company_stamp').value = d.stamp || '';
             document.getElementById('company_signature').value = d.signature || '';
             if(d.logo) {
@@ -1215,7 +1027,7 @@
         loadCompanyData();
     }
 
-    // 12. إعداد الطباعة
+    // 9. إعداد الطباعة
     window.loadPrintSettings = async () => {
         const doc = await db.collection('printSettings').doc(projectCode).get();
         if(doc.exists) {
@@ -1244,7 +1056,7 @@
         Swal.fire('تم', 'تم حفظ إعدادات الطباعة', 'success');
     }
 
-    // 13. أنواع السندات
+    // 10. أنواع السندات + الأثر المحاسبي
     window.loadBondTypes = async () => {
         const snap = await db.collection('bondTypes').where('projectCode', '==', projectCode).get();
         const list = document.getElementById('bondTypesList');
@@ -1263,6 +1075,10 @@
                             <span class="font-bold text-lg ${colorClass}">${b.name}</span>
                             <span class="text-sm text-gray-500 mr-2">بادئة: ${b.prefix}</span>
                             <span class="text-sm text-gray-500">يبدأ من: ${b.startNumber}</span>
+                            <div class="text-sm mt-1">
+                                <span class="text-red-600">مدين: ${b.debitAccount || 'غير محدد'}</span> |
+                                <span class="text-green-600">دائن: ${b.creditAccount || 'غير محدد'}</span>
+                            </div>
                         </div>
                         <button onclick="deleteBondType('${docSnap.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
                     </div>
@@ -1286,6 +1102,8 @@
             prefix: document.getElementById('modal_bondPrefix').value.trim(),
             startNumber: Number(document.getElementById('modal_bondStartNumber').value) || 1,
             color: document.getElementById('modal_bondColor').value,
+            debitAccount: document.getElementById('modal_debitAccount').value,
+            creditAccount: document.getElementById('modal_creditAccount').value,
             projectCode: projectCode,
             createdAt: new Date()
         };
@@ -1318,7 +1136,7 @@
         container.appendChild(div);
     }
 
-    // 14. التقارير
+    // 11. التقارير
     window.loadReports = async () => {
         const dateFrom = document.getElementById('filter_dateFrom').value;
         const dateTo = document.getElementById('filter_dateTo').value;
@@ -1366,7 +1184,7 @@
     window.exportReportsPDF = () => Swal.fire('قريباً', 'جاري التطوير', 'info');
     window.viewBond = (id) => window.open(`view-receipt.html?id=${id}`, '_blank');
 
-    // 15. عام
+    // 12. عام
     window.closeModal = (id) => {
         document.getElementById(id).classList.add('hidden');
         document.getElementById(id).classList.remove('flex');
@@ -1407,20 +1225,18 @@
     }
 
     // تحميل الفلاتر للتقارير
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            const delegateFilter = document.getElementById('filter_delegate');
-            const bondTypeFilter = document.getElementById('filter_bondType');
-            
-            allDelegates.forEach(d => {
-                delegateFilter.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-            });
-            
-            allBondTypes.forEach(b => {
-                bondTypeFilter.innerHTML += `<option value="${b.name}">${b.name}</option>`;
-            });
-        }, 2000);
-    });
+    setTimeout(() => {
+        const delegateFilter = document.getElementById('filter_delegate');
+        const bondTypeFilter = document.getElementById('filter_bondType');
+
+        allDelegates.forEach(d => {
+            delegateFilter.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+        });
+
+        allBondTypes.forEach(b => {
+            bondTypeFilter.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+        });
+    }, 2000);
 </script>
 </body>
 </html>
