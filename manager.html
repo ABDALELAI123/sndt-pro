@@ -17,17 +17,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <style>
-     body { font-family: 'Cairo', sans-serif; }
-     .tab-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
-     .btn-action { padding: 6px 12px; border-radius: 8px; font-size: 14px; margin: 2px; }
-     .field-disabled { background: #f3f4f6; cursor: not-allowed; }
-     .admin-badge { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); }
-     .amount-negative { color: #dc2626; font-weight: bold; }
-     .amount-positive { color: #16a34a; font-weight: bold; }
+        body { font-family: 'Cairo', sans-serif; }
+        .tab-active { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .btn-action { padding: 6px 12px; border-radius: 8px; font-size: 14px; margin: 2px; }
+        .field-disabled { background: #f3f4f6; cursor: not-allowed; }
+        .admin-badge { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); }
+        .amount-negative { color: #dc2626; font-weight: bold; }
+        .amount-positive { color: #16a34a; font-weight: bold; }
     </style>
 </head>
 <body class="bg-gray-100">
-    <!-- الشريط العلوي -->
     <div class="bg-gradient-to-r from-green-700 to-emerald-800 text-white p-4 shadow-lg">
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -50,7 +49,7 @@
             </div>
         </div>
     </div>
-    <!-- بانل المدير العام -->
+
     <div id="adminPanel" class="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 shadow-lg hidden">
         <div class="container mx-auto">
             <h2 class="text-xl font-bold mb-3">
@@ -67,7 +66,6 @@
         </div>
     </div>
 
-    <!-- التبويبات -->
     <div class="bg-white shadow-md">
         <div class="container mx-auto flex gap-2 p-2 overflow-x-auto">
             <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-btn px-6 py-3 rounded-lg font-bold whitespace-nowrap tab-active">
@@ -96,8 +94,8 @@
             </button>
         </div>
     </div>
+    
     <div class="container mx-auto p-6">
-        <!-- تبويب الرئيسية -->
         <div id="content-dashboard" class="tab-content">
             <div class="grid md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
@@ -116,6 +114,7 @@
                     <div class="text-3xl font-bold" id="stat_total_amount">0</div>
                     <div class="text-sm opacity-90">صافي المبالغ</div>
                 </div>
+            </div>
             <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
                 <h3 class="text-xl font-bold mb-4">السندات المعلقة</h3>
                 <div class="overflow-x-auto">
@@ -138,7 +137,7 @@
                 <canvas id="dashboardChart"></canvas>
             </div>
         </div>
-        <!-- تبويب المناديب -->
+
         <div id="content-delegates" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -176,7 +175,7 @@
                 </div>
             </div>
         </div>
-        <!-- تبويب سند جديد للمدير -->
+
         <div id="content-bondEntry" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
@@ -228,7 +227,7 @@
                 </button>
             </div>
         </div>
-        <!-- تبويب طرق الدفع والصناديق -->
+
         <div id="content-payments" class="tab-content hidden">
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="bg-white rounded-xl shadow-lg p-6">
@@ -255,7 +254,7 @@
                 </div>
             </div>
         </div>
-        <!-- تبويب إعداد الشركة -->
+
         <div id="content-company" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
@@ -296,8 +295,7 @@
                 </button>
             </div>
         </div>
-        <!-- تبويب إعداد الطباعة -->
-        <div id="content-print" class="tab-content hidden">
+  <div id="content-print" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
                     <i class="fas fa-print text-green-600"></i> إعداد الطباعة
@@ -337,7 +335,6 @@
             </div>
         </div>
 
-        <!-- تبويب إعداد السند - رجعناه كامل -->
         <div id="content-bonds" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -356,7 +353,6 @@
             </div>
         </div>
 
-        <!-- تبويب التقارير -->
         <div id="content-reports" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">
@@ -394,7 +390,7 @@
             </div>
         </div>
     </div>
-    <!-- المودالات -->
+
     <div id="delegateModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
         <div class="bg-white rounded-xl p-6 w-full max-w-3xl mx-4 my-8">
             <h3 class="text-xl font-bold mb-4" id="delegateModalTitle">إضافة مندوب جديد</h3>
@@ -442,6 +438,7 @@
             </div>
         </div>
     </div>
+
     <div id="paymentModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
             <h3 class="text-xl font-bold mb-4">إضافة طريقة دفع</h3>
@@ -452,6 +449,7 @@
             </div>
         </div>
     </div>
+
     <div id="boxModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
             <h3 class="text-xl font-bold mb-4">إضافة صندوق</h3>
@@ -462,6 +460,7 @@
             </div>
         </div>
     </div>
+
     <div id="bondTypeModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
         <div class="bg-white rounded-xl p-6 w-full max-w-3xl mx-4 my-8">
             <h3 class="text-xl font-bold mb-4">إضافة نوع سند جديد</h3>
@@ -491,6 +490,15 @@
                 <div>
                     <label class="block font-bold text-gray-700 mb-2">الحساب الدائن</label>
                     <select id="modal_creditAccount" class="w-full p-3 border-2 rounded-lg">
+                                                <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
+                        <option value="مصروفات">مصروفات</option>
+                        <option value="البنك">البنك</option>
+                        <option value="العملاء">العملاء</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-700 mb-2">الحساب الدائن</label>
+                    <select id="modal_creditAccount" class="w-full p-3 border-2 rounded-lg">
                         <option value="عهدة المندوب">عهدة المندوب</option>
                         <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
                         <option value="الإيرادات">الإيرادات</option>
@@ -510,8 +518,8 @@
             </div>
         </div>
     </div>
+
 <script>
-    // 1. Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
       authDomain: "sanadat-pro.firebaseapp.com",
@@ -532,11 +540,9 @@
     let allBondTypes = [];
     let allPaymentMethods = [];
 
-    // 2. التحقق من دخول المدير + تسجيل دخول مجهول
     document.addEventListener('DOMContentLoaded', async () => {
         try {
             await auth.signInAnonymously();
-            console.log('تم تسجيل الدخول المجهول بنجاح');
         } catch (error) {
             console.error('فشل تسجيل الدخول:', error);
         }
@@ -588,7 +594,6 @@
         allPaymentMethods = paymentsSnap.docs.map(d => ({id: d.id,...d.data()}));
     }
 
-    // 3. التبويبات
     window.showTab = (tab) => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('tab-active'));
@@ -602,7 +607,6 @@
         if(tab === 'bondEntry') loadBondEntryDropdowns();
     }
 
-    // 4. الرئيسية
     window.loadDashboard = async () => {
         const delegatesQ = db.collection('delegates').where('projectCode', '==', projectCode);
         const delegatesSnap = await delegatesQ.get();
@@ -630,11 +634,11 @@
                     const sign = data.type === 'صرف'? '-' : '+';
                     pendingTable.innerHTML += `
                         <tr class="border-b">
-                            <td class="p-3">${data.bondNumber}</td>
-                            <td class="p-3">${data.delegateName}</td>
-                            <td class="p-3">${data.type}</td>
-                            <td class="p-3 font-bold ${amountClass}">${sign}${data.amount}</td>
-                            <td class="p-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${data.status}</span></td>
+                            <td class="p-3">${data.bondNumber || '---'}</td>
+                            <td class="p-3">${data.delegateName || '---'}</td>
+                            <td class="p-3">${data.type || '---'}</td>
+                            <td class="p-3 font-bold ${amountClass}">${sign}${data.amount || 0}</td>
+                            <td class="p-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">${data.status || 'غير محدد'}</span></td>
                             <td class="p-3"><button onclick="approveBond('${docSnap.id}', '${data.type}')" class="bg-green-600 text-white px-3 py-1 rounded text-sm">${data.type === 'قبض'? 'توريد' : 'توثيق'}</button></td>
                         </tr>`;
                 }
@@ -672,7 +676,6 @@
         }
     }
 
-    // 5. المناديب - مع العهدة الافتتاحية
     window.loadDelegates = async () => {
         const q = db.collection('delegates').where('projectCode', '==', projectCode);
         const snap = await q.get();
@@ -693,8 +696,8 @@
             const balanceClass = currentBalance < 0? 'amount-negative' : 'amount-positive';
             tbody.innerHTML += `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3 font-bold">${d.name}</td>
-                    <td class="p-3">${d.phone}</td>
+                    <td class="p-3 font-bold">${d.name || '---'}</td>
+                    <td class="p-3">${d.phone || '---'}</td>
                     <td class="p-3 font-bold ${balanceClass}">${currentBalance.toLocaleString()} ريال</td>
                     <td class="p-3">${d.limitDailyCount || 0}</td>
                     <td class="p-3">${d.limitTotalCount || 0}</td>
@@ -799,6 +802,7 @@
             }
             closeModal('delegateModal');
             loadDelegates();
+            loadAllData();
             Swal.fire('تم', 'تم حفظ المندوب بنجاح', 'success');
         } catch (error) {
             console.error(error);
@@ -821,12 +825,12 @@
             if (result.isConfirmed) {
                 await db.collection('delegates').doc(id).delete();
                 loadDelegates();
+                loadAllData();
                 Swal.fire('تم الحذف', '', 'success');
             }
         });
     }
 
-    // 6. سند جديد من المدير
     window.loadBondEntryDropdowns = async () => {
         const delegateSelect = document.getElementById('bond_delegateId');
         const paymentSelect = document.getElementById('bond_paymentMethod');
@@ -874,6 +878,7 @@
                 bondNumber: bondNumber,
                 delegateId: delegateId,
                 delegateName: delegate.name,
+                delegatePhone: delegate.phone,
                 type: type,
                 paymentMethod: paymentMethod,
                 amount: amount,
@@ -909,7 +914,6 @@
         }
     }
 
-    // 7. طرق الدفع والصناديق
     window.loadPaymentsAndBoxes = async () => {
         const paymentsSnap = await db.collection('paymentMethods').where('projectCode', '==', projectCode).get();
         const paymentsList = document.getElementById('paymentsList');
@@ -983,7 +987,6 @@
         loadPaymentsAndBoxes();
     }
 
-    // 8. إعداد الشركة
     window.loadCompanyData = async () => {
         const doc = await db.collection('companies').doc(projectCode).get();
         if(doc.exists) {
@@ -1016,7 +1019,6 @@
         loadCompanyData();
     }
 
-    // 9. إعداد الطباعة
     window.loadPrintSettings = async () => {
         const doc = await db.collection('printSettings').doc(projectCode).get();
         if(doc.exists) {
@@ -1045,7 +1047,6 @@
         Swal.fire('تم', 'تم حفظ إعدادات الطباعة', 'success');
     }
 
-    // 10. أنواع السندات + الأثر المحاسبي
     window.loadBondTypes = async () => {
         const snap = await db.collection('bondTypes').where('projectCode', '==', projectCode).get();
         const list = document.getElementById('bondTypesList');
@@ -1081,6 +1082,7 @@
         document.getElementById('modal_bondTypeName').value = '';
         document.getElementById('modal_bondPrefix').value = '';
         document.getElementById('modal_bondStartNumber').value = '1';
+        document.getElementById('customFieldsContainer').innerHTML = '';
         document.getElementById('bondTypeModal').classList.remove('hidden');
         document.getElementById('bondTypeModal').classList.add('flex');
     }
@@ -1125,7 +1127,6 @@
         container.appendChild(div);
     }
 
-    // 11. التقارير
     window.loadReports = async () => {
         const dateFrom = document.getElementById('filter_dateFrom').value;
         const dateTo = document.getElementById('filter_dateTo').value;
@@ -1152,13 +1153,13 @@
             const amountClass = d.type === 'صرف'? 'amount-negative' : 'amount-positive';
             const sign = d.type === 'صرف'? '-' : '+';
             tbody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3">${d.bondNumber}</td>
-                    <td class="p-3">${d.date}</td>
-                    <td class="p-3">${d.delegateName}</td>
-                    <td class="p-3">${d.type}</td>
-                    <td class="p-3 font-bold ${amountClass}">${sign}${d.amount}</td>
-                    <td class="p-3">${d.status}</td>
+                                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${d.bondNumber || '---'}</td>
+                    <td class="p-3">${d.date || '---'}</td>
+                    <td class="p-3">${d.delegateName || '---'}</td>
+                    <td class="p-3">${d.type || '---'}</td>
+                    <td class="p-3 font-bold ${amountClass}">${sign}${d.amount || 0}</td>
+                    <td class="p-3">${d.status || 'غير محدد'}</td>
                     <td class="p-3">
                         <button onclick="viewBond('${docSnap.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-sm">
                             <i class="fas fa-eye"></i>
@@ -1173,7 +1174,6 @@
     window.exportReportsPDF = () => Swal.fire('قريباً', 'جاري التطوير', 'info');
     window.viewBond = (id) => window.open(`view-receipt.html?id=${id}`, '_blank');
 
-    // 12. عام
     window.closeModal = (id) => {
         document.getElementById(id).classList.add('hidden');
         document.getElementById(id).classList.remove('flex');
@@ -1213,7 +1213,6 @@
         });
     }
 
-    // تحميل الفلاتر للتقارير
     setTimeout(() => {
         const delegateFilter = document.getElementById('filter_delegate');
         const bondTypeFilter = document.getElementById('filter_bondType');
@@ -1226,6 +1225,9 @@
             bondTypeFilter.innerHTML += `<option value="${b.name}">${b.name}</option>`;
         });
     }, 2000);
+
+    window.showAdminProjects = () => Swal.fire('قريباً', 'إدارة المشاريع تحت التطوير', 'info');
+    window.showAdminManagers = () => Swal.fire('قريباً', 'إدارة المدراء تحت التطوير', 'info');
 </script>
 </body>
 </html>
