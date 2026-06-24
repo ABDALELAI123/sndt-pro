@@ -38,8 +38,8 @@
             </div>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">اسم المستخدم</label>
-                    <input id="login_username" type="text" class="w-full p-3 border-2 rounded-lg" placeholder="admin">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">رقم الجوال</label>
+                    <input id="login_username" type="text" class="w-full p-3 border-2 rounded-lg" placeholder="05xxxxxxxx">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">كلمة المرور</label>
@@ -486,9 +486,9 @@
                 <input id="modal_bondPrefix" type="text" placeholder="البادئة: QBD-" class="w-full p-3 border-2 rounded-lg">
                 <input id="modal_bondStartNumber" type="number" placeholder="رقم البداية: 1" value="1" class="w-full p-3 border-2 rounded-lg">
                 <select id="modal_bondColor" class="w-full p-3 border-2 rounded-lg">
-                    <option value="green">أخضر - قبض</option>
+                               <option value="green">أخضر - قبض</option>
                     <option value="red">أحمر - صرف</option>
-                                       <option value="blue">أزرق - تحويل</option>
+                    <option value="blue">أزرق - تحويل</option>
                 </select>
             </div>
             <h4 class="font-bold text-red-700 border-b pb-2 mb-3">الأثر المحاسبي - مهم</h4>
@@ -604,9 +604,9 @@
 
         try {
             const snap = await db.collection('managers')
-               .where('phone', '==', username)
-               .where('password', '==', password)
-               .get();
+              .where('phone', '==', username)
+              .where('password', '==', password)
+              .get();
 
             if(snap.empty) {
                 Swal.fire('خطأ', 'اسم المستخدم أو كلمة المرور غلط', 'error');
@@ -1132,8 +1132,8 @@
         if(doc.exists) {
             const d = doc.data();
             document.getElementById('print_headerColor').value = d.headerColor || '#10b981';
-            document.getElementById('print_logoPosition').value = d.logoPosition || 'right';
-                     document.getElementById('print_showTax').checked = d.showTax!== false;
+                        document.getElementById('print_logoPosition').value = d.logoPosition || 'right';
+            document.getElementById('print_showTax').checked = d.showTax!== false;
             document.getElementById('print_showAddress').checked = d.showAddress!== false;
             document.getElementById('print_showStamp').checked = d.showStamp!== false;
             document.getElementById('print_showSignature').checked = d.showSignature!== false;
@@ -1465,4 +1465,4 @@
     }
 </script>
 </body>
-</html>
+</html> 
