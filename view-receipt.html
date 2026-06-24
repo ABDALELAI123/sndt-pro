@@ -1,70 +1,139 @@
-<!DOCTYPE html>
+أ<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عرض سند</title>
+    <title>عرض السند</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>body { font-family: 'Cairo', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-10">
+        <div id="loading" class="text-center py-10">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600 text-lg">جاري تحميل بيانات السند...</p>
+        </div>
+        
+        <div id="receiptData" class="hidden">
+            <div class="text-center mb-8 pb-6 border-b-2 border-gray-200">
+                <i class="fas fa-file-invoice text-blue-600 text-5xl mb-3"></i>
+                <h1 class="text-3xl font-extrabold text-blue-600">سند <span id="bondType"></span></h1>
+                <p class="text-gray-500 mt-2">مشروع: <span id="projectCode" class="font-bold"></span></p>
+            </div>
+            
+            <div class="space-y-4 text-lg">
+                <div class="flex justify-between p-4 bg-gray-50 rounded-xl">
+                    <span class="text-gray-600">رقم السند:</span>
+                    <span class="font-bold" id="bondNumber">---</span>
+                </div>
+                <div class="flex justify-between p-4 bg-gray-50 rounded-xl">
+                    <span class="text-gray-600">اسم العميل:</span>
+                    <span class="font-bold" id="customerName">---</span>
+                </div>
+                <div class="flex justify-between p-4 bg-green-50 rounded-xl">
+                    <span class="text-gray-600">المبلغ:</span>
+                    <span class="font-bold text-green-600 text-2xl"><span id="amount"></span> ريال</span>
+                </div>
+                <div class="flex justify-between p-4 bg-gray-50 rounded-xl">
+                    <span class="text-gray-600">التاريخ:</span>
+                    <span class="font-bold" id="bondDate">---</span>
+                </div>
+                <div class="flex justify-between p-4 bg-gray-50 rounded-xl">
+                    <span class="text-gray-600">المندوب:</span>
+                    <span class="font-bold" id="delegateName">---</span>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                    <span class="text-gray-600">حالة السند:</span>
+                    <span class="font-bold px-4 py-2 rounded-full text-sm" id="status">---</span>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-xl">
+                    <p class="text-gray-600 mb-2">ملاحظات:</p>
+                    <p class="font-bold" id="notes">لا يوجد</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t-2 text-center text-sm text-gray-500">
+                <p><i class="fas fa-sync-alt text-blue-500"></i> يتم تحديث حالة السند تلقائياً</p>
+                <p class="mt-1">آخر تحديث: <span id="lastUpdate"></span></p>
+            </div>
+        </div>
+        
+        <div id="error" class="hidden text-center py-10">
+            <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+            <p class="text-red-600 text-xl font-bold">السند غير موجود أو الرابط خاطئ</p>
+            <p class="text-gray-500 mt-2">تأكد من صحة الرابط أو تواصل مع المندوب</p>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        import { firebaseConfig } from './firebase-config.js';
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+          authDomain: "sanadat-pro.firebaseapp.com",
+          projectId: "sanadat-pro",
+          storageBucket: "sanadat-pro.firebasestorage.app",
+          messagingSenderId: "1039476751095",
+          appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // جيب id و projectCode من الرابط
-        const params = new URLSearchParams(window.location.search);
-        const receiptId = params.get('id');
-        const projectCode = params.get('project');
+        const urlParams = new URLSearchParams(window.location.search);
+        const bondId = urlParams.get('id');
+        const projectCode = urlParams.get('project');
 
-        if (!receiptId || !projectCode) {
-            document.getElementById('content').innerHTML = '<p class="text-red-500 text-center">رابط غير صحيح</p>';
+        console.log('Bond ID:', bondId, 'Project:', projectCode);
+
+        if (!bondId || !projectCode) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').classList.remove('hidden');
         } else {
-            // تابع السند لحظياً
-            const receiptRef = doc(db, `projects/${projectCode}/receipts/${receiptId}`);
-            onSnapshot(receiptRef, (docSnap) => {
-                if (docSnap.exists()) {
+            const docRef = doc(db, 'bonds', bondId);
+            
+            // onSnapshot = تحديث لحظي لو المدير غير الحالة
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().projectCode === projectCode) {
                     const data = docSnap.data();
-                    document.getElementById('content').innerHTML = `
-                        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto mt-10">
-                            <h1 class="text-2xl font-bold text-center mb-4">سند رقم: ${data.receiptNumber || receiptId}</h1>
-                            <div class="space-y-3 text-lg">
-                                <p><strong>المبلغ:</strong> ${data.amount} ريال</p>
-                                <p><strong>التاريخ:</strong> ${data.date?.toDate().toLocaleDateString('ar-SA') || '-'}</p>
-                                <p><strong>البيان:</strong> ${data.description || '-'}</p>
-                                <div class="border-t pt-3 mt-3">
-                                    <p><strong>حالة التوريد:</strong> 
-                                        <span class="px-3 py-1 rounded ${data.isSupplied ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
-                                            ${data.isSupplied ? 'مورد' : 'غير مورد'}
-                                        </span>
-                                    </p>
-                                    <p class="mt-2"><strong>حالة التوثيق:</strong> 
-                                        <span class="px-3 py-1 rounded ${data.isDocumented ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}">
-                                            ${data.isDocumented ? 'موثق' : 'غير موثق'}
-                                        </span>
-                                    </p>
-                                </div>
-                            <button onclick="window.print()" class="w-full mt-6 bg-gray-800 text-white py-2 rounded hover:bg-black">
-                                طباعة السند
-                            </button>
-                        </div>
-                    `;
+                    console.log('بيانات السند:', data);
+                    
+                    document.getElementById('bondType').textContent = data.bondType || 'قبض';
+                    document.getElementById('projectCode').textContent = data.projectCode;
+                    document.getElementById('bondNumber').textContent = data.bondNumber || '---';
+                    document.getElementById('customerName').textContent = data.customerName;
+                    document.getElementById('amount').textContent = data.amount.toLocaleString();
+                    document.getElementById('bondDate').textContent = data.date;
+                    document.getElementById('delegateName').textContent = data.delegateName;
+                    document.getElementById('notes').textContent = data.notes || 'لا يوجد';
+                    
+                    const statusEl = document.getElementById('status');
+                    const status = data.status || 'غير مورد';
+                    statusEl.textContent = status;
+                    if (status === 'مورد' || status === 'موثق') {
+                        statusEl.className = 'font-bold px-4 py-2 rounded-full text-sm bg-green-100 text-green-800';
+                    } else {
+                        statusEl.className = 'font-bold px-4 py-2 rounded-full text-sm bg-yellow-100 text-yellow-800';
+                    }
+                    
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ar-SA');
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('receiptData').classList.remove('hidden');
+                    document.getElementById('error').classList.add('hidden');
                 } else {
-                    document.getElementById('content').innerHTML = '<p class="text-red-500 text-center">السند غير موجود</p>';
+                    console.error('السند غير موجود أو المشروع غلط');
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('error').classList.remove('hidden');
                 }
+            }, (error) => {
+                console.error('خطأ في جلب البيانات:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
             });
         }
     </script>
-    <style>
-        @media print {
-            button { display: none; }
-        }
-    </style>
-</head>
-<body class="bg-gray-100">
-    <div id="content" class="p-4">
-        <p class="text-center text-gray-500">جاري تحميل بيانات السند...</p>
-    </div>
 </body>
 </html>
