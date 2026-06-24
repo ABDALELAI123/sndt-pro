@@ -12,10 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-      .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
-      .tab-active { @apply bg-blue-600 text-white; }
-      .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
-      .swal2-popup { font-family: 'Cairo', sans-serif; }
+     .numpad-btn { @apply bg-gray-200 hover:bg-blue-500 hover:text-white text-2xl font-bold py-3 rounded-lg transition; }
+     .tab-active { @apply bg-blue-600 text-white; }
+     .tab-inactive { @apply bg-gray-200 text-gray-700 hover:bg-gray-300; }
+     .swal2-popup { font-family: 'Cairo', sans-serif; }
         @media print {.no-print { display: none!important; } }
     </style>
 </head>
@@ -440,9 +440,10 @@
         const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nشكراً لتعاملكم معنا`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
-    // بداية تعديل الكيو ار والواتساب
+    
+    // بداية تعديل الكيو ار والواتساب - النسخة الصحيحة الوحيدة
     window.shareWhatsAppGeneral = (name, amount, bondId) => {
-        const receiptUrl = `${window.location.origin}/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
+        const receiptUrl = `${window.location.origin}/sndt-pro/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
         const msg = `مرحباً ${name}\nتم إصدار سند بمبلغ ${amount} ريال\nلمتابعة حالة السند: ${receiptUrl}\nشكراً لتعاملكم معنا`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     }
@@ -454,12 +455,10 @@
             return;
         }
         qrDiv.classList.remove('hidden');
-        qrDiv.innerHTML = ''; // تنظيف
+        qrDiv.innerHTML = '';
         
-        // الرابط الصح اللي يروح لصفحة view-receipt.html
-        const receiptUrl = `${window.location.origin}/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
+        const receiptUrl = `${window.location.origin}/sndt-pro/view-receipt.html?id=${bondId}&project=${delegateData.projectCode}`;
         
-        // توليد الكيو ار
         new QRCode(qrDiv, {
             text: receiptUrl,
             width: 140,
@@ -469,17 +468,15 @@
             correctLevel: QRCode.CorrectLevel.H
         });
         
-        // ضيف زر طباعة الكيو ار تحت الكيو ار
         setTimeout(() => {
             const printBtn = document.createElement('button');
             printBtn.innerHTML = '<i class="fas fa-print"></i> طباعة الكيو ار';
-            printBtn.className = 'mt-2 bg-gray-700 text-white px-3 py-1 rounded text-sm hover:bg-black';
+            printBtn.className = 'mt-2 bg-gray-700 text-white px-3 py-1 rounded text-sm hover:bg-black w-full';
             printBtn.onclick = () => printQR(bondId);
             qrDiv.appendChild(printBtn);
         }, 100);
     }
 
-    // دالة طباعة الكيو ار فقط
     window.printQR = (bondId) => {
         const canvas = document.querySelector(`#qr-${bondId} canvas`);
         if (!canvas) return Swal.fire('خطأ', 'الكيو ار غير موجود', 'error');
