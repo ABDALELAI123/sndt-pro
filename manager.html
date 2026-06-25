@@ -181,7 +181,7 @@
             const roles = { superadmin: 'سوبر أدمن', manager: 'مدير', delegate: 'مندوب' };
             return roles[role] || role;
         }
-           // ===== التبويبات + المشاريع =====
+    
         function addTabsAndProjects() {
             const container = document.querySelector('.container-fluid.mt-4');
             container.innerHTML += `
@@ -237,7 +237,6 @@
             });
         }
 
-        // شغل التبويبات بعد تسجيل الدخول
         const oldOnAuthStateChanged = onAuthStateChanged;
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -260,7 +259,7 @@
         });
 
     </script>
-        // ===== الخطوة 1: التبويبات + جدول المشاريع =====
+       
         function loadTabsAndProjects() {
             const container = document.querySelector('.container-fluid.mt-4');
             container.innerHTML += `
@@ -284,7 +283,6 @@
                     </div>
                 </div>
 
-                <!-- مودال إضافة مشروع -->
                 <div class="modal fade" id="projectModal" tabindex="-1">
                     <div class="modal-dialog"><div class="modal-content">
                         <div class="modal-header"><h5 class="modal-title">إضافة مشروع جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -299,7 +297,6 @@
                 </div>
             `;
 
-            // زر الإضافة يظهر للسوبر أدمن فقط
             if (isSuperAdmin) {
                 document.getElementById('addProjectBtn').style.display = 'inline-block';
                 document.getElementById('addProjectBtn').onclick = () => {
