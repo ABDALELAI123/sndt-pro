@@ -7,208 +7,36 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        * {
-            font-family: 'Cairo', sans-serif;
-        }
-
-        body {
-            background: #f5f7fa;
-            min-height: 100vh;
-        }
-
-       .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-       .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-        }
-
-       .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-       .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 40px;
-            width: 100%;
-            max-width: 420px;
-        }
-
-       .login-card h3 {
-            color: #667eea;
-            font-weight: 700;
-            margin-bottom: 30px;
-        }
-
-       .dashboard-container {
-            padding: 30px 0;
-            display: none;
-        }
-
-       .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-right: 4px solid #667eea;
-        }
-
-       .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
-        }
-
-       .stat-card.stat-icon {
-            font-size: 2.5rem;
-            color: #667eea;
-            opacity: 0.8;
-        }
-
-       .stat-card.stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3748;
-            margin: 10px 0 5px;
-        }
-
-       .stat-card.stat-label {
-            color: #718096;
-            font-size: 0.95rem;
-        }
-
-       .nav-tabs {
-            border-bottom: 2px solid #e2e8f0;
-            margin-bottom: 25px;
-        }
-
-       .nav-tabs.nav-link {
-            color: #718096;
-            font-weight: 600;
-            border: none;
-            padding: 12px 25px;
-            transition: all 0.3s;
-        }
-
-       .nav-tabs.nav-link:hover {
-            color: #667eea;
-            border: none;
-        }
-
-       .nav-tabs.nav-link.active {
-            color: #667eea;
-            background: none;
-            border: none;
-            border-bottom: 3px solid #667eea;
-        }
-
-       .tab-content {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-       .table {
-            margin-top: 20px;
-        }
-
-       .table thead th {
-            background: #f7fafc;
-            color: #2d3748;
-            font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
-            padding: 15px;
-        }
-
-       .table tbody td {
-            padding: 15px;
-            vertical-align: middle;
-        }
-
-       .badge {
-            padding: 6px 12px;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-       .btn-primary {
-            background: #667eea;
-            border: none;
-            padding: 10px 25px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-       .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-       .btn-danger {
-            background: #f56565;
-            border: none;
-        }
-
-       .btn-success {
-            background: #48bb78;
-            border: none;
-        }
-
-       .btn-warning {
-            background: #ed8936;
-            border: none;
-        }
-
-       .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-       .modal-header.btn-close {
-            filter: brightness(0) invert(1);
-        }
-
-       .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255,255,255,0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-       .spinner-border {
-            width: 3rem;
-            height: 3rem;
-            border-width: 0.3rem;
-        }
-
-       .alert {
-            border-radius: 10px;
-            border: none;
-        }
-
-       .form-control:focus,.form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
+        * { font-family: 'Cairo', sans-serif; }
+        body { background: #f5f7fa; min-height: 100vh; }
+      .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+      .navbar-brand { font-weight: 700; font-size: 1.3rem; }
+      .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+      .login-card { background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); padding: 40px; width: 100%; max-width: 420px; }
+      .login-card h3 { color: #667eea; font-weight: 700; margin-bottom: 30px; }
+      .dashboard-container { padding: 30px 0; display: none; }
+      .stat-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s; border-right: 4px solid #667eea; }
+      .stat-card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(0,0,0,0.12); }
+      .stat-card.stat-icon { font-size: 2.5rem; color: #667eea; opacity: 0.8; }
+      .stat-card.stat-value { font-size: 2rem; font-weight: 700; color: #2d3748; margin: 10px 0 5px; }
+      .stat-card.stat-label { color: #718096; font-size: 0.95rem; }
+      .nav-tabs { border-bottom: 2px solid #e2e8f0; margin-bottom: 25px; }
+      .nav-tabs.nav-link { color: #718096; font-weight: 600; border: none; padding: 12px 25px; transition: all 0.3s; }
+      .nav-tabs.nav-link:hover { color: #667eea; border: none; }
+      .nav-tabs.nav-link.active { color: #667eea; background: none; border-bottom: 3px solid #667eea; }
+      .tab-content { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+      .table { margin-top: 20px; }
+      .table thead th { background: #f7fafc; color: #2d3748; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding: 15px; }
+      .table tbody td { padding: 15px; vertical-align: middle; }
+      .badge { padding: 6px 12px; font-weight: 600; font-size: 0.85rem; }
+      .btn-primary { background: #667eea; border: none; padding: 10px 25px; font-weight: 600; transition: all 0.3s; }
+      .btn-primary:hover { background: #5568d3; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+      .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+      .spinner-border { width: 3rem; height: 3rem; border-width: 0.3rem; }
+      .form-control:focus,.form-select:focus { border-color: #667eea; box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); }
     </style>
 </head>
 <body>
@@ -229,8 +57,12 @@
             <div class="alert alert-danger d-none" id="loginError"></div>
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label">رقم الجوال أو البريد الإلكتروني</label>
-                    <input type="text" class="form-control" id="emailInput" placeholder="05xxxxxxxx أو email@example.com" required>
+                    <label class="form-label">كود المشروع</label>
+                    <input type="text" class="form-control" id="projectCodeInput" placeholder="001122334455" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رقم الجوال</label>
+                    <input type="text" class="form-control" id="phoneInput" placeholder="0597087767" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">كلمة المرور</label>
@@ -245,7 +77,6 @@
 
     <!-- Dashboard Section -->
     <div class="dashboard-container" id="dashboardSection">
-        <!-- Navbar -->
         <nav class="navbar navbar-dark navbar-expand-lg">
             <div class="container-fluid">
                 <a class="navbar-brand" href="#">
@@ -275,6 +106,7 @@
                             <i class="bi bi-people stat-icon"></i>
                         </div>
                     </div>
+                </div>
                 <div class="col-md-3">
                     <div class="stat-card" style="border-right-color: #48bb78;">
                         <div class="d-flex justify-content-between align-items-start">
@@ -285,6 +117,7 @@
                             <i class="bi bi-folder stat-icon" style="color: #48bb78;"></i>
                         </div>
                     </div>
+                </div>
                 <div class="col-md-3">
                     <div class="stat-card" style="border-right-color: #ed8936;">
                         <div class="d-flex justify-content-between align-items-start">
@@ -295,6 +128,7 @@
                             <i class="bi bi-list-task stat-icon" style="color: #ed8936;"></i>
                         </div>
                     </div>
+                </div>
                 <div class="col-md-3">
                     <div class="stat-card" style="border-right-color: #f56565;">
                         <div class="d-flex justify-content-between align-items-start">
@@ -330,11 +164,6 @@
                         <i class="bi bi-list-check"></i> المهام
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button">
-                        <i class="bi bi-bar-chart-fill"></i> التقارير
-                    </button>
-                </li>
             </ul>
 
             <!-- Tab Content -->
@@ -353,16 +182,15 @@
                                 <tr>
                                     <th>#</th>
                                     <th>الاسم</th>
-                                    <th>البريد الإلكتروني</th>
                                     <th>رقم الجوال</th>
-                                    <th>عدد المهام</th>
+                                    <th>كود المشروع</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="delegatesTableBody">
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="6" class="text-center text-muted py-4">
                                         <div class="spinner-border spinner-border-sm me-2"></div>
                                         جاري تحميل البيانات...
                                     </td>
@@ -386,17 +214,15 @@
                                 <tr>
                                     <th>#</th>
                                     <th>اسم المشروع</th>
-                                    <th>المدير المسؤول</th>
-                                    <th>تاريخ البداية</th>
-                                    <th>تاريخ النهاية</th>
-                                    <th>عدد المهام</th>
+                                    <th>كود المشروع</th>
+                                    <th>تاريخ الإنشاء</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="projectsTableBody">
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
+                                    <td colspan="6" class="text-center text-muted py-4">
                                         <div class="spinner-border spinner-border-sm me-2"></div>
                                         جاري تحميل البيانات...
                                     </td>
@@ -420,17 +246,16 @@
                                 <tr>
                                     <th>#</th>
                                     <th>الاسم</th>
-                                    <th>البريد الإلكتروني</th>
+                                    <th>رقم الجوال</th>
                                     <th>الدور</th>
-                                    <th>عدد المشاريع</th>
-                                    <th>تاريخ الإضافة</th>
+                                    <th>كود المشروع</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="managersTableBody">
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
+                                    <td colspan="7" class="text-center text-muted py-4">
                                         <div class="spinner-border spinner-border-sm me-2"></div>
                                         جاري تحميل البيانات...
                                     </td>
@@ -444,18 +269,10 @@
                 <div class="tab-pane fade" id="tasks" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="bi bi-list-check"></i> قائمة المهام</h5>
-                        <div>
-                            <select class="form-select d-inline-block w-auto me-2" id="taskFilterStatus">
-                                <option value="all">كل الحالات</option>
-                                <option value="pending">قيد الانتظار</option>
-                                <option value="in_progress">قيد التنفيذ</option>
-                                <option value="completed">مكتملة</option>
-                                <option value="cancelled">ملغية</option>
-                            </select>
-                            <button class="btn btn-primary" onclick="showAddTaskModal()">
-                                <i class="bi bi-plus-circle"></i> إضافة مهمة
-                            </button>
-                        </div>
+                        <button class="btn btn-primary" onclick="showAddTaskModal()">
+                            <i class="bi bi-plus-circle"></i> إضافة مهمة
+                        </button>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
@@ -464,15 +281,13 @@
                                     <th>عنوان المهمة</th>
                                     <th>المشروع</th>
                                     <th>المندوب</th>
-                                    <th>تاريخ الاستحقاق</th>
-                                    <th>الأولوية</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody id="tasksTableBody">
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
+                                    <td colspan="6" class="text-center text-muted py-4">
                                         <div class="spinner-border spinner-border-sm me-2"></div>
                                         جاري تحميل البيانات...
                                     </td>
@@ -481,205 +296,18 @@
                         </table>
                     </div>
                 </div>
-
-                <!-- Reports Tab -->
-                <div class="tab-pane fade" id="reports" role="tabpanel">
-                    <h5 class="mb-4"><i class="bi bi-bar-chart-fill"></i> التقارير والإحصائيات</h5>
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">توزيع المهام حسب الحالة</h6>
-                                    <canvas id="tasksChart"></canvas>
-                                </div>
-                            </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">أداء المندوبين</h6>
-                                    <canvas id="delegatesChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Add Delegate Modal -->
-    <div class="modal fade" id="addDelegateModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> إضافة مندوب جديد</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addDelegateForm">
-                        <div class="mb-3">
-                            <label class="form-label">الاسم الكامل</label>
-                            <input type="text" class="form-control" id="delegateName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">البريد الإلكتروني</label>
-                            <input type="email" class="form-control" id="delegateEmail" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">رقم الجوال</label>
-                            <input type="tel" class="form-control" id="delegatePhone" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary" onclick="saveDelegate()">حفظ</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Project Modal -->
-    <div class="modal fade" id="addProjectModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-folder-plus"></i> إضافة مشروع جديد</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addProjectForm">
-                        <div class="mb-3">
-                            <label class="form-label">اسم المشروع</label>
-                            <input type="text" class="form-control" id="projectName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">الوصف</label>
-                            <textarea class="form-control" id="projectDescription" rows="3"></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">تاريخ البداية</label>
-                                <input type="date" class="form-control" id="projectStartDate" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">تاريخ النهاية</label>
-                                <input type="date" class="form-control" id="projectEndDate" required>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary" onclick="saveProject()">حفظ</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Manager Modal -->
-    <div class="modal fade" id="addManagerModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-person-badge"></i> إضافة مدير جديد</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addManagerForm">
-                        <div class="mb-3">
-                            <label class="form-label">الاسم الكامل</label>
-                            <input type="text" class="form-control" id="managerNameInput" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">البريد الإلكتروني</label>
-                            <input type="email" class="form-control" id="managerEmailInput" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">كلمة المرور</label>
-                            <input type="password" class="form-control" id="managerPasswordInput" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">الدور</label>
-                            <select class="form-select" id="managerRoleInput" required>
-                                <option value="manager">مدير</option>
-                                <option value="general_manager">مدير عام</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary" onclick="saveManager()">حفظ</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Task Modal -->
-    <div class="modal fade" id="addTaskModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-plus-square"></i> إضافة مهمة جديدة</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addTaskForm">
-                        <div class="mb-3">
-                            <label class="form-label">عنوان المهمة</label>
-                            <input type="text" class="form-control" id="taskTitle" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">الوصف</label>
-                            <textarea class="form-control" id="taskDescription" rows="3"></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">المشروع</label>
-                                <select class="form-select" id="taskProject" required></select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">المندوب</label>
-                                <select class="form-select" id="taskDelegate" required></select>
-                            </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">تاريخ الاستحقاق</label>
-                                <input type="date" class="form-control" id="taskDueDate" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">الأولوية</label>
-                                <select class="form-select" id="taskPriority" required>
-                                    <option value="low">منخفضة</option>
-                                    <option value="medium" selected>متوسطة</option>
-                                    <option value="high">عالية</option>
-                                    <option value="urgent">عاجلة</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary" onclick="saveTask()">حفظ</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap + Chart.js -->
+    <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- Firebase Configuration - مفاتيح مشروعك مدموجة -->
+    <!-- Firebase Configuration -->
     <script type="module">
-        // Firebase Imports
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-        import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import { getFirestore, collection, query, where, getDocs, doc, setDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-        // Firebase Config - مفاتيح مشروعك
         const firebaseConfig = {
             apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6Mca0MufvGqr2fY",
             authDomain: "sanadat-pro.firebaseapp.com",
@@ -689,44 +317,17 @@
             appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Global Variables
         let currentUser = null;
-        let currentUserRole = null;
-        let isGeneralManager = false;
+        let currentUserDoc = null;
 
-        // Auth State Observer
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                await checkUserRole(user.uid);
-                showDashboard();
-                loadDashboard();
-            } else {
-                showLogin();
-            }
-            hideLoading();
-        });
-
-        // Check if user is authenticated, if not use anonymous auth
-        async function ensureAuthenticated() {
-            if (!auth.currentUser) {
-                try {
-                    await signInAnonymously(auth);
-                } catch (error) {
-                    console.error("خطأ في المصادقة:", error);
-                }
-            }
-        }
-
-        // Login Function - يقبل إيميل أو رقم جوال
+        // Login Function - يشتغل على بياناتك الحالية
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('emailInput').value.trim();
+            const projectCode = document.getElementById('projectCodeInput').value.trim();
+            const phone = document.getElementById('phoneInput').value.trim();
             const password = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('loginError');
             const loginBtn = document.getElementById('loginBtn');
@@ -737,95 +338,81 @@
                 loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري التحقق...';
                 errorDiv.classList.add('d-none');
 
-                let emailToLogin = '';
+                // البحث في collection "المديرين" بنفس الحقول اللي عندك
+                const managersRef = collection(db, 'المديرين');
+                const q = query(
+                    managersRef,
+                    where('projectCode', '==', projectCode),
+                    where('phone', '==', phone)
+                );
 
-                // تحقق إذا كان المدخل إيميل أو رقم جوال
-                if (username.includes('@')) {
-                    // إيميل مباشر
-                    emailToLogin = username;
-                } else {
-                    // رقم جوال - نبحث عنه في Firestore
-                    await ensureAuthenticated();
-                    const usersRef = collection(db, 'users');
-                    const q = query(usersRef, where('phone', '==', username));
-                    const querySnapshot = await getDocs(q);
+                const querySnapshot = await getDocs(q);
 
-                    if (querySnapshot.empty) {
-                        throw new Error('رقم الجوال غير مسجل في النظام');
-                    }
-
-                    const userData = querySnapshot.docs[0].data();
-                    emailToLogin = userData.email;
-
-                    if (!emailToLogin) {
-                        throw new Error('لم يتم العثور على إيميل مرتبط بهذا الرقم');
-                    }
+                if (querySnapshot.empty) {
+                    throw new Error('البيانات غير صحيحة');
                 }
 
-                // تسجيل الدخول بـ Firebase Auth
-                await signInWithEmailAndPassword(auth, emailToLogin, password);
+                const userDoc = querySnapshot.docs[0];
+                const userData = userDoc.data();
+
+                // تحقق من كلمة المرور
+                if (userData.password!== password) {
+                    throw new Error('كلمة المرور غير صحيحة');
+                }
+
+                // تحقق من الحالة
+                if (userData.status!== 'active') {
+                    throw new Error('الحساب غير نشط');
+                }
+
+                currentUser = { id: userDoc.id,...userData };
+                currentUserDoc = userDoc.id;
+
+                // حفظ في localStorage عشان ما يطلب دخول كل مرة
+                localStorage.setItem('currentManager', JSON.stringify(currentUser));
+
+                showDashboard();
+                await loadDashboard();
 
             } catch (error) {
                 hideLoading();
-                let errorMsg = 'خطأ في تسجيل الدخول';
-
-                if (error.message.includes('رقم الجوال')) {
-                    errorMsg = error.message;
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMsg = 'كلمة المرور غير صحيحة';
-                } else if (error.code === 'auth/user-not-found') {
-                    errorMsg = 'المستخدم غير مسجل';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMsg = 'صيغة البريد الإلكتروني غير صحيحة';
-                } else if (error.code === 'auth/invalid-credential') {
-                    errorMsg = 'بيانات الدخول غير صحيحة';
-                }
-
-                errorDiv.textContent = errorMsg;
+                errorDiv.textContent = error.message || 'خطأ في تسجيل الدخول';
                 errorDiv.classList.remove('d-none');
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> دخول';
             }
         });
 
+        // Check if already logged in
+        window.addEventListener('load', () => {
+            const savedUser = localStorage.getItem('currentManager');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showDashboard();
+                loadDashboard();
+            } else {
+                hideLoading();
+            }
+        });
+
         // Logout Function
-        window.doLogout = async function() {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                console.error('خطأ في تسجيل الخروج:', error);
-            }
+        window.doLogout = function() {
+            localStorage.removeItem('currentManager');
+            currentUser = null;
+            currentUserDoc = null;
+            location.reload();
         }
 
-        // Check User Role & Permissions
-        async function checkUserRole(uid) {
-            try {
-                const userDoc = await getDoc(doc(db, 'users', uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    currentUserRole = userData.role || 'manager';
-                    isGeneralManager = userData.role === 'general_manager' || userData.isGeneralManager === true;
-
-                    document.getElementById('managerName').textContent = userData.name || userData.email;
-
-                    if (isGeneralManager) {
-                        document.getElementById('managersTabNav').style.display = 'block';
-                    }
-                }
-            } catch (error) {
-                console.error('خطأ في جلب بيانات المستخدم:', error);
-            }
-        }
-
-        // Show/Hide Sections
         function showDashboard() {
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
-        }
+            document.getElementById('managerName').textContent = currentUser.name || 'مدير';
 
-        function showLogin() {
-            document.getElementById('loginSection').style.display = 'flex';
-            document.getElementById('dashboardSection').style.display = 'none';
+            // إظهار تبويب المدراء للسوبر فقط
+            if (currentUser.isSuper === true || currentUser.role === 'admin') {
+                document.getElementById('managersTabNav').style.display = 'block';
+            }
+            hideLoading();
         }
 
         function showLoading() {
@@ -839,15 +426,13 @@
         // Load Dashboard Data
         async function loadDashboard() {
             try {
-                await ensureAuthenticated();
                 await loadStats();
                 await loadDelegates();
                 await loadProjectsTab();
-                if (isGeneralManager) {
+                if (currentUser.isSuper === true || currentUser.role === 'admin') {
                     await loadManagersTab();
                 }
                 await loadTasks();
-                await loadReports();
             } catch (error) {
                 console.error('خطأ في تحميل الداشبورد:', error);
             }
@@ -856,17 +441,19 @@
         // Load Statistics
         async function loadStats() {
             try {
-                const delegatesSnapshot = await getDocs(collection(db, 'delegates'));
+                const delegatesQuery = query(collection(db, 'المناديب'), where('projectCode', '==', currentUser.projectCode));
+                const delegatesSnapshot = await getDocs(delegatesQuery);
                 document.getElementById('totalDelegates').textContent = delegatesSnapshot.size;
 
-                const projectsSnapshot = await getDocs(collection(db, 'projects'));
+                const projectsQuery = query(collection(db, 'المشاريع'), where('projectCode', '==', currentUser.projectCode));
+                const projectsSnapshot = await getDocs(projectsQuery);
                 document.getElementById('totalProjects').textContent = projectsSnapshot.size;
 
-                const tasksQuery = query(collection(db, 'tasks'), where('status', '!=', 'completed'));
+                const tasksQuery = query(collection(db, 'المهام'), where('projectCode', '==', currentUser.projectCode), where('status', '!=', 'completed'));
                 const tasksSnapshot = await getDocs(tasksQuery);
                 document.getElementById('activeTasks').textContent = tasksSnapshot.size;
 
-                const managersQuery = query(collection(db, 'users'), where('role', 'in', ['manager', 'general_manager']));
+                const managersQuery = query(collection(db, 'المديرين'), where('projectCode', '==', currentUser.projectCode));
                 const managersSnapshot = await getDocs(managersQuery);
                 document.getElementById('totalManagers').textContent = managersSnapshot.size;
             } catch (error) {
@@ -874,37 +461,30 @@
             }
         }
 
-        // Load Delegates Tab
+        // Load Delegates
         async function loadDelegates() {
             const tbody = document.getElementById('delegatesTableBody');
             try {
-                await ensureAuthenticated();
-                const querySnapshot = await getDocs(collection(db, 'delegates'));
+                const q = query(collection(db, 'المناديب'), where('projectCode', '==', currentUser.projectCode));
+                const querySnapshot = await getDocs(q);
                 tbody.innerHTML = '';
 
                 if (querySnapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">لا توجد بيانات</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">لا توجد بيانات</td></tr>';
                     return;
                 }
 
                 let index = 1;
-                for (const docSnap of querySnapshot.docs) {
+                querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const tasksQuery = query(collection(db, 'tasks'), where('delegateId', '==', docSnap.id));
-                    const tasksSnapshot = await getDocs(tasksQuery);
-
                     const row = `
                         <tr>
                             <td>${index++}</td>
                             <td><strong>${data.name || '-'}</strong></td>
-                            <td>${data.email || '-'}</td>
                             <td>${data.phone || '-'}</td>
-                                                      <td><span class="badge bg-info">${tasksSnapshot.size}</span></td>
-                            <td>${data.active ? '<span class="badge bg-success">نشط</span>' : '<span class="badge bg-secondary">غير نشط</span>'}</td>
+                            <td>${data.projectCode || '-'}</td>
+                            <td>${data.status === 'active'? '<span class="badge bg-success">نشط</span>' : '<span class="badge bg-secondary">غير نشط</span>'}</td>
                             <td>
-                                <button class="btn btn-sm btn-warning me-1" onclick="editDelegate('${docSnap.id}')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteDelegate('${docSnap.id}')">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -912,57 +492,37 @@
                         </tr>
                     `;
                     tbody.innerHTML += row;
-                }
+                });
             } catch (error) {
                 console.error('خطأ في تحميل المندوبين:', error);
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
             }
         }
 
-        // Load Projects Tab
+        // Load Projects
         async function loadProjectsTab() {
             const tbody = document.getElementById('projectsTableBody');
             try {
-                await ensureAuthenticated();
-                const querySnapshot = await getDocs(collection(db, 'projects'));
+                const q = query(collection(db, 'المشاريع'), where('projectCode', '==', currentUser.projectCode));
+                const querySnapshot = await getDocs(q);
                 tbody.innerHTML = '';
-                
+
                 if (querySnapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">لا توجد مشاريع</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">لا توجد مشاريع</td></tr>';
                     return;
                 }
 
                 let index = 1;
-                for (const docSnap of querySnapshot.docs) {
+                querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    let managerName = '-';
-                    if (data.managerId) {
-                        const managerDoc = await getDoc(doc(db, 'users', data.managerId));
-                        if (managerDoc.exists()) {
-                            managerName = managerDoc.data().name || managerDoc.data().email;
-                        }
-                    }
-                    
-                    const tasksQuery = query(collection(db, 'tasks'), where('projectId', '==', docSnap.id));
-                    const tasksSnapshot = await getDocs(tasksQuery);
-                    const statusBadge = getStatusBadge(data.status);
-                    
                     const row = `
                         <tr>
                             <td>${index++}</td>
                             <td><strong>${data.name || '-'}</strong></td>
-                            <td>${managerName}</td>
-                            <td>${data.startDate || '-'}</td>
-                            <td>${data.endDate || '-'}</td>
-                            <td><span class="badge bg-info">${tasksSnapshot.size}</span></td>
-                            <td>${statusBadge}</td>
+                            <td>${data.projectCode || '-'}</td>
+                            <td>${data.createdAt? new Date(data.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-'}</td>
+                            <td><span class="badge bg-success">نشط</span></td>
                             <td>
-                                <button class="btn btn-sm btn-primary me-1" onclick="viewProject('${docSnap.id}')">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="btn btn-sm btn-warning me-1" onclick="editProject('${docSnap.id}')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteProject('${docSnap.id}')">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -970,130 +530,81 @@
                         </tr>
                     `;
                     tbody.innerHTML += row;
-                }
+                });
             } catch (error) {
                 console.error('خطأ في تحميل المشاريع:', error);
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
             }
         }
 
-        // Load Managers Tab - تبويب المدراء للمدير العام فقط
-        async function loadManagersTab() { 
+        // Load Managers
+        async function loadManagersTab() {
             const tbody = document.getElementById('managersTableBody');
             try {
-                await ensureAuthenticated();
-                const managersQuery = query(collection(db, 'users'), where('role', 'in', ['manager', 'general_manager']));
-                const querySnapshot = await getDocs(managersQuery);
+                const q = query(collection(db, 'المديرين'), where('projectCode', '==', currentUser.projectCode));
+                const querySnapshot = await getDocs(q);
                 tbody.innerHTML = '';
-                
+
                 if (querySnapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">لا يوجد مدراء</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">لا يوجد مدراء</td></tr>';
                     return;
                 }
 
                 let index = 1;
-                for (const docSnap of querySnapshot.docs) {
+                querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    
-                    const projectsQuery = query(collection(db, 'projects'), where('managerId', '==', docSnap.id));
-                    const projectsSnapshot = await getDocs(projectsQuery);
-                    
-                    const roleBadge = data.role === 'general_manager' 
-                       ? '<span class="badge bg-danger">مدير عام</span>' 
-                        : '<span class="badge bg-primary">مدير</span>';
-                    
-                    const statusBadge = data.active !== false 
-                       ? '<span class="badge bg-success">نشط</span>' 
-                        : '<span class="badge bg-secondary">غير نشط</span>';
-                    
-                    const dateAdded = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-';
-                    
+                    const roleBadge = data.isSuper === true? '<span class="badge bg-danger">سوبر</span>' : '<span class="badge bg-primary">مدير</span>';
+                    const statusBadge = data.status === 'active'? '<span class="badge bg-success">نشط</span>' : '<span class="badge bg-secondary">غير نشط</span>';
+
                     const row = `
                         <tr>
                             <td>${index++}</td>
                             <td><strong>${data.name || '-'}</strong></td>
-                            <td>${data.email || '-'}</td>
+                            <td>${data.phone || '-'}</td>
                             <td>${roleBadge}</td>
-                            <td><span class="badge bg-info">${projectsSnapshot.size}</span></td>
-                            <td>${dateAdded}</td>
+                            <td>${data.projectCode || '-'}</td>
                             <td>${statusBadge}</td>
                             <td>
-                                <button class="btn btn-sm btn-warning me-1" onclick="editManager('${docSnap.id}')" ${docSnap.id === currentUser.uid ? 'disabled' : ''}>
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')" ${docSnap.id === currentUser.uid ? 'disabled' : ''}>
+                                <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')" ${docSnap.id === currentUserDoc? 'disabled' : ''}>
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </td>
                         </tr>
                     `;
                     tbody.innerHTML += row;
-                }
+                });
             } catch (error) {
                 console.error('خطأ في تحميل المدراء:', error);
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
             }
         }
 
         // Load Tasks
         async function loadTasks() {
             const tbody = document.getElementById('tasksTableBody');
-            const filterStatus = document.getElementById('taskFilterStatus').value;
             try {
-                await ensureAuthenticated();
-                let tasksQuery = collection(db, 'tasks');
-                
-                if (filterStatus !== 'all') {
-                    tasksQuery = query(collection(db, 'tasks'), where('status', '==', filterStatus));
-                }
-                
-                const querySnapshot = await getDocs(tasksQuery);
+                const q = query(collection(db, 'المهام'), where('projectCode', '==', currentUser.projectCode));
+                const querySnapshot = await getDocs(q);
                 tbody.innerHTML = '';
-                
+
                 if (querySnapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">لا توجد مهام</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">لا توجد مهام</td></tr>';
                     return;
                 }
 
                 let index = 1;
-                for (const docSnap of querySnapshot.docs) {
+                querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    
-                    let projectName = '-';
-                    if (data.projectId) {
-                        const projectDoc = await getDoc(doc(db, 'projects', data.projectId));
-                        if (projectDoc.exists()) {
-                            projectName = projectDoc.data().name;
-                        }
-                    }
-                    
-                    let delegateName = '-';
-                    if (data.delegateId) {
-                        const delegateDoc = await getDoc(doc(db, 'delegates', data.delegateId));
-                        if (delegateDoc.exists()) {
-                            delegateName = delegateDoc.data().name;
-                        }
-                    }
-                    
-                    const statusBadge = getTaskStatusBadge(data.status);
-                    const priorityBadge = getPriorityBadge(data.priority);
-                    
+                    const statusBadge = data.status === 'completed'? '<span class="badge bg-success">مكتملة</span>' : '<span class="badge bg-warning">قيد التنفيذ</span>';
+
                     const row = `
                         <tr>
                             <td>${index++}</td>
                             <td><strong>${data.title || '-'}</strong></td>
-                            <td>${projectName}</td>
-                            <td>${delegateName}</td>
-                            <td>${data.dueDate || '-'}</td>
-                            <td>${priorityBadge}</td>
+                            <td>${data.projectName || '-'}</td>
+                            <td>${data.delegateName || '-'}</td>
                             <td>${statusBadge}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary me-1" onclick="viewTask('${docSnap.id}')">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="btn btn-sm btn-warning me-1" onclick="editTask('${docSnap.id}')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteTask('${docSnap.id}')">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -1101,217 +612,18 @@
                         </tr>
                     `;
                     tbody.innerHTML += row;
-                }
+                });
             } catch (error) {
                 console.error('خطأ في تحميل المهام:', error);
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">خطأ في تحميل البيانات</td></tr>';
             }
         }
 
-        // Load Reports & Charts
-        async function loadReports() {
-            try {
-                await ensureAuthenticated();
-                await loadTasksChart();
-                await loadDelegatesChart();
-            } catch (error) {
-                console.error('خطأ في تحميل التقارير:', error);
-            }
-        }
-
-        // Tasks Chart
-        async function loadTasksChart() {
-            const ctx = document.getElementById('tasksChart');
-            if (!ctx) return;
-            
-            const tasksSnapshot = await getDocs(collection(db, 'tasks'));
-            const statusCounts = { pending: 0, in_progress: 0, completed: 0, cancelled: 0 };
-            
-            tasksSnapshot.forEach(doc => {
-                const status = doc.data().status || 'pending';
-                if (statusCounts.hasOwnProperty(status)) {
-                    statusCounts[status]++;
-                }
-            });
-
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['قيد الانتظار', 'قيد التنفيذ', 'مكتملة', 'ملغية'],
-                    datasets: [{
-                        data: [statusCounts.pending, statusCounts.in_progress, statusCounts.completed, statusCounts.cancelled],
-                        backgroundColor: ['#ffc107', '#0dcaf0', '#198754', '#dc3545']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
-        }
-
-        // Delegates Performance Chart
-        async function loadDelegatesChart() {
-            const ctx = document.getElementById('delegatesChart');
-            if (!ctx) return;
-            
-            const delegatesSnapshot = await getDocs(collection(db, 'delegates'));
-            const labels = [];
-            const completedTasks = [];
-            const totalTasks = [];
-            
-            for (const docSnap of delegatesSnapshot.docs) {
-                const data = docSnap.data();
-                labels.push(data.name);
-                
-                const tasksQuery = query(collection(db, 'tasks'), where('delegateId', '==', docSnap.id));
-                const tasksSnapshot = await getDocs(tasksQuery);
-                
-                let completed = 0;
-                tasksSnapshot.forEach(taskDoc => {
-                    if (taskDoc.data().status === 'completed') completed++;
-                });
-                
-                completedTasks.push(completed);
-                totalTasks.push(tasksSnapshot.size);
-            }
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'المهام المكتملة', data: completedTasks, backgroundColor: '#198754' },
-                        { label: 'إجمالي المهام', data: totalTasks, backgroundColor: '#0dcaf0' }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-
-        // Helper Functions for Badges
-        function getStatusBadge(status) {
-            const badges = {
-                'active': '<span class="badge bg-success">نشط</span>',
-                'inactive': '<span class="badge bg-secondary">غير نشط</span>',
-                'pending': '<span class="badge bg-warning">قيد المراجعة</span>',
-                'completed': '<span class="badge bg-success">مكتمل</span>'
-            };
-            return badges[status] || '<span class="badge bg-secondary">غير محدد</span>';
-        }
-
-        function getTaskStatusBadge(status) {
-            const badges = {
-                'pending': '<span class="badge bg-warning">قيد الانتظار</span>',
-                'in_progress': '<span class="badge bg-info">قيد التنفيذ</span>',
-                'completed': '<span class="badge bg-success">مكتملة</span>',
-                'cancelled': '<span class="badge bg-danger">ملغية</span>'
-            };
-            return badges[status] || '<span class="badge bg-secondary">غير محدد</span>';
-        }
-
-        function getPriorityBadge(priority) {
-            const badges = {
-                'low': '<span class="badge bg-secondary">منخفضة</span>',
-                'medium': '<span class="badge bg-info">متوسطة</span>',
-                'high': '<span class="badge bg-warning">عالية</span>',
-                'urgent': '<span class="badge bg-danger">عاجلة</span>'
-            };
-            return badges[priority] || '<span class="badge bg-secondary">غير محدد</span>';
-        }
-
-        // ========== MODAL FUNCTIONS ==========
-        
-        window.showAddDelegateModal = function() {
-            document.getElementById('addDelegateForm').reset();
-            new bootstrap.Modal(document.getElementById('addDelegateModal')).show();
-        }
-
-        window.saveDelegate = async function() {
-            try {
-                await ensureAuthenticated();
-                const name = document.getElementById('delegateName').value;
-                const email = document.getElementById('delegateEmail').value;
-                const phone = document.getElementById('delegatePhone').value;
-
-                if (!name || !email || !phone) {
-                    alert('الرجاء ملء جميع الحقول');
-                    return;
-                }
-
-                await setDoc(doc(collection(db, 'delegates')), {
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    active: true,
-                    createdAt: serverTimestamp(),
-                    createdBy: currentUser.uid
-                });
-
-                bootstrap.Modal.getInstance(document.getElementById('addDelegateModal')).hide();
-                await loadDelegates();
-                await loadStats();
-                alert('تم إضافة المندوب بنجاح');
-            } catch (error) {
-                console.error('خطأ في حفظ المندوب:', error);
-                alert('حدث خطأ: ' + error.message);
-            }
-        }
-
-        window.editDelegate = async function(id) {
-            try {
-                await ensureAuthenticated();
-                const docSnap = await getDoc(doc(db, 'delegates', id));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('delegateName').value = data.name;
-                    document.getElementById('delegateEmail').value = data.email;
-                    document.getElementById('delegatePhone').value = data.phone;
-                    
-                    const saveBtn = document.querySelector('#addDelegateModal .btn-primary');
-                    saveBtn.onclick = () => updateDelegate(id);
-                    
-                    new bootstrap.Modal(document.getElementById('addDelegateModal')).show();
-                }
-            } catch (error) {
-                console.error('خطأ:', error);
-                alert('حدث خطأ في تحميل البيانات');
-            }
-        }
-
-        async function updateDelegate(id) {
-            try {
-                await ensureAuthenticated();
-                const name = document.getElementById('delegateName').value;
-                const email = document.getElementById('delegateEmail').value;
-                const phone = document.getElementById('delegatePhone').value;
-
-                await updateDoc(doc(db, 'delegates', id), {
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    updatedAt: serverTimestamp()
-                });
-
-                bootstrap.Modal.getInstance(document.getElementById('addDelegateModal')).hide();
-                await loadDelegates();
-                alert('تم تحديث المندوب بنجاح');
-            } catch (error) {
-                console.error('خطأ في التحديث:', error);
-                alert('حدث خطأ: ' + error.message);
-            }
-        }
-
+        // Delete Functions
         window.deleteDelegate = async function(id) {
             if (!confirm('هل أنت متأكد من حذف هذا المندوب؟')) return;
-            
             try {
-                await ensureAuthenticated();
-                await deleteDoc(doc(db, 'delegates', id));
+                await deleteDoc(doc(db, 'المناديب', id));
                 await loadDelegates();
                 await loadStats();
                 alert('تم حذف المندوب بنجاح');
@@ -1321,109 +633,10 @@
             }
         }
 
-        window.showAddProjectModal = function() {
-            document.getElementById('addProjectForm').reset();
-            new bootstrap.Modal(document.getElementById('addProjectModal')).show();
-        }
-
-        window.saveProject = async function() {
-            try {
-                await ensureAuthenticated();
-                const name = document.getElementById('projectName').value;
-                const description = document.getElementById('projectDescription').value;
-                const startDate = document.getElementById('projectStartDate').value;
-                const endDate = document.getElementById('projectEndDate').value;
-
-                if (!name || !startDate || !endDate) {
-                    alert('الرجاء ملء الحقول المطلوبة');
-                    return;
-                }
-
-                await setDoc(doc(collection(db, 'projects')), {
-                    name: name,
-                    description: description,
-                    startDate: startDate,
-                    endDate: endDate,
-                    status: 'active',
-                    managerId: currentUser.uid,
-                    createdAt: serverTimestamp()
-                });
-
-                bootstrap.Modal.getInstance(document.getElementById('addProjectModal')).hide();
-                await loadProjectsTab();
-                await loadStats();
-                alert('تم إضافة المشروع بنجاح');
-            } catch (error) {
-                console.error('خطأ في حفظ المشروع:', error);
-                alert('حدث خطأ: ' + error.message);
-            }
-        }
-
-        window.viewProject = async function(id) {
-            try {
-                await ensureAuthenticated();
-                const docSnap = await getDoc(doc(db, 'projects', id));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    alert(`اسم المشروع: ${data.name}\nالوصف: ${data.description || 'لا يوجد'}\nالحالة: ${data.status}`);
-                }
-            } catch (error) {
-                console.error('خطأ:', error);
-            }
-        }
-
-        window.editProject = async function(id) {
-            try {
-                await ensureAuthenticated();
-                const docSnap = await getDoc(doc(db, 'projects', id));
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    document.getElementById('projectName').value = data.name;
-                    document.getElementById('projectDescription').value = data.description || '';
-                    document.getElementById('projectStartDate').value = data.startDate;
-                    document.getElementById('projectEndDate').value = data.endDate;
-                    
-                    const saveBtn = document.querySelector('#addProjectModal .btn-primary');
-                    saveBtn.onclick = () => updateProject(id);
-                    
-                    new bootstrap.Modal(document.getElementById('addProjectModal')).show();
-                }
-            } catch (error) {
-                console.error('خطأ:', error);
-            }
-        }
-
-        async function updateProject(id) {
-            try {
-                await ensureAuthenticated();
-                const name = document.getElementById('projectName').value;
-                const description = document.getElementById('projectDescription').value;
-                const startDate = document.getElementById('projectStartDate').value;
-                const endDate = document.getElementById('projectEndDate').value;
-
-                await updateDoc(doc(db, 'projects', id), {
-                    name: name,
-                    description: description,
-                    startDate: startDate,
-                    endDate: endDate,
-                    updatedAt: serverTimestamp()
-                });
-
-                bootstrap.Modal.getInstance(document.getElementById('addProjectModal')).hide();
-                await loadProjectsTab();
-                alert('تم تحديث المشروع بنجاح');
-            } catch (error) {
-                console.error('خطأ:', error);
-                alert('حدث خطأ: ' + error.message);
-            }
-        }
-
         window.deleteProject = async function(id) {
-            if (!confirm('هل أنت متأكد من حذف هذا المشروع؟ سيتم حذف جميع المهام المرتبطة به.')) return;
-            
+            if (!confirm('هل أنت متأكد من حذف هذا المشروع؟')) return;
             try {
-                await ensureAuthenticated();
-                await deleteDoc(doc(db, 'projects', id));
+                await deleteDoc(doc(db, 'المشاريع', id));
                 await loadProjectsTab();
                 await loadStats();
                 alert('تم حذف المشروع بنجاح');
@@ -1433,69 +646,10 @@
             }
         }
 
-        window.showAddManagerModal = function() {
-            if (!isGeneralManager) {
-                alert('ليس لديك صلاحية لإضافة مدراء');
-                return;
-            }
-            document.getElementById('addManagerForm').reset();
-            new bootstrap.Modal(document.getElementById('addManagerModal')).show();
-        }
-
-        window.saveManager = async function() {
-            if (!isGeneralManager) {
-                alert('ليس لديك صلاحية لإضافة مدراء');
-                return;
-            }
-            
-            const name = document.getElementById('managerNameInput').value;
-            const email = document.getElementById('managerEmailInput').value;
-            const password = document.getElementById('managerPasswordInput').value;
-            const role = document.getElementById('managerRoleInput').value;
-            
-            try {
-                await ensureAuthenticated();
-                
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    name: name,
-                    email: email,
-                    role: role,
-                    isGeneralManager: role === 'general_manager',
-                    active: true,
-                    createdAt: serverTimestamp(),
-                    createdBy: currentUser.uid
-                });
-                
-                bootstrap.Modal.getInstance(document.getElementById('addManagerModal')).hide();
-                await loadManagersTab();
-                await loadStats();
-                alert('تم إضافة المدير بنجاح');
-            } catch (error) {
-                console.error('خطأ في حفظ المدير:', error);
-                alert('حدث خطأ: ' + error.message);
-            }
-        }
-
-        window.editManager = async function(id) {
-            if (!isGeneralManager) {
-                alert('ليس لديك صلاحية لتعديل المدراء');
-                return;
-            }
-            alert('ميزة التعديل قيد التطوير');
-        }
-
         window.deleteManager = async function(id) {
-            if (!isGeneralManager) {
-                alert('ليس لديك صلاحية لحذف المدراء');
-                return;
-            }
-            if (!confirm('هل أنت متأكد من حذف هذا المدير؟ سيتم حذف كل مشاريعه ومهامه.')) return;
-            
+            if (!confirm('هل أنت متأكد من حذف هذا المدير؟')) return;
             try {
-                await ensureAuthenticated();
-                await deleteDoc(doc(db, 'users', id));
+                await deleteDoc(doc(db, 'المديرين', id));
                 await loadManagersTab();
                 await loadStats();
                 alert('تم حذف المدير بنجاح');
@@ -1505,64 +659,10 @@
             }
         }
 
-        window.showAddTaskModal = async function() {
-            document.getElementById('addTaskForm').reset();
-            
-            const projectsSelect = document.getElementById('taskProject');
-            projectsSelect.innerHTML = '<option value="">اختر المشروع</option>';
-            const projectsSnapshot = await getDocs(collection(db, 'projects'));
-            projectsSnapshot.forEach(doc => {
-                projectsSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
-            });
-            
-            const delegatesSelect = document.getElementById('taskDelegate');
-            delegatesSelect.innerHTML = '<option value="">اختر المندوب</option>';
-            const delegatesSnapshot = await getDocs(collection(db, 'delegates'));
-            delegatesSnapshot.forEach(doc => {
-                delegatesSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
-            });
-            
-            new bootstrap.Modal(document.getElementById('addTaskModal')).show();
-        }
-
-        window.saveTask = async function() {
-            const title = document.getElementById('taskTitle').value;
-            const description = document.getElementById('taskDescription').value;
-            const projectId = document.getElementById('taskProject').value;
-            const delegateId = document.getElementById('taskDelegate').value;
-            const dueDate = document.getElementById('taskDueDate').value;
-            const priority = document.getElementById('taskPriority').value;
-            
-            try {
-                await ensureAuthenticated();
-                await setDoc(doc(collection(db, 'tasks')), {
-                    title: title,
-                    description: description,
-                    projectId: projectId,
-                    delegateId: delegateId,
-                    dueDate: dueDate,
-                    priority: priority,
-                    status: 'pending',
-                    createdAt: serverTimestamp(),
-                    managerId: currentUser.uid
-                });
-                
-                bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
-                await loadTasks();
-                await loadStats();
-                alert('تم إضافة المهمة بنجاح');
-            } catch (error) {
-                console.error('خطأ في حفظ المهمة:', error);
-                alert('حدث خطأ: ' + error.message);
-            }
-        }
-
         window.deleteTask = async function(id) {
             if (!confirm('هل أنت متأكد من حذف هذه المهمة؟')) return;
-            
             try {
-                await ensureAuthenticated();
-                await deleteDoc(doc(db, 'tasks', id));
+                await deleteDoc(doc(db, 'المهام', id));
                 await loadTasks();
                 await loadStats();
                 alert('تم حذف المهمة بنجاح');
@@ -1572,23 +672,109 @@
             }
         }
 
-        window.viewTask = (id) => alert('ميزة العرض قيد التطوير');
-        window.editTask = (id) => alert('ميزة التعديل قيد التطوير');
+        // Add Functions - تبسيط
+        window.showAddDelegateModal = function() {
+            const name = prompt('اسم المندوب:');
+            const phone = prompt('رقم الجوال:');
+            if (name && phone) {
+                saveDelegate(name, phone);
+            }
+        }
 
-        // Tab Change Event
-        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', async (e) => {
-                const target = e.target.getAttribute('data-bs-target');
-                if (target === '#delegates') await loadDelegates();
-                if (target === '#projects') await loadProjectsTab();
-                if (target === '#managers') await loadManagersTab();
-                if (target === '#tasks') await loadTasks();
-                if (target === '#reports') await loadReports();
-            });
-        });
+        async function saveDelegate(name, phone) {
+            try {
+                await setDoc(doc(collection(db, 'المناديب')), {
+                    name: name,
+                    phone: phone,
+                    projectCode: currentUser.projectCode,
+                    status: 'active',
+                    createdAt: serverTimestamp()
+                });
+                await loadDelegates();
+                await loadStats();
+                alert('تم إضافة المندوب بنجاح');
+            } catch (error) {
+                console.error('خطأ في الحفظ:', error);
+                alert('حدث خطأ: ' + error.message);
+            }
+        }
 
-        // Task Filter Change
-        document.getElementById('taskFilterStatus').addEventListener('change', loadTasks);
+        window.showAddProjectModal = function() {
+            const name = prompt('اسم المشروع:');
+            if (name) {
+                saveProject(name);
+            }
+        }
+
+        async function saveProject(name) {
+            try {
+                await setDoc(doc(collection(db, 'المشاريع')), {
+                    name: name,
+                    projectCode: currentUser.projectCode,
+                    createdAt: serverTimestamp()
+                });
+                await loadProjectsTab();
+                await loadStats();
+                alert('تم إضافة المشروع بنجاح');
+            } catch (error) {
+                console.error('خطأ في الحفظ:', error);
+                alert('حدث خطأ: ' + error.message);
+            }
+        }
+
+        window.showAddManagerModal = function() {
+            const name = prompt('اسم المدير:');
+            const phone = prompt('رقم الجوال:');
+            const password = prompt('كلمة المرور:');
+            if (name && phone && password) {
+                saveManager(name, phone, password);
+            }
+        }
+
+        async function saveManager(name, phone, password) {
+            try {
+                await setDoc(doc(collection(db, 'المديرين')), {
+                    name: name,
+                    phone: phone,
+                    password: password,
+                    projectCode: currentUser.projectCode,
+                    role: 'admin',
+                    status: 'active',
+                    isSuper: false,
+                    createdAt: serverTimestamp()
+                });
+                await loadManagersTab();
+                await loadStats();
+                alert('تم إضافة المدير بنجاح');
+            } catch (error) {
+                console.error('خطأ في الحفظ:', error);
+                alert('حدث خطأ: ' + error.message);
+            }
+        }
+
+        window.showAddTaskModal = function() {
+            const title = prompt('عنوان المهمة:');
+            if (title) {
+                saveTask(title);
+            }
+        }
+
+        async function saveTask(title) {
+            try {
+                await setDoc(doc(collection(db, 'المهام')), {
+                    title: title,
+                    projectCode: currentUser.projectCode,
+                    status: 'pending',
+                    createdAt: serverTimestamp()
+                });
+                await loadTasks();
+                await loadStats();
+                alert('تم إضافة المهمة بنجاح');
+            } catch (error) {
+                console.error('خطأ في الحفظ:', error);
+                alert('حدث خطأ: ' + error.message);
+            }
+        }
 
     </script>
 </body>
