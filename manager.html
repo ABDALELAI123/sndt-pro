@@ -139,7 +139,6 @@
             </ul>
 
             <div class="tab-content" id="mainTabContent">
-                <!-- تبويب المشاريع -->
                 <div class="tab-pane fade show active" id="projects" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="bi bi-folder"></i> المشاريع</h5>
@@ -153,7 +152,6 @@
                     </div>
                 </div>
 
-                <!-- تبويب المدراء -->
                 <div class="tab-pane fade" id="managers" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="bi bi-person-badge"></i> المدراء</h5>
@@ -167,7 +165,6 @@
                     </div>
                 </div>
 
-                <!-- تبويب المناديب -->
                 <div class="tab-pane fade" id="delegates" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="bi bi-people"></i> المناديب</h5>
@@ -181,7 +178,6 @@
                     </div>
                 </div>
 
-                <!-- تبويب السندات -->
                 <div class="tab-pane fade" id="bonds" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="bi bi-receipt"></i> السندات</h5>
@@ -198,7 +194,6 @@
                     </div>
                 </div>
 
-                <!-- تبويب الإعدادات -->
                 <div class="tab-pane fade" id="settings" role="tabpanel">
                     <h5 class="mb-4"><i class="bi bi-gear-fill"></i> الإعدادات</h5>
                     <div class="row">
@@ -231,7 +226,7 @@
             </div>
         </div>
     </div>
-        <!-- المودالات -->
+
     <div class="modal fade" id="projectModal" tabindex="-1">
         <div class="modal-dialog"><div class="modal-content">
             <div class="modal-header"><h5 class="modal-title">إضافة/تعديل مشروع</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -254,7 +249,7 @@
                     <input type="hidden" id="managerId">
                     <div class="mb-3"><label class="form-label">الاسم الكامل</label><input type="text" class="form-control" id="managerName" required></div>
                     <div class="mb-3"><label class="form-label">رقم الجوال</label><input type="text" class="form-control" id="managerPhone" required></div>
-                    <div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" id="managerPassword" required></div>
+                    <div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" id="managerPassword"></div>
                     <div class="mb-3"><label class="form-label">المشروع</label><select class="form-select" id="managerProject" required></select></div>
                     <div class="mb-3"><label class="form-label">الحالة</label><select class="form-select" id="managerStatus"><option value="active">نشط</option><option value="inactive">موقوف</option></select></div>
                 </form>
@@ -271,7 +266,7 @@
                     <input type="hidden" id="delegateId">
                     <div class="mb-3"><label class="form-label">الاسم الكامل</label><input type="text" class="form-control" id="delegateName" required></div>
                     <div class="mb-3"><label class="form-label">رقم الجوال</label><input type="text" class="form-control" id="delegatePhone" required></div>
-                    <div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" id="delegatePassword" required></div>
+                    <div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" id="delegatePassword"></div>
                     <div class="mb-3"><label class="form-label">الحالة</label><select class="form-select" id="delegateStatus"><option value="active">نشط</option><option value="inactive">موقوف</option></select></div>
                 </form>
             </div>
@@ -310,188 +305,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
-        // استدعاء ملف المفاتيح حقك مباشرة
-        import { auth, db, storage } from './firebase.js';
-        import { signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, addDoc, deleteDoc, updateDoc, onSnapshot, doc, serverTimestamp, query, orderBy, where, getDocs, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-        let currentUser = null;
-        let currentUserRole = null;
-        let currentUserData = null;
-
-        // تسجيل الدخول الموحد
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const code = document.getElementById('projectCode').value.trim();
-            const phone = document.getElementById('phoneInput').value.trim();
-            const pass = document.getElementById('passwordInput').value;
-            const errorDiv = document.getElementById('loginError');
-            
-            errorDiv.classList.add('d-none');
-            
-            if (code!== '001122334455') {
-                errorDiv.textContent = 'كود المشروع غير صحيح';
-                errorDiv.classList.remove('d-none');
-                return;
-            }
-
-            const email = `user${phone}@gmail.com`;
-
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (e) {
-                errorDiv.textContent = 'رقم الجوال أو كلمة المرور غلط';
-                errorDiv.classList.remove('d-none');
-            }
-        });
-
-        window.doLogout = () => signOut(auth);
-
-        // مراقبة الدخول وتحديد الصلاحيات
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                
-                if (userDoc.exists()) {
-                    currentUserData = userDoc.data();
-                    currentUserRole = currentUserData.role; // super, manager, delegate
-                } else {
-                    // أول مرة سوبر أدمن
-                    if (user.email === 'user0597087767@gmail.com') {
-                        currentUserRole = 'super';
-                        await setDoc(doc(db, 'users', user.uid), {
-                            name: 'السوبر أدمن',
-                            phone: '0597087767',
-                            role: 'super',
-                            active: true,
-                            createdAt: serverTimestamp()
-                        });
-                    }
-                }
-
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('dashboardSection').style.display = 'block';
-                document.getElementById('userName').textContent = currentUserData?.name || 'مستخدم';
-                document.getElementById('userRole').textContent = getRoleName(currentUserRole);
-                
-                setupPermissions();
-                loadAllData();
-            } else {
-                document.getElementById('loginSection').style.display = 'flex';
-                document.getElementById('dashboardSection').style.display = 'none';
-            }
-            document.getElementById('loadingOverlay').style.display = 'none';
-        });
-
-        function getRoleName(role) {
-            const roles = { super: 'سوبر أدمن', manager: 'مدير', delegate: 'مندوب' };
-            return roles[role] || 'مستخدم';
-        }
-
-        // إخفاء/إظهار الأزرار حسب الصلاحية
-        function setupPermissions() {
-            if (currentUserRole === 'super') {
-                document.getElementById('addProjectBtn').style.display = 'block';
-                document.getElementById('addManagerBtn').style.display = 'block';
-            }
-            if (currentUserRole === 'super' || currentUserRole === 'manager') {
-                document.getElementById('addDelegateBtn').style.display = 'block';
-            }
-        }
-
-    <!-- مودال إضافة مشروع -->
-    <div class="modal fade" id="addProjectModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-folder-plus"></i> إضافة مشروع جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="addProjectForm">
-                    <div class="mb-3"><label class="form-label">اسم المشروع</label><input type="text" class="form-control" id="projectName" required></div>
-                    <div class="mb-3"><label class="form-label">الوصف</label><textarea class="form-control" id="projectDescription" rows="3"></textarea></div>
-                </form>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-primary" onclick="saveProject()">حفظ</button></div>
-        </div></div>
-    </div>
-
-    <!-- مودال إضافة مدير -->
-    <div class="modal fade" id="addManagerModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-badge"></i> إضافة مدير جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="addManagerForm">
-                    <div class="mb-3"><label class="form-label">الاسم الكامل</label><input type="text" class="form-control" id="managerNameInput" required></div>
-                    <div class="mb-3"><label class="form-label">رقم الجوال</label><input type="text" class="form-control" id="managerPhoneInput" required></div>
-                    <div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" id="managerPasswordInput" required></div>
-                    <div class="mb-3"><label class="form-label">المشروع</label><select class="form-select" id="managerProjectSelect" required></select></div>
-                </form>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-primary" onclick="saveManager()">حفظ</button></div>
-        </div></div>
-    </div>
-
-    <!-- مودال إضافة مندوب -->
-    <div class="modal fade" id="addDelegateModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-person-plus"></i> إضافة مندوب جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="addDelegateForm">
-                    <div class="mb-3"><label class="form-label">الاسم الكامل</label><input type="text" class="form-control" id="delegateName" required></div>
-                    <div class="mb-3"><label class="form-label">رقم الجوال</label><input type="text" class="form-control" id="delegatePhone" required></div>
-                    <div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" id="delegatePassword" required></div>
-                    <div class="mb-3"><label class="form-label">المدير المسؤول</label><select class="form-select" id="delegateManagerSelect"></select></div>
-                </form>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-primary" onclick="saveDelegate()">حفظ</button></div>
-        </div></div>
-    </div>
-
-    <!-- مودال إضافة سند -->
-    <div class="modal fade" id="addBondModal" tabindex="-1">
-        <div class="modal-dialog modal-lg"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-receipt"></i> إضافة سند جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="addBondForm">
-                    <div class="row">
-                        <div class="col-md-6 mb-3"><label class="form-label">عنوان السند</label><input type="text" class="form-control" id="bondTitle" required></div>
-                        <div class="col-md-6 mb-3"><label class="form-label">المبلغ</label><input type="number" class="form-control" id="bondAmount" required></div>
-                    </div>
-                    <div class="mb-3"><label class="form-label">التفاصيل</label><textarea class="form-control" id="bondDetails" rows="3"></textarea></div>
-                    <div class="mb-3"><label class="form-label">المندوب</label><select class="form-select" id="bondDelegateSelect"></select></div>
-                </form>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-primary" onclick="saveBond()">حفظ</button></div>
-        </div></div>
-    </div>
-
-    <!-- مودال QR -->
-    <div class="modal fade" id="qrModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-qr-code"></i> رمز QR للسند</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body qr-modal-content">
-                <div id="qrcode"></div>
-                <p id="qrLink" style="word-break: break-all; font-size: 12px; color: #666; margin-top: 15px;"></p>
-                <button class="btn btn-success" onclick="downloadQR()"><i class="bi bi-download"></i> تحميل QR</button>
-                <button class="btn btn-success" onclick="sendWhatsApp()"><i class="bi bi-whatsapp"></i> إرسال واتساب</button>
-            </div>
-        </div></div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, addDoc, deleteDoc, updateDoc, onSnapshot, doc, serverTimestamp, query, orderBy, where, getDocs, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // ⚠️ حط مفاتيحك الأصلية من Firebase Console
         const firebaseConfig = {
-            apiKey: "حط_apiKey_حقك_هنا",
-            authDomain: "حط_authDomain_حقك_هنا",
+            apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
+            authDomain: "sanadat-pro.firebaseapp.com",
+            databaseURL: "https://sanadat-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "sanadat-pro",
-            storageBucket: "حط_storageBucket_حقك_هنا",
-            messagingSenderId: "حط_messagingSenderId_حقك_هنا",
-            appId: "حط_appId_حقك_هنا"
+            storageBucket: "sanadat-pro.firebasestorage.app",
+            messagingSenderId: "1039476751095",
+            appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -503,7 +328,6 @@
         let isSuperAdmin = false;
         let currentQRUrl = '';
 
-        // تسجيل الدخول الموحد
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const code = document.getElementById('projectCode').value.trim();
@@ -531,7 +355,6 @@
 
         window.doLogout = () => signOut(auth);
 
-        // مراقبة الدخول
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
@@ -559,112 +382,20 @@
         }
 
         function setupUIByRole() {
-            // السوبر أدمن يشوف كل شي
             if (isSuperAdmin) {
                 document.getElementById('addProjectBtn').style.display = 'inline-block';
                 document.getElementById('addManagerBtn').style.display = 'inline-block';
             }
-            // المدير ما يشوف تبويب المدراء
             if (currentUserData.role === 'manager') {
-                document.querySelector('#managers-tab').parentElement.style.display = 'none';
+                document.querySelector('#managers-tab')?.parentElement?.style.display = 'none';
             }
-            // المندوب ما يشوف إلا السندات
             if (currentUserData.role === 'delegate') {
-                document.querySelector('#projects-tab').parentElement.style.display = 'none';
-                document.querySelector('#managers-tab').parentElement.style.display = 'none';
-                document.querySelector('#delegates-tab').parentElement.style.display = 'none';
+                document.querySelector('#projects-tab')?.parentElement?.style.display = 'none';
+                document.querySelector('#managers-tab')?.parentElement?.style.display = 'none';
+                document.querySelector('#delegates-tab')?.parentElement?.style.display = 'none';
             }
         }
 
-        // تحميل البيانات
-        function loadAllData() {
-            loadStats();
-            loadProjects();
-            loadManagers();
-            loadDelegates();
-            loadBonds();
-            loadSettings();
-        }
-
-        // الإحصائيات
-        async function loadStats() {
-            const [managers, delegates, projects, bonds] = await Promise.all([
-                getDocs(query(collection(db, 'users'), where('role', '==', 'manager'))),
-                getDocs(query(collection(db, 'users'), where('role', '==', 'delegate'))),
-                getDocs(collection(db, 'projects')),
-                getDocs(collection(db, 'bonds'))
-            ]);
-            document.getElementById('totalManagers').textContent = managers.size;
-            document.getElementById('totalDelegates').textContent = delegates.size;
-            document.getElementById('totalProjects').textContent = projects.size;
-            document.getElementById('totalBonds').textContent = bonds.size;
-        }
-
-        // المشاريع - السوبر بس ينشئ
-        function loadProjects() {
-            onSnapshot(collection(db, 'projects'), (snapshot) => {
-                const tbody = document.getElementById('projectsTableBody');
-                tbody.innerHTML = '';
-                let i = 1;
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const canEdit = isSuperAdmin;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${i++}</td>
-                            <td>${data.name}</td>
-                            <td>${data.managerName || '-'}</td>
-                            <td><span class="badge bg-success">نشط</span></td>
-                            <td>
-                                ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="deleteProject('${docSnap.id}')"><i class="bi bi-trash"></i></button>` : '-'}
-                            </td>
-                        </tr>`;
-                });
-            });
-        }
-
-        document.getElementById('addProjectBtn').onclick = () => new bootstrap.Modal(document.getElementById('addProjectModal')).show();
-
-        window.saveProject = async () => {
-            const name = document.getElementById('projectName').value.trim();
-            const desc = document.getElementById('projectDescription').value.trim();
-            if (!name) return alert('عبي اسم المشروع');
-            await addDoc(collection(db, 'projects'), { name, description: desc, createdAt: serverTimestamp(), createdBy: currentUser.uid });
-            bootstrap.Modal.getInstance(document.getElementById('addProjectModal')).hide();
-            document.getElementById('addProjectForm').reset();
-        };
-
-        window.deleteProject = async (id) => {
-            if (confirm('متأكد تبي تحذف المشروع؟')) await deleteDoc(doc(db, 'projects', id));
-        };
-
-        // المدراء - السوبر بس يضيف/يحذف/يوقف/ينشط
-        function loadManagers() {
-            const q = query(collection(db, 'users'), where('role', '==', 'manager'));
-            onSnapshot(q, (snapshot) => {
-                const tbody = document.getElementById('managersTableBody');
-                tbody.innerHTML = '';
-                let i = 1;
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const canEdit = isSuperAdmin;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${i++}</td>
-                            <td>${data.name}</td>
-                            <td>${data.phone}</td>
-                            <td>${data.projectName || '-'}</td>
-                            <td><span class="badge bg-${data.active ? 'success' : 'secondary'}">${data.active ? 'نشط' : 'موقوف'}</span></td>
-                            <td>
-                                ${canEdit ? `
-                                <button class="btn btn-sm btn-warning" onclick="toggleManager('${docSnap.id}', ${data.active})"><i class="bi bi-power"></i></button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')"><i class="bi bi-trash"></i></button>
-                                ` : '-'}
-                            </td>
-                        </tr>`;
-                });
-            });
-                  // ===== المشاريع - السوبر أدمن فقط =====
         function loadProjects() {
             const tbody = document.getElementById('projectsTableBody');
             onSnapshot(query(collection(db, 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -672,7 +403,7 @@
                 let i = 1;
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const canEdit = currentUserRole === 'super';
+                    const canEdit = isSuperAdmin;
                     tbody.innerHTML += `
                         <tr>
                             <td>${i++}</td>
@@ -704,7 +435,7 @@
             const name = document.getElementById('projectName').value.trim();
             const desc = document.getElementById('projectDesc').value.trim();
             if (!name) return alert('اكتب اسم المشروع');
-            
+
             const data = { name, desc, active: true, updatedAt: serverTimestamp() };
             if (id) {
                 await updateDoc(doc(db, 'projects', id), data);
@@ -735,7 +466,6 @@
             }
         };
 
-        // ===== المدراء - السوبر أدمن فقط =====
         function loadManagers() {
             const tbody = document.getElementById('managersTableBody');
             onSnapshot(query(collection(db, 'users'), where('role', '==', 'manager')), (snapshot) => {
@@ -743,7 +473,7 @@
                 let i = 1;
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const canEdit = currentUserRole === 'super';
+                    const canEdit = isSuperAdmin;
                     tbody.innerHTML += `
                         <tr>
                             <td>${i++}</td>
@@ -755,345 +485,343 @@
                                 ${canEdit? `
                                 <button class="btn btn-sm btn-warning me-1" onclick="editManager('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-sm btn-${data.active? 'secondary' : 'success'} me-1" onclick="toggleManager('${docSnap.id}', ${!data.active})">
-                                    <i class="bi bi-${data.active? 'pause' : 'play'}"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')"><i class="bi bi-trash"></i></button>
-                                ` : '-'}
-                            </td>
-                        </tr>`;
-                });
+                              <i class="bi bi-${data.active? 'pause' : 'play'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')"><i class="bi bi-trash"></i></button>
+                        ` : '-'}
+                    </td>
+                </tr>`;
             });
-        }
+        });
+    }
 
-        document.getElementById('addManagerBtn').onclick = async () => {
-            // تحميل المشاريع
-            const select = document.getElementById('managerProject');
-            const snap = await getDocs(collection(db, 'projects'));
-            select.innerHTML = '<option value="">اختر مشروع</option>';
-            snap.forEach(d => {
-                select.innerHTML += `<option value="${d.id}" data-name="${d.data().name}">${d.data().name}</option>`;
-            });
-            document.getElementById('managerForm').reset();
-            document.getElementById('managerId').value = '';
-            new bootstrap.Modal(document.getElementById('managerModal')).show();
-        };
+    document.getElementById('addManagerBtn').onclick = async () => {
+        const select = document.getElementById('managerProject');
+        const snap = await getDocs(collection(db, 'projects'));
+        select.innerHTML = '<option value="">اختر مشروع</option>';
+        snap.forEach(d => {
+            select.innerHTML += `<option value="${d.id}" data-name="${d.data().name}">${d.data().name}</option>`;
+        });
+        document.getElementById('managerForm').reset();
+        document.getElementById('managerId').value = '';
+        new bootstrap.Modal(document.getElementById('managerModal')).show();
+    };
 
-        window.saveManager = async () => {
-            const id = document.getElementById('managerId').value;
-            const name = document.getElementById('managerName').value.trim();
-            const phone = document.getElementById('managerPhone').value.trim();
-            const password = document.getElementById('managerPassword').value;
-            const projectId = document.getElementById('managerProject').value;
-            const projectName = document.getElementById('managerProject').selectedOptions[0]?.dataset.name;
-            const status = document.getElementById('managerStatus').value;
-            
-            if (!name ||!phone ||!projectId) return alert('عبي كل الحقول');
-            
-            const email = `user${phone}@gmail.com`;
-            try {
-                if (id) {
-                    await updateDoc(doc(db, 'users', id), { name, phone, projectId, projectName, active: status === 'active' });
-                } else {
-                    if (!password) return alert('اكتب كلمة المرور');
-                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, 'users', userCred.user.uid), {
-                        name, phone, email, role: 'manager', projectId, projectName, active: true, createdAt: serverTimestamp()
-                    });
-                }
-                bootstrap.Modal.getInstance(document.getElementById('managerModal')).hide();
-            } catch(e) {
-                alert('خطأ: ' + e.message);
-            }
-        };
+    window.saveManager = async () => {
+        const id = document.getElementById('managerId').value;
+        const name = document.getElementById('managerName').value.trim();
+        const phone = document.getElementById('managerPhone').value.trim();
+        const password = document.getElementById('managerPassword').value;
+        const projectId = document.getElementById('managerProject').value;
+        const projectName = document.getElementById('managerProject').selectedOptions[0]?.dataset.name;
+        const status = document.getElementById('managerStatus').value;
 
-        window.editManager = async (id) => {
-            const docSnap = await getDoc(doc(db, 'users', id));
-            const data = docSnap.data();
-            document.getElementById('managerId').value = id;
-            document.getElementById('managerName').value = data.name;
-            document.getElementById('managerPhone').value = data.phone;
-            document.getElementById('managerPassword').value = '';
-            document.getElementById('managerStatus').value = data.active? 'active' : 'inactive';
-            
-            // تحميل المشاريع
-            const select = document.getElementById('managerProject');
-            const snap = await getDocs(collection(db, 'projects'));
-            select.innerHTML = '<option value="">اختر مشروع</option>';
-            snap.forEach(d => {
-                select.innerHTML += `<option value="${d.id}" ${d.id === data.projectId? 'selected' : ''}>${d.data().name}</option>`;
-            });
-            new bootstrap.Modal(document.getElementById('managerModal')).show();
-        };
+        if (!name ||!phone ||!projectId) return alert('عبي كل الحقول');
 
-        window.toggleManager = async (id, active) => {
-            await updateDoc(doc(db, 'users', id), { active });
-        };
-
-        window.deleteManager = async (id) => {
-            if (confirm('متأكد من حذف المدير؟')) await deleteDoc(doc(db, 'users', id));
-        };
-
-        // ===== المناديب - المدراء يضيفو =====
-        function loadDelegates() {
-            const tbody = document.getElementById('delegatesTableBody');
-            let q = query(collection(db, 'users'), where('role', '==', 'delegate'));
-            if (currentUserRole === 'manager') {
-                q = query(collection(db, 'users'), where('role', '==', 'delegate'), where('managerId', '==', currentUser.uid));
-            }
-            onSnapshot(q, (snapshot) => {
-                tbody.innerHTML = '';
-                let i = 1;
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${i++}</td>
-                            <td><strong>${data.name}</strong></td>
-                            <td>${data.phone}</td>
-                            <td>${data.managerName || '-'}</td>
-                            <td><span class="badge bg-${data.active? 'success' : 'secondary'}">${data.active? 'نشط' : 'موقوف'}</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-warning me-1" onclick="editDelegate('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-${data.active? 'secondary' : 'success'} me-1" onclick="toggleDelegate('${docSnap.id}', ${!data.active})">
-                                    <i class="bi bi-${data.active? 'pause' : 'play'}"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteDelegate('${docSnap.id}')"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>`;
-                });
-            });
-        }
-
-        document.getElementById('addDelegateBtn').onclick = () => {
-            document.getElementById('delegateForm').reset();
-            document.getElementById('delegateId').value = '';
-            new bootstrap.Modal(document.getElementById('delegateModal')).show();
-        };
-
-        window.saveDelegate = async () => {
-            const id = document.getElementById('delegateId').value;
-            const name = document.getElementById('delegateName').value.trim();
-            const phone = document.getElementById('delegatePhone').value.trim();
-            const password = document.getElementById('delegatePassword').value;
-            const status = document.getElementById('delegateStatus').value;
-            
-            if (!name ||!phone) return alert('عبي الاسم والجوال');
-            
-            const email = `user${phone}@gmail.com`;
-            try {
-                if (id) {
-                    await updateDoc(doc(db, 'users', id), { name, phone, active: status === 'active' });
-                } else {
-                    if (!password) return alert('اكتب كلمة المرور');
-                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, 'users', userCred.user.uid), {
-                        name, phone, email, role: 'delegate', managerId: currentUser.uid, managerName: currentUserData.name, active: true, createdAt: serverTimestamp()
-                    });
-                }
-                bootstrap.Modal.getInstance(document.getElementById('delegateModal')).hide();
-            } catch(e) {
-                alert('خطأ: ' + e.message);
-            }
-        };
-
-        window.editDelegate = async (id) => {
-            const docSnap = await getDoc(doc(db, 'users', id));
-            const data = docSnap.data();
-            document.getElementById('delegateId').value = id;
-            document.getElementById('delegateName').value = data.name;
-            document.getElementById('delegatePhone').value = data.phone;
-            document.getElementById('delegatePassword').value = '';
-            document.getElementById('delegateStatus').value = data.active? 'active' : 'inactive';
-            new bootstrap.Modal(document.getElementById('delegateModal')).show();
-        };
-
-        window.toggleDelegate = async (id, active) => {
-            await updateDoc(doc(db, 'users', id), { active });
-        };
-
-        window.deleteDelegate = async (id) => {
-            if (confirm('متأكد من حذف المندوب؟')) await deleteDoc(doc(db, 'users', id));
-        };
-
-        // ===== السندات =====
-        function loadBonds() {
-            const tbody = document.getElementById('bondsTableBody');
-            let q = query(collection(db, 'bonds'), orderBy('createdAt', 'desc'));
-            if (currentUserRole === 'delegate') {
-                q = query(collection(db, 'bonds'), where('delegateId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
-            } else if (currentUserRole === 'manager') {
-                q = query(collection(db, 'bonds'), where('managerId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
-            }
-            onSnapshot(q, (snapshot) => {
-                tbody.innerHTML = '';
-                let i = 1;
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${i++}</td>
-                            <td>${data.title}</td>
-                            <td>${data.amount}</td>
-                            <td>${data.delegateName}</td>
-                            <td>${data.createdAt? new Date(data.createdAt.toDate()).toLocaleDateString('ar-SA') : '-'}</td>
-                            <td>
-                                <button class="btn btn-sm btn-info me-1" onclick="showQR('${docSnap.id}')"><i class="bi bi-qr-code"></i></button>
-                                <button class="btn btn-sm btn-success me-1" onclick="shareWhatsApp('${docSnap.id}')"><i class="bi bi-whatsapp"></i></button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteBond('${docSnap.id}')"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>`;
-                });
-            });
-        }
-
-        document.getElementById('addBondBtn').onclick = () => {
-            document.getElementById('bondForm').reset();
-            document.getElementById('bondId').value = '';
-            new bootstrap.Modal(document.getElementById('bondModal')).show();
-        };
-
-        window.saveBond = async () => {
-            const id = document.getElementById('bondId').value;
-            const title = document.getElementById('bondTitle').value.trim();
-            const amount = document.getElementById('bondAmount').value.trim();
-            const details = document.getElementById('bondDetails').value.trim();
-            
-            if (!title ||!amount) return alert('عبي العنوان والمبلغ');
-            
-            const data = { title, amount, details, updatedAt: serverTimestamp() };
+        const email = `user${phone}@gmail.com`;
+        try {
             if (id) {
-                await updateDoc(doc(db, 'bonds', id), data);
+                await updateDoc(doc(db, 'users', id), { name, phone, projectId, projectName, active: status === 'active' });
             } else {
-                data.delegateId = currentUser.uid;
-                data.delegateName = currentUserData.name;
-                data.managerId = currentUserData.managerId || currentUser.uid;
-                data.createdAt = serverTimestamp();
-                await addDoc(collection(db, 'bonds'), data);
+                if (!password) return alert('اكتب كلمة المرور');
+                const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, 'users', userCred.user.uid), {
+                    name, phone, email, role: 'manager', projectId, projectName, active: true, createdAt: serverTimestamp()
+                });
             }
-            bootstrap.Modal.getInstance(document.getElementById('bondModal')).hide();
-        };
+            bootstrap.Modal.getInstance(document.getElementById('managerModal')).hide();
+        } catch(e) {
+            alert('خطأ: ' + e.message);
+        }
+    };
 
-        window.deleteBond = async (id) => {
-            if (confirm('متأكد من حذف السند؟')) await deleteDoc(doc(db, 'bonds', id));
-        };
+    window.editManager = async (id) => {
+        const docSnap = await getDoc(doc(db, 'users', id));
+        const data = docSnap.data();
+        document.getElementById('managerId').value = id;
+        document.getElementById('managerName').value = data.name;
+        document.getElementById('managerPhone').value = data.phone;
+        document.getElementById('managerPassword').value = '';
+        document.getElementById('managerStatus').value = data.active? 'active' : 'inactive';
 
-        // ===== الكيو آر + واتساب =====
-        window.showQR = (id) => {
-            const url = `${window.location.origin}/sanad.html?id=${id}`;
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '';
-            QRCode.toCanvas(url, { width: 250 }, (err, canvas) => {
-                if (err) return console.error(err);
-                qrContainer.appendChild(canvas);
+        const select = document.getElementById('managerProject');
+        const snap = await getDocs(collection(db, 'projects'));
+        select.innerHTML = '<option value="">اختر مشروع</option>';
+        snap.forEach(d => {
+            select.innerHTML += `<option value="${d.id}" ${d.id === data.projectId? 'selected' : ''}>${d.data().name}</option>`;
+        });
+        new bootstrap.Modal(document.getElementById('managerModal')).show();
+    };
+
+    window.toggleManager = async (id, active) => {
+        await updateDoc(doc(db, 'users', id), { active });
+    };
+
+    window.deleteManager = async (id) => {
+        if (confirm('متأكد من حذف المدير؟')) await deleteDoc(doc(db, 'users', id));
+    };
+
+    // ===== المناديب - المدراء يضيفو =====
+    function loadDelegates() {
+        const tbody = document.getElementById('delegatesTableBody');
+        let q = query(collection(db, 'users'), where('role', '==', 'delegate'));
+        if (currentUserRole === 'manager') {
+            q = query(collection(db, 'users'), where('role', '==', 'delegate'), where('managerId', '==', currentUser.uid));
+        }
+        onSnapshot(q, (snapshot) => {
+            tbody.innerHTML = '';
+            let i = 1;
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${i++}</td>
+                        <td><strong>${data.name}</strong></td>
+                        <td>${data.phone}</td>
+                        <td>${data.managerName || '-'}</td>
+                        <td><span class="badge bg-${data.active? 'success' : 'secondary'}">${data.active? 'نشط' : 'موقوف'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-warning me-1" onclick="editDelegate('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-${data.active? 'secondary' : 'success'} me-1" onclick="toggleDelegate('${docSnap.id}', ${!data.active})">
+                                <i class="bi bi-${data.active? 'pause' : 'play'}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteDelegate('${docSnap.id}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`;
             });
-            document.getElementById('qrLink').innerText = url;
-            document.getElementById('qrLink').dataset.id = id;
-            new bootstrap.Modal(document.getElementById('qrModal')).show();
-        };
+        });
+    }
 
-        window.downloadQR = () => {
-            const canvas = document.querySelector('#qrcode canvas');
-            if (canvas) {
-                const url = canvas.toDataURL('image/png');
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'sanad-qr.png';
-                a.click();
+    document.getElementById('addDelegateBtn').onclick = () => {
+        document.getElementById('delegateForm').reset();
+        document.getElementById('delegateId').value = '';
+        new bootstrap.Modal(document.getElementById('delegateModal')).show();
+    };
+
+    window.saveDelegate = async () => {
+        const id = document.getElementById('delegateId').value;
+        const name = document.getElementById('delegateName').value.trim();
+        const phone = document.getElementById('delegatePhone').value.trim();
+        const password = document.getElementById('delegatePassword').value;
+        const status = document.getElementById('delegateStatus').value;
+
+        if (!name ||!phone) return alert('عبي الاسم والجوال');
+
+        const email = `user${phone}@gmail.com`;
+        try {
+            if (id) {
+                await updateDoc(doc(db, 'users', id), { name, phone, active: status === 'active' });
+            } else {
+                if (!password) return alert('اكتب كلمة المرور');
+                const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, 'users', userCred.user.uid), {
+                    name, phone, email, role: 'delegate', managerId: currentUser.uid, managerName: currentUserData.name, active: true, createdAt: serverTimestamp()
+                });
             }
-        };
+            bootstrap.Modal.getInstance(document.getElementById('delegateModal')).hide();
+        } catch(e) {
+            alert('خطأ: ' + e.message);
+        }
+    };
 
-        window.shareWhatsApp = async (id) => {
-            const settings = await getDoc(doc(db, 'settings', 'app'));
-            const msg = settings.data()?.whatsappMessage || 'رابط السند:';
-            const link = `${window.location.origin}/sanad.html?id=${id}`;
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(msg + ' ' + link)}`;
-            window.open(whatsappUrl, '_blank');
-        };
+    window.editDelegate = async (id) => {
+        const docSnap = await getDoc(doc(db, 'users', id));
+        const data = docSnap.data();
+        document.getElementById('delegateId').value = id;
+        document.getElementById('delegateName').value = data.name;
+        document.getElementById('delegatePhone').value = data.phone;
+        document.getElementById('delegatePassword').value = '';
+        document.getElementById('delegateStatus').value = data.active? 'active' : 'inactive';
+        new bootstrap.Modal(document.getElementById('delegateModal')).show();
+    };
 
-        // ===== تصدير إكسل =====
-        window.exportExcel = async () => {
-            const snap = await getDocs(collection(db, 'bonds'));
-            const data = [];
+    window.toggleDelegate = async (id, active) => {
+        await updateDoc(doc(db, 'users', id), { active });
+    };
+
+    window.deleteDelegate = async (id) => {
+        if (confirm('متأكد من حذف المندوب؟')) await deleteDoc(doc(db, 'users', id));
+    };
+
+    // ===== السندات =====
+    function loadBonds() {
+        const tbody = document.getElementById('bondsTableBody');
+        let q = query(collection(db, 'bonds'), orderBy('createdAt', 'desc'));
+        if (currentUserRole === 'delegate') {
+            q = query(collection(db, 'bonds'), where('delegateId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+        } else if (currentUserRole === 'manager') {
+            q = query(collection(db, 'bonds'), where('managerId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+        }
+        onSnapshot(q, (snapshot) => {
+            tbody.innerHTML = '';
+            let i = 1;
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${i++}</td>
+                        <td>${data.title}</td>
+                        <td>${data.amount}</td>
+                        <td>${data.delegateName}</td>
+                        <td>${data.createdAt? new Date(data.createdAt.toDate()).toLocaleDateString('ar-SA') : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-1" onclick="showQR('${docSnap.id}')"><i class="bi bi-qr-code"></i></button>
+                            <button class="btn btn-sm btn-success me-1" onclick="shareWhatsApp('${docSnap.id}')"><i class="bi bi-whatsapp"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteBond('${docSnap.id}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        });
+    }
+
+    document.getElementById('addBondBtn').onclick = () => {
+        document.getElementById('bondForm').reset();
+        document.getElementById('bondId').value = '';
+        new bootstrap.Modal(document.getElementById('bondModal')).show();
+    };
+
+    window.saveBond = async () => {
+        const id = document.getElementById('bondId').value;
+        const title = document.getElementById('bondTitle').value.trim();
+        const amount = document.getElementById('bondAmount').value.trim();
+        const details = document.getElementById('bondDetails').value.trim();
+
+        if (!title ||!amount) return alert('عبي العنوان والمبلغ');
+
+        const data = { title, amount, details, updatedAt: serverTimestamp() };
+        if (id) {
+            await updateDoc(doc(db, 'bonds', id), data);
+        } else {
+            data.delegateId = currentUser.uid;
+            data.delegateName = currentUserData.name;
+            data.managerId = currentUserData.managerId || currentUser.uid;
+            data.createdAt = serverTimestamp();
+            await addDoc(collection(db, 'bonds'), data);
+        }
+        bootstrap.Modal.getInstance(document.getElementById('bondModal')).hide();
+    };
+
+    window.deleteBond = async (id) => {
+        if (confirm('متأكد من حذف السند؟')) await deleteDoc(doc(db, 'bonds', id));
+    };
+
+    // ===== الكيو آر + واتساب =====
+    window.showQR = (id) => {
+        const url = `${window.location.origin}/sanad.html?id=${id}`;
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
+        QRCode.toCanvas(url, { width: 250 }, (err, canvas) => {
+            if (err) return console.error(err);
+            qrContainer.appendChild(canvas);
+        });
+        document.getElementById('qrLink').innerText = url;
+        document.getElementById('qrLink').dataset.id = id;
+        new bootstrap.Modal(document.getElementById('qrModal')).show();
+    };
+
+    window.downloadQR = () => {
+        const canvas = document.querySelector('#qrcode canvas');
+        if (canvas) {
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sanad-qr.png';
+            a.click();
+        }
+    };
+
+    window.shareWhatsApp = async (id) => {
+        const settings = await getDoc(doc(db, 'settings', 'app'));
+        const msg = settings.data()?.whatsappMessage || 'رابط السند:';
+        const link = `${window.location.origin}/sanad.html?id=${id}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(msg + ' ' + link)}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
+    // ===== تصدير إكسل =====
+    window.exportExcel = async () => {
+        const snap = await getDocs(collection(db, 'bonds'));
+        const data = [];
+        snap.forEach(d => {
+            const b = d.data();
+            data.push({
+                'العنوان': b.title,
+                'المبلغ': b.amount,
+                'المندوب': b.delegateName,
+                'التاريخ': b.createdAt? new Date(b.createdAt.toDate()).toLocaleDateString('ar-SA') : ''
+            });
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'السندات');
+        XLSX.writeFile(wb, 'bonds.xlsx');
+    };
+
+    // ===== الإعدادات =====
+    async function loadSettings() {
+        const settingsSnap = await getDoc(doc(db, 'settings', 'app'));
+        if (settingsSnap.exists()) {
+            const s = settingsSnap.data();
+            document.getElementById('companyName').value = s.companyName || '';
+            document.getElementById('companyLogo').value = s.companyLogo || '';
+            document.getElementById('currency').value = s.currency || 'ر.س';
+            document.getElementById('taxPercent').value = s.taxPercent || '15';
+            document.getElementById('whatsappNumber').value = s.whatsappNumber || '';
+            document.getElementById('whatsappMessage').value = s.whatsappMessage || 'رابط السند:';
+        }
+    }
+
+    window.savePrintSettings = async () => {
+        await setDoc(doc(db, 'settings', 'app'), {
+            companyName: document.getElementById('companyName').value,
+            companyLogo: document.getElementById('companyLogo').value
+        }, { merge: true });
+        alert('تم الحفظ');
+    };
+
+    window.saveSystemSettings = async () => {
+        await setDoc(doc(db, 'settings', 'app'), {
+            currency: document.getElementById('currency').value,
+            taxPercent: document.getElementById('taxPercent').value
+        }, { merge: true });
+        alert('تم الحفظ');
+    };
+
+    window.saveWhatsAppSettings = async () => {
+        await setDoc(doc(db, 'settings', 'app'), {
+            whatsappNumber: document.getElementById('whatsappNumber').value,
+            whatsappMessage: document.getElementById('whatsappMessage').value
+        }, { merge: true });
+        alert('تم الحفظ');
+    };
+
+    // تحميل البيانات
+    function loadAllData() {
+        loadStats();
+        loadProjects();
+        loadManagers();
+        loadDelegates();
+        loadBonds();
+        loadSettings();
+    }
+
+    function loadStats() {
+        onSnapshot(collection(db, 'users'), (snap) => {
+            let managers = 0, delegates = 0;
             snap.forEach(d => {
-                const b = d.data();
-                data.push({
-                    'العنوان': b.title,
-                    'المبلغ': b.amount,
-                    'المندوب': b.delegateName,
-                    'التاريخ': b.createdAt? new Date(b.createdAt.toDate()).toLocaleDateString('ar-SA') : ''
-                });
+                if (d.data().role === 'manager') managers++;
+                if (d.data().role === 'delegate') delegates++;
             });
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'السندات');
-            XLSX.writeFile(wb, 'bonds.xlsx');
-        };
-
-        // ===== الإعدادات =====
-        async function loadSettings() {
-            const settingsSnap = await getDoc(doc(db, 'settings', 'app'));
-            if (settingsSnap.exists()) {
-                const s = settingsSnap.data();
-                document.getElementById('companyName').value = s.companyName || '';
-                document.getElementById('companyLogo').value = s.companyLogo || '';
-                document.getElementById('currency').value = s.currency || 'ر.س';
-                document.getElementById('taxPercent').value = s.taxPercent || '15';
-                document.getElementById('whatsappNumber').value = s.whatsappNumber || '';
-                document.getElementById('whatsappMessage').value = s.whatsappMessage || 'رابط السند:';
-            }
-        }
-
-        window.savePrintSettings = async () => {
-            await setDoc(doc(db, 'settings', 'app'), {
-                companyName: document.getElementById('companyName').value,
-                companyLogo: document.getElementById('companyLogo').value
-            }, { merge: true });
-            alert('تم الحفظ');
-        };
-
-        window.saveSystemSettings = async () => {
-            await setDoc(doc(db, 'settings', 'app'), {
-                currency: document.getElementById('currency').value,
-                taxPercent: document.getElementById('taxPercent').value
-            }, { merge: true });
-            alert('تم الحفظ');
-        };
-
-        window.saveWhatsAppSettings = async () => {
-            await setDoc(doc(db, 'settings', 'app'), {
-                whatsappNumber: document.getElementById('whatsappNumber').value,
-                whatsappMessage: document.getElementById('whatsappMessage').value
-            }, { merge: true });
-            alert('تم الحفظ');
-        };
-
-        // تحميل البيانات
-        function loadAllData() {
-            loadStats();
-            loadProjects();
-            loadManagers();
-            loadDelegates();
-            loadBonds();
-            loadSettings();
-        }
-
-        function loadStats() {
-            onSnapshot(collection(db, 'users'), (snap) => {
-                let managers = 0, delegates = 0;
-                snap.forEach(d => {
-                    if (d.data().role === 'manager') managers++;
-                    if (d.data().role === 'delegate') delegates++;
-                });
-                document.getElementById('totalManagers').textContent = managers;
-                document.getElementById('totalDelegates').textContent = delegates;
-            });
-            onSnapshot(collection(db, 'projects'), (snap) => {
-                document.getElementById('totalProjects').textContent = snap.size;
-            });
-            onSnapshot(collection(db, 'bonds'), (snap) => {
-                document.getElementById('totalBonds').textContent = snap.size;
-            });
-        }
+            document.getElementById('totalManagers').textContent = managers;
+            document.getElementById('totalDelegates').textContent = delegates;
+        });
+        onSnapshot(collection(db, 'projects'), (snap) => {
+            document.getElementById('totalProjects').textContent = snap.size;
+        });
+        onSnapshot(collection(db, 'bonds'), (snap) => {
+            document.getElementById('totalBonds').textContent = snap.size;
+        });
+    }
     </script>
 </body>
-</html>
+</html>                                  
