@@ -24,6 +24,8 @@
         .admin-badge { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); }
         .amount-negative { color: #dc2626; font-weight: bold; }
         .amount-positive { color: #16a34a; font-weight: bold; }
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-inactive { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -63,6 +65,9 @@
                         <span class="text-sm opacity-90">المشروع: <span id="projectCode">---</span></span>
                         <span id="adminBadge" class="hidden admin-badge px-2 py-1 rounded text-xs mr-2">
                             <i class="fas fa-crown"></i> مدير عام
+                        </span>
+                        <span id="superAdminBadge" class="hidden bg-yellow-500 text-black px-2 py-1 rounded text-xs mr-2">
+                            <i class="fas fa-star"></i> سوبر أدمن
                         </span>
                     </div>
                 </div>
@@ -480,93 +485,93 @@
     <div id="bondTypeModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
         <div class="bg-white rounded-xl p-6 w-full max-w-3xl mx-4 my-8">
             <h3 class="text-xl font-bold mb-4">إضافة نوع سند جديد</h3>
-            <input type="hidden" id="editBondTypeId">
-            <div class="grid md:grid-cols-2 gap-4 mb-4">
-                <input id="modal_bondTypeName" type="text" placeholder="اسم النوع: قبض / صرف" class="w-full p-3 border-2 rounded-lg">
-                <input id="modal_bondPrefix" type="text" placeholder="البادئة: QBD-" class="w-full p-3 border-2 rounded-lg">
-                <input id="modal_bondStartNumber" type="number" placeholder="رقم البداية: 1" value="1" class="w-full p-3 border-2 rounded-lg">
-                <select id="modal_bondColor" class="w-full p-3 border-2 rounded-lg">
-                               <option value="green">أخضر - قبض</option>
-                    <option value="red">أحمر - صرف</option>
-                    <option value="blue">أزرق - تحويل</option>
-                </select>
-            </div>
-            <h4 class="font-bold text-red-700 border-b pb-2 mb-3">الأثر المحاسبي - مهم</h4>
-            <div class="grid md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block font-bold text-gray-700 mb-2">الحساب المدين</label>
-                    <select id="modal_debitAccount" class="w-full p-3 border-2 rounded-lg">
-                        <option value="عهدة المندوب">عهدة المندوب</option>
-                        <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
-                        <option value="مصروفات">مصروفات</option>
-                        <option value="البنك">البنك</option>
-                        <option value="العملاء">العملاء</option>
+                            <input type="hidden" id="editBondTypeId">
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <input id="modal_bondTypeName" type="text" placeholder="اسم النوع: قبض / صرف" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_bondPrefix" type="text" placeholder="البادئة: QBD-" class="w-full p-3 border-2 rounded-lg">
+                    <input id="modal_bondStartNumber" type="number" placeholder="رقم البداية: 1" value="1" class="w-full p-3 border-2 rounded-lg">
+                    <select id="modal_bondColor" class="w-full p-3 border-2 rounded-lg">
+                        <option value="green">أخضر - قبض</option>
+                        <option value="red">أحمر - صرف</option>
+                        <option value="blue">أزرق - تحويل</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block font-bold text-gray-700 mb-2">الحساب الدائن</label>
-                    <select id="modal_creditAccount" class="w-full p-3 border-2 rounded-lg">
-                        <option value="عهدة المندوب">عهدة المندوب</option>
-                        <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
-                        <option value="الإيرادات">الإيرادات</option>
-                        <option value="البنك">البنك</option>
-                        <option value="العملاء">العملاء</option>
-                    </select>
+                <h4 class="font-bold text-red-700 border-b pb-2 mb-3">الأثر المحاسبي - مهم</h4>
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-2">الحساب المدين</label>
+                        <select id="modal_debitAccount" class="w-full p-3 border-2 rounded-lg">
+                            <option value="عهدة المندوب">عهدة المندوب</option>
+                            <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
+                            <option value="مصروفات">مصروفات</option>
+                            <option value="البنك">البنك</option>
+                            <option value="العملاء">العملاء</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-2">الحساب الدائن</label>
+                        <select id="modal_creditAccount" class="w-full p-3 border-2 rounded-lg">
+                            <option value="عهدة المندوب">عهدة المندوب</option>
+                            <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
+                            <option value="الإيرادات">الإيرادات</option>
+                            <option value="البنك">البنك</option>
+                            <option value="العملاء">العملاء</option>
+                        </select>
+                    </div>
+                </div>
+                <h4 class="font-bold text-purple-700 border-b pb-2 mb-3">الحقول الإضافية - مفتوحة بلا عدد</h4>
+                <div id="customFieldsContainer" class="space-y-2 mb-3"></div>
+                <button onclick="addCustomField()" class="w-full bg-blue-100 text-blue-700 p-2 rounded-lg font-bold mb-4">
+                    <i class="fas fa-plus"></i> إضافة حقل جديد
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="saveBondType()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">حفظ</button>
+                    <button onclick="closeModal('bondTypeModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
                 </div>
             </div>
-            <h4 class="font-bold text-purple-700 border-b pb-2 mb-3">الحقول الإضافية - مفتوحة بلا عدد</h4>
-            <div id="customFieldsContainer" class="space-y-2 mb-3"></div>
-            <button onclick="addCustomField()" class="w-full bg-blue-100 text-blue-700 p-2 rounded-lg font-bold mb-4">
-                <i class="fas fa-plus"></i> إضافة حقل جديد
-            </button>
-            <div class="flex gap-2">
-                <button onclick="saveBondType()" class="flex-1 bg-green-600 text-white p-3 rounded-lg font-bold">حفظ</button>
-                <button onclick="closeModal('bondTypeModal')" class="flex-1 bg-gray-300 p-3 rounded-lg font-bold">إلغاء</button>
-            </div>
         </div>
-    </div>
 
-    <!-- مودال إدارة المشاريع - للمدير العام فقط -->
-    <div id="adminProjectsModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
-        <div class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-8">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold"><i class="fas fa-folder-plus text-red-600"></i> إدارة المشاريع</h3>
-                <button onclick="closeModal('adminProjectsModal')" class="text-gray-500 hover:text-red-600"><i class="fas fa-times text-2xl"></i></button>
+        <!-- مودال إدارة المشاريع - للمدير العام فقط -->
+        <div id="adminProjectsModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
+            <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold"><i class="fas fa-folder-plus text-red-600"></i> إدارة المشاريع</h3>
+                    <button onclick="closeModal('adminProjectsModal')" class="text-gray-500 hover:text-red-600"><i class="fas fa-times text-2xl"></i></button>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
+                    <input id="newProjectCode" type="text" placeholder="كود المشروع: 001" class="p-3 border-2 rounded-lg">
+                    <input id="newProjectName" type="text" placeholder="اسم المشروع" class="p-3 border-2 rounded-lg">
+                    <button onclick="addNewProject()" class="bg-red-600 text-white p-3 rounded-lg font-bold">
+                        <i class="fas fa-plus"></i> إضافة مشروع جديد
+                    </button>
+                </div>
+                <h4 class="font-bold text-gray-700 mb-3">المشاريع الحالية</h4>
+                <div id="projectsList" class="space-y-2 max-h-96 overflow-y-auto"></div>
             </div>
-            <div class="grid md:grid-cols-2 gap-4 mb-6">
-                <input id="newProjectCode" type="text" placeholder="كود المشروع: 001" class="p-3 border-2 rounded-lg">
-                <input id="newProjectName" type="text" placeholder="اسم المشروع" class="w-full p-3 border-2 rounded-lg">
-            </div>
-            <button onclick="addNewProject()" class="w-full bg-red-600 text-white p-3 rounded-lg font-bold mb-6">
-                <i class="fas fa-plus"></i> إضافة مشروع جديد
-            </button>
-            <h4 class="font-bold text-gray-700 mb-3">المشاريع الحالية</h4>
-            <div id="projectsList" class="space-y-2 max-h-96 overflow-y-auto"></div>
         </div>
-    </div>
 
-    <!-- مودال إدارة المدراء - للمدير العام فقط -->
-    <div id="adminManagersModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
-        <div class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 my-8">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold"><i class="fas fa-user-shield text-red-600"></i> إدارة المدراء</h3>
-                <button onclick="closeModal('adminManagersModal')" class="text-gray-500 hover:text-red-600"><i class="fas fa-times text-2xl"></i></button>
+        <!-- مودال إدارة المدراء - للمدير العام فقط -->
+        <div id="adminManagersModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
+            <div class="bg-white rounded-xl p-6 w-full max-w-5xl mx-4 my-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold"><i class="fas fa-user-shield text-red-600"></i> إدارة المدراء</h3>
+                    <button onclick="closeModal('adminManagersModal')" class="text-gray-500 hover:text-red-600"><i class="fas fa-times text-2xl"></i></button>
+                </div>
+                <div class="grid md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
+                    <input id="newManagerName" type="text" placeholder="اسم المدير" class="p-3 border-2 rounded-lg">
+                    <input id="newManagerPhone" type="text" placeholder="جوال المدير" class="p-3 border-2 rounded-lg">
+                    <input id="newManagerPassword" type="text" placeholder="كلمة المرور" class="p-3 border-2 rounded-lg">
+                    <select id="newManagerProject" class="p-3 border-2 rounded-lg">
+                        <option value="">-- اختر المشروع --</option>
+                    </select>
+                    <button onclick="addNewManager()" class="md:col-span-4 bg-red-600 text-white p-3 rounded-lg font-bold">
+                        <i class="fas fa-plus"></i> إضافة مدير جديد
+                    </button>
+                </div>
+                <h4 class="font-bold text-gray-700 mb-3">المدراء الحاليين</h4>
+                <div id="managersList" class="space-y-2 max-h-96 overflow-y-auto"></div>
             </div>
-            <div class="grid md:grid-cols-3 gap-4 mb-6">
-                <input id="newManagerName" type="text" placeholder="اسم المدير" class="p-3 border-2 rounded-lg">
-                <input id="newManagerPhone" type="text" placeholder="جوال المدير" class="p-3 border-2 rounded-lg">
-                <input id="newManagerPassword" type="text" placeholder="كلمة المرور" class="p-3 border-2 rounded-lg">
-                <select id="newManagerProject" class="p-3 border-2 rounded-lg md:col-span-3">
-                    <option value="">-- اختر المشروع --</option>
-                </select>
-            </div>
-            <button onclick="addNewManager()" class="w-full bg-red-600 text-white p-3 rounded-lg font-bold mb-6">
-                <i class="fas fa-plus"></i> إضافة مدير جديد
-            </button>
-            <h4 class="font-bold text-gray-700 mb-3">المدراء الحاليين</h4>
-            <div id="managersList" class="space-y-2 max-h-96 overflow-y-auto"></div>
         </div>
-    </div>
 
 <script>
     const firebaseConfig = {
@@ -589,6 +594,7 @@
     let allBondTypes = [];
     let allPaymentMethods = [];
     let allProjects = [];
+    let unsubscribeProjects = null;
 
     // تسجيل الدخول
     window.doLogin = async () => {
@@ -604,9 +610,9 @@
 
         try {
             const snap = await db.collection('managers')
-              .where('phone', '==', username)
-              .where('password', '==', password)
-              .get();
+             .where('phone', '==', username)
+             .where('password', '==', password)
+             .get();
 
             if(snap.empty) {
                 Swal.fire('خطأ', 'اسم المستخدم أو كلمة المرور غلط', 'error');
@@ -655,9 +661,13 @@
             document.getElementById('companyName').textContent = currentManager.projectName || 'لوحة تحكم المدير';
             document.getElementById('managerName').textContent = currentManager.name || '---';
 
+            // المدير العام + السوبر أدمن
             if (currentManager.role === 'admin') {
                 document.getElementById('adminPanel').classList.remove('hidden');
                 document.getElementById('adminBadge').classList.remove('hidden');
+                if(currentManager.isSuper) {
+                    document.getElementById('superAdminBadge').classList.remove('hidden');
+                }
                 await loadAllProjects();
             }
 
@@ -687,12 +697,17 @@
     }
 
     async function loadAllProjects() {
-        const snap = await db.collection('projects').get();
-        allProjects = snap.docs.map(d => ({id: d.id,...d.data()}));
         const select = document.getElementById('newManagerProject');
         select.innerHTML = '<option value="">-- اختر المشروع --</option>';
-        allProjects.forEach(p => {
-            select.innerHTML += `<option value="${p.code}">${p.code} - ${p.name}</option>`;
+        
+        // نستخدم onSnapshot عشان تتحدث لحظياً
+        if(unsubscribeProjects) unsubscribeProjects();
+        unsubscribeProjects = db.collection('projects').onSnapshot(snap => {
+            allProjects = snap.docs.map(d => ({id: d.id,...d.data()}));
+            select.innerHTML = '<option value="">-- اختر المشروع --</option>';
+            allProjects.forEach(p => {
+                select.innerHTML += `<option value="${p.code}">${p.code} - ${p.name}</option>`;
+            });
         });
     }
 
@@ -707,6 +722,12 @@
         if(tab === 'bonds') loadBondTypes();
         if(tab === 'reports') loadReports();
         if(tab === 'bondEntry') loadBondEntryDropdowns();
+    }
+
+    window.logout = () => {
+        localStorage.clear();
+        auth.signOut();
+        location.reload();
     }
 
     window.loadDashboard = async () => {
@@ -1085,7 +1106,7 @@
     window.saveBox = async () => {
         const name = document.getElementById('modal_boxName').value.trim();
         if(!name) return Swal.fire('خطأ', 'اكتب اسم الصندوق', 'error');
-        await db.collection('boxes').add({ name, projectCode, createdAt: new Date() });
+                await db.collection('boxes').add({ name, projectCode, createdAt: new Date() });
         closeModal('boxModal');
         loadPaymentsAndBoxes();
     }
@@ -1132,7 +1153,7 @@
         if(doc.exists) {
             const d = doc.data();
             document.getElementById('print_headerColor').value = d.headerColor || '#10b981';
-                        document.getElementById('print_logoPosition').value = d.logoPosition || 'right';
+            document.getElementById('print_logoPosition').value = d.logoPosition || 'right';
             document.getElementById('print_showTax').checked = d.showTax!== false;
             document.getElementById('print_showAddress').checked = d.showAddress!== false;
             document.getElementById('print_showStamp').checked = d.showStamp!== false;
@@ -1300,12 +1321,6 @@
         document.getElementById(id).classList.remove('flex');
     }
 
-    window.logout = () => {
-        localStorage.clear();
-        auth.signOut();
-        location.reload();
-    }
-
     window.toggleLanguage = () => {
         Swal.fire('قريباً', 'تغيير اللغة تحت التطوير', 'info');
     }
@@ -1357,18 +1372,8 @@
                 <input id="swal-project-code" class="swal2-input" placeholder="كود المشروع الجديد">
                 <input id="swal-project-name" class="swal2-input" placeholder="اسم المشروع">
             `,
-            didOpen: async () => {
-                const list = document.getElementById('projectsList');
-                const snap = await db.collection('projects').get();
-                list.innerHTML = '';
-                snap.forEach(doc => {
-                    const p = doc.data();
-                    list.innerHTML += `
-                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded mb-2">
-                            <span><b>${p.code}</b> - ${p.name}</span>
-                            <button onclick="deleteProject('${doc.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
-                        </div>`;
-                });
+            didOpen: () => {
+                loadProjectsList();
             },
             confirmButtonText: 'إضافة مشروع',
             showCancelButton: true,
@@ -1385,27 +1390,123 @@
             await db.collection('projects').add({
                 code: formValues.code.trim(),
                 name: formValues.name.trim(),
-                createdAt: new Date()
+                status: 'active',
+                createdAt: new Date(),
+                createdBy: currentManager.name
             });
             Swal.fire('تم', 'تم إضافة المشروع', 'success');
             showAdminProjectsModal();
         }
     }
 
+    async function loadProjectsList() {
+        const list = document.getElementById('projectsList');
+        list.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+        
+        const snap = await db.collection('projects').orderBy('createdAt', 'desc').get();
+        list.innerHTML = '';
+        
+        if(snap.empty) {
+            list.innerHTML = '<div class="text-center text-gray-400 p-4">لا توجد مشاريع</div>';
+            return;
+        }
+
+        snap.forEach(doc => {
+            const p = doc.data();
+            const isActive = p.status === 'active';
+            const statusClass = isActive ? 'status-active' : 'status-inactive';
+            const statusText = isActive ? 'نشط' : 'متوقف';
+            
+            // المدير العام الأساسي ما يقدر يحذف نفسه
+            const canDelete = !p.isSystem || currentManager.isSuper;
+            
+            list.innerHTML += `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg mb-2 border">
+                    <div class="flex-1">
+                        <div class="font-bold text-lg">${p.name}</div>
+                        <div class="text-sm text-gray-600">
+                            كود: <b>${p.code}</b> | 
+                            <span class="px-2 py-1 rounded text-xs ${statusClass}">${statusText}</span>
+                            ${p.isSystem ? '<span class="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs mr-2"><i class="fas fa-star"></i> أساسي</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${isActive ? 
+                            `<button onclick="toggleProjectStatus('${doc.id}', 'inactive')" class="bg-orange-500 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-pause"></i> إيقاف
+                            </button>` :
+                            `<button onclick="toggleProjectStatus('${doc.id}', 'active')" class="bg-green-500 text-white px-3 py-2 rounded text-sm">
+                                <i class="fas fa-play"></i> تنشيط
+                            </button>`
+                        }
+                        ${canDelete ? `
+                        <button onclick="deleteProject('${doc.id}')" class="bg-red-500 text-white px-3 py-2 rounded text-sm">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>` : ''}
+                    </div>
+                </div>`;
+        });
+    }
+
+    window.toggleProjectStatus = async (id, newStatus) => {
+        await db.collection('projects').doc(id).update({ 
+            status: newStatus,
+            updatedAt: new Date(),
+            updatedBy: currentManager.name
+        });
+        loadProjectsList();
+        Swal.fire('تم', newStatus === 'active' ? 'تم تنشيط المشروع' : 'تم إيقاف المشروع', 'success');
+    }
+
     window.deleteProject = async (id) => {
-        await db.collection('projects').doc(id).delete();
-        showAdminProjectsModal();
+        const confirm = await Swal.fire({
+            title: 'متأكد؟',
+            text: "حذف المشروع نهائي ولا يمكن التراجع! كل البيانات المرتبطة بتروح",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'نعم، احذف',
+            cancelButtonText: 'إلغاء',
+            confirmButtonColor: '#dc2626'
+        });
+        
+        if (confirm.isConfirmed) {
+            await db.collection('projects').doc(id).delete();
+            loadProjectsList();
+            Swal.fire('تم الحذف', '', 'success');
+        }
+    }
+
+    window.addNewProject = async () => {
+        const code = document.getElementById('newProjectCode').value.trim();
+        const name = document.getElementById('newProjectName').value.trim();
+        
+        if(!code || !name) {
+            return Swal.fire('خطأ', 'املأ كود واسم المشروع', 'error');
+        }
+
+        // تحقق من عدم تكرار الكود
+        const exists = await db.collection('projects').where('code', '==', code).get();
+        if(!exists.empty) {
+            return Swal.fire('خطأ', 'كود المشروع موجود مسبقاً', 'error');
+        }
+
+        await db.collection('projects').add({
+            code: code,
+            name: name,
+            status: 'active',
+            createdAt: new Date(),
+            createdBy: currentManager.name,
+            isSystem: false
+        });
+        
+        document.getElementById('newProjectCode').value = '';
+        document.getElementById('newProjectName').value = '';
+        loadProjectsList();
+        Swal.fire('تم', 'تم إضافة المشروع بنجاح', 'success');
     }
 
     // === إدارة المدراء - المدير العام ===
     window.showAdminManagersModal = async () => {
-        const projectsSnap = await db.collection('projects').get();
-        let projectsOptions = '';
-        projectsSnap.forEach(doc => {
-            const p = doc.data();
-            projectsOptions += `<option value="${p.code}">${p.code} - ${p.name}</option>`;
-        });
-
         const { value: formValues } = await Swal.fire({
             title: 'إدارة المدراء',
             html: `
@@ -1416,25 +1517,23 @@
                 <input id="swal-manager-password" class="swal2-input" placeholder="كلمة المرور">
                 <select id="swal-manager-project" class="swal2-select">
                     <option value="">اختر المشروع</option>
-                    ${projectsOptions}
                 </select>
             `,
             didOpen: async () => {
-                const list = document.getElementById('managersList');
-                const snap = await db.collection('managers').get();
-                list.innerHTML = '';
-                snap.forEach(doc => {
-                    const m = doc.data();
-                    list.innerHTML += `
-                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded mb-2">
-                            <span><b>${m.name}</b> - ${m.phone} - ${m.projectCode} ${m.role === 'admin' ? '<i class="fas fa-crown text-red-500"></i>' : ''}</span>
-                            <button onclick="deleteManager('${doc.id}')" class="text-red-500"><i class="fas fa-trash"></i></button>
-                        </div>`;
+                // تحميل المشاريع في الـ select
+                const projectsSnap = await db.collection('projects').where('status', '==', 'active').get();
+                const select = document.getElementById('swal-manager-project');
+                projectsSnap.forEach(doc => {
+                    const p = doc.data();
+                    select.innerHTML += `<option value="${p.code}">${p.code} - ${p.name}</option>`;
                 });
+                
+                loadManagersList();
             },
             confirmButtonText: 'إضافة مدير',
             showCancelButton: true,
             cancelButtonText: 'إغلاق',
+            width: '700px',
             preConfirm: () => {
                 return {
                     name: document.getElementById('swal-manager-name').value,
@@ -1452,17 +1551,120 @@
                 password: formValues.password.trim(),
                 projectCode: formValues.projectCode,
                 role: 'manager',
-                createdAt: new Date()
+                isSuper: false,
+                createdAt: new Date(),
+                createdBy: currentManager.name
             });
             Swal.fire('تم', 'تم إضافة المدير', 'success');
             showAdminManagersModal();
         }
     }
 
-    window.deleteManager = async (id) => {
-        await db.collection('managers').doc(id).delete();
-        showAdminManagersModal();
+    async function loadManagersList() {
+        const list = document.getElementById('managersList');
+        list.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>';
+        
+        const snap = await db.collection('managers').orderBy('createdAt', 'desc').get();
+        list.innerHTML = '';
+        
+        if(snap.empty) {
+            list.innerHTML = '<div class="text-center text-gray-400 p-4">لا يوجد مدراء</div>';
+            return;
+        }
+
+        snap.forEach(doc => {
+            const m = doc.data();
+            const isSuperAdmin = m.isSuper === true;
+            const canDelete = !isSuperAdmin || currentManager.isSuper;
+            
+            list.innerHTML += `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg mb-2 border">
+                    <div class="flex-1">
+                        <div class="font-bold">
+                            ${m.name}
+                            ${m.role === 'admin' ? '<i class="fas fa-crown text-red-500 mr-1"></i>' : ''}
+                            ${isSuperAdmin ? '<i class="fas fa-star text-yellow-500 mr-1"></i>' : ''}
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <i class="fas fa-phone"></i> ${m.phone} | 
+                            <i class="fas fa-folder"></i> ${m.projectCode}
+                            ${m.projectName ? ' - ' + m.projectName : ''}
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${canDelete ? `
+                        <button onclick="deleteManager('${doc.id}')" class="bg-red-500 text-white px-3 py-2 rounded text-sm">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>` : `
+                        <span class="text-gray-400 text-sm px-3 py-2">
+                            <i class="fas fa-lock"></i> محمي
+                        </span>`}
+                    </div>
+                </div>`;
+        });
     }
+
+    window.deleteManager = async (id) => {
+        const doc = await db.collection('managers').doc(id).get();
+        const manager = doc.data();
+        
+        if(manager.isSuper && !currentManager.isSuper) {
+            return Swal.fire('مرفوض', 'لا يمكن حذف السوبر أدمن', 'error');
+        }
+
+        const confirm = await Swal.fire({
+            title: 'متأكد؟',
+            text: `حذف المدير ${manager.name} نهائياً؟`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'نعم، احذف',
+            cancelButtonText: 'إلغاء',
+            confirmButtonColor: '#dc2626'
+        });
+        
+        if (confirm.isConfirmed) {
+            await db.collection('managers').doc(id).delete();
+            loadManagersList();
+            Swal.fire('تم الحذف', '', 'success');
+        }
+    }
+
+    window.addNewManager = async () => {
+        const name = document.getElementById('newManagerName').value.trim();
+        const phone = document.getElementById('newManagerPhone').value.trim();
+        const password = document.getElementById('newManagerPassword').value.trim();
+        const projectCode = document.getElementById('newManagerProject').value;
+        
+        if(!name || !phone || !password || !projectCode) {
+            return Swal.fire('خطأ', 'املأ كل البيانات', 'error');
+        }
+
+        // تحقق من عدم تكرار رقم الجوال
+        const exists = await db.collection('managers').where('phone', '==', phone).get();
+        if(!exists.empty) {
+            return Swal.fire('خطأ', 'رقم الجوال مسجل مسبقاً', 'error');
+        }
+
+        await db.collection('managers').add({
+            name: name,
+            phone: phone,
+            password: password,
+            projectCode: projectCode,
+            role: 'manager',
+            isSuper: false,
+            createdAt: new Date(),
+            createdBy: currentManager.name
+        });
+        
+        document.getElementById('newManagerName').value = '';
+        document.getElementById('newManagerPhone').value = '';
+        document.getElementById('newManagerPassword').value = '';
+        document.getElementById('newManagerProject').value = '';
+        
+        loadManagersList();
+        Swal.fire('تم', 'تم إضافة المدير بنجاح', 'success');
+    }
+
 </script>
 </body>
-</html> 
+</html>
