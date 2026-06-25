@@ -181,6 +181,85 @@
             const roles = { superadmin: 'سوبر أدمن', manager: 'مدير', delegate: 'مندوب' };
             return roles[role] || role;
         }
+           // ===== التبويبات + المشاريع =====
+        function addTabsAndProjects() {
+            const container = document.querySelector('.container-fluid.mt-4');
+            container.innerHTML += `
+                <ul class="nav nav-tabs mt-4" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button"><i class="bi bi-folder-fill"></i> المشاريع</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="mainTabContent">
+                    <div class="tab-pane fade show active" id="projects" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="bi bi-folder"></i> المشاريع</h5>
+                            <button class="btn btn-primary" id="addProjectBtn"><i class="bi bi-plus-circle"></i> إضافة مشروع</button>
+                        </div>
+                        <div class="table-responsive bg-white p-3 rounded">
+                            <table class="table table-hover">
+                                <thead><tr><th>#</th><th>اسم المشروع</th><th>المدير</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                                <tbody id="projectsTableBody"><tr><td colspan="5" class="text-center text-muted py-4">لا توجد مشاريع</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (isSuperAdmin) document.getElementById('addProjectBtn').style.display = 'inline-block';
+            else document.getElementById('addProjectBtn').style.display = 'none';
+            
+            loadProjects();
+        }
+
+        function loadProjects() {
+            const tbody = document.getElementById('projectsTableBody');
+            onSnapshot(query(collection(db, 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
+                tbody.innerHTML = '';
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">لا توجد مشاريع</td></tr>';
+                    document.getElementById('totalProjects').textContent = 0;
+                    return;
+                }
+                let i = 1;
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${i++}</td>
+                            <td><strong>${data.name}</strong></td>
+                            <td>${data.managerName || '-'}</td>
+                            <td><span class="badge bg-${data.active? 'success' : 'secondary'}">${data.active? 'نشط' : 'موقوف'}</span></td>
+                            <td>-</td>
+                        </tr>`;
+                });
+                document.getElementById('totalProjects').textContent = snapshot.size;
+            });
+        }
+
+        // شغل التبويبات بعد تسجيل الدخول
+        const oldOnAuthStateChanged = onAuthStateChanged;
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                    isSuperAdmin = currentUserData.role === 'superadmin';
+                    document.getElementById('userName').textContent = currentUserData.name;
+                    document.getElementById('userRole').textContent = getRoleText(currentUserData.role);
+                    addTabsAndProjects();
+                }
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+            } else {
+                document.getElementById('loginSection').style.display = 'flex';
+                document.getElementById('dashboardSection').style.display = 'none';
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
+        });
+
     </script>
 </body>
+</html>
 </html>
