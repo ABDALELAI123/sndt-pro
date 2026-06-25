@@ -25,7 +25,7 @@
         .stat-label { color: #718096; font-size: 0.95rem; }
         .nav-tabs { border-bottom: 2px solid #e2e8f0; margin-bottom: 25px; }
         .nav-tabs .nav-link { color: #718096; font-weight: 600; border: none; padding: 12px 25px; }
-        .nav-tabs .nav-link.active { color: #667eea; background: none; border: none; border-bottom: 3px solid #667eea; }
+        .nav-tabs .nav-link.active { color: #667eea; background: none; border-bottom: 3px solid #667eea; }
         .tab-content { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .table thead th { background: #f7fafc; color: #2d3748; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding: 15px; }
         .table tbody td { padding: 15px; vertical-align: middle; }
@@ -485,29 +485,29 @@
                                 ${canEdit? `
                                 <button class="btn btn-sm btn-warning me-1" onclick="editManager('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-sm btn-${data.active? 'secondary' : 'success'} me-1" onclick="toggleManager('${docSnap.id}', ${!data.active})">
-                              <i class="bi bi-${data.active? 'pause' : 'play'}"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')"><i class="bi bi-trash"></i></button>
-                        ` : '-'}
-                    </td>
-                </tr>`;
+                                    <i class="bi bi-${data.active? 'pause' : 'play'}"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')"><i class="bi bi-trash"></i></button>
+                                ` : '-'}
+                            </td>
+                        </tr>`;
+                });
             });
-        });
-    }
+        }
 
-    document.getElementById('addManagerBtn').onclick = async () => {
-        const select = document.getElementById('managerProject');
-        const snap = await getDocs(collection(db, 'projects'));
-        select.innerHTML = '<option value="">اختر مشروع</option>';
-        snap.forEach(d => {
-            select.innerHTML += `<option value="${d.id}" data-name="${d.data().name}">${d.data().name}</option>`;
-        });
-        document.getElementById('managerForm').reset();
-        document.getElementById('managerId').value = '';
-        new bootstrap.Modal(document.getElementById('managerModal')).show();
-    };
+        document.getElementById('addManagerBtn').onclick = async () => {
+            const select = document.getElementById('managerProject');
+            const snap = await getDocs(collection(db, 'projects'));
+            select.innerHTML = '<option value="">اختر مشروع</option>';
+            snap.forEach(d => {
+                select.innerHTML += `<option value="${d.id}" data-name="${d.data().name}">${d.data().name}</option>`;
+            });
+            document.getElementById('managerForm').reset();
+            document.getElementById('managerId').value = '';
+            new bootstrap.Modal(document.getElementById('managerModal')).show();
+        };
 
-    window.saveManager = async () => {
+          window.saveManager = async () => {
         const id = document.getElementById('managerId').value;
         const name = document.getElementById('managerName').value.trim();
         const phone = document.getElementById('managerPhone').value.trim();
@@ -561,6 +561,7 @@
         if (confirm('متأكد من حذف المدير؟')) await deleteDoc(doc(db, 'users', id));
     };
 
+    // ===== المناديب =====
     function loadDelegates() {
         const tbody = document.getElementById('delegatesTableBody');
         let q = query(collection(db, 'users'), where('role', '==', 'delegate'));
@@ -642,7 +643,7 @@
         if (confirm('متأكد من حذف المندوب؟')) await deleteDoc(doc(db, 'users', id));
     };
 
-
+    // ===== السندات =====
     function loadBonds() {
         const tbody = document.getElementById('bondsTableBody');
         let q = query(collection(db, 'bonds'), orderBy('createdAt', 'desc'));
@@ -704,7 +705,7 @@
         if (confirm('متأكد من حذف السند؟')) await deleteDoc(doc(db, 'bonds', id));
     };
 
-    
+    // ===== الكيو آر + واتساب =====
     window.showQR = (id) => {
         const url = `${window.location.origin}/sanad.html?id=${id}`;
         const qrContainer = document.getElementById('qrcode');
@@ -737,7 +738,7 @@
         window.open(whatsappUrl, '_blank');
     };
 
-
+    // ===== تصدير إكسل =====
     window.exportExcel = async () => {
         const snap = await getDocs(collection(db, 'bonds'));
         const data = [];
@@ -756,7 +757,7 @@
         XLSX.writeFile(wb, 'bonds.xlsx');
     };
 
-
+    // ===== الإعدادات =====
     async function loadSettings() {
         const settingsSnap = await getDoc(doc(db, 'settings', 'app'));
         if (settingsSnap.exists()) {
@@ -794,7 +795,7 @@
         alert('تم الحفظ');
     };
 
-
+    // تحميل البيانات
     function loadAllData() {
         loadStats();
         loadProjects();
@@ -823,4 +824,4 @@
     }
     </script>
 </body>
-</html>
+</html> 
