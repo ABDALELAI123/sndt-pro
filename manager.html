@@ -258,7 +258,7 @@
                         </div>
                         <div id="paymentsList" class="space-y-2"></div>
                     </div>
-                    <div class="bg-white rounded-xl shadow-lg p-6">
+                                        <div class="bg-white rounded-xl shadow-lg p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-bold text-gray-800">
                                 <i class="fas fa-box text-green-600"></i> الصناديق
@@ -485,41 +485,41 @@
     <div id="bondTypeModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
         <div class="bg-white rounded-xl p-6 w-full max-w-3xl mx-4 my-8">
             <h3 class="text-xl font-bold mb-4">إضافة نوع سند جديد</h3>
-                            <input type="hidden" id="editBondTypeId">
-                <div class="grid md:grid-cols-2 gap-4 mb-4">
-                    <input id="modal_bondTypeName" type="text" placeholder="اسم النوع: قبض / صرف" class="w-full p-3 border-2 rounded-lg">
-                    <input id="modal_bondPrefix" type="text" placeholder="البادئة: QBD-" class="w-full p-3 border-2 rounded-lg">
-                    <input id="modal_bondStartNumber" type="number" placeholder="رقم البداية: 1" value="1" class="w-full p-3 border-2 rounded-lg">
-                    <select id="modal_bondColor" class="w-full p-3 border-2 rounded-lg">
-                        <option value="green">أخضر - قبض</option>
-                        <option value="red">أحمر - صرف</option>
-                        <option value="blue">أزرق - تحويل</option>
+            <input type="hidden" id="editBondTypeId">
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <input id="modal_bondTypeName" type="text" placeholder="اسم النوع: قبض / صرف" class="w-full p-3 border-2 rounded-lg">
+                <input id="modal_bondPrefix" type="text" placeholder="البادئة: QBD-" class="w-full p-3 border-2 rounded-lg">
+                <input id="modal_bondStartNumber" type="number" placeholder="رقم البداية: 1" value="1" class="w-full p-3 border-2 rounded-lg">
+                <select id="modal_bondColor" class="w-full p-3 border-2 rounded-lg">
+                    <option value="green">أخضر - قبض</option>
+                    <option value="red">أحمر - صرف</option>
+                    <option value="blue">أزرق - تحويل</option>
+                </select>
+            </div>
+            <h4 class="font-bold text-red-700 border-b pb-2 mb-3">الأثر المحاسبي - مهم</h4>
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block font-bold text-gray-700 mb-2">الحساب المدين</label>
+                    <select id="modal_debitAccount" class="w-full p-3 border-2 rounded-lg">
+                        <option value="عهدة المندوب">عهدة المندوب</option>
+                        <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
+                        <option value="مصروفات">مصروفات</option>
+                        <option value="البنك">البنك</option>
+                        <option value="العملاء">العملاء</option>
                     </select>
                 </div>
-                <h4 class="font-bold text-red-700 border-b pb-2 mb-3">الأثر المحاسبي - مهم</h4>
-                <div class="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block font-bold text-gray-700 mb-2">الحساب المدين</label>
-                        <select id="modal_debitAccount" class="w-full p-3 border-2 rounded-lg">
-                            <option value="عهدة المندوب">عهدة المندوب</option>
-                            <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
-                            <option value="مصروفات">مصروفات</option>
-                            <option value="البنك">البنك</option>
-                            <option value="العملاء">العملاء</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-bold text-gray-700 mb-2">الحساب الدائن</label>
-                        <select id="modal_creditAccount" class="w-full p-3 border-2 rounded-lg">
-                            <option value="عهدة المندوب">عهدة المندوب</option>
-                            <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
-                            <option value="الإيرادات">الإيرادات</option>
-                            <option value="البنك">البنك</option>
-                            <option value="العملاء">العملاء</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="block font-bold text-gray-700 mb-2">الحساب الدائن</label>
+                    <select id="modal_creditAccount" class="w-full p-3 border-2 rounded-lg">
+                        <option value="عهدة المندوب">عهدة المندوب</option>
+                        <option value="الصندوق الرئيسي">الصندوق الرئيسي</option>
+                        <option value="الإيرادات">الإيرادات</option>
+                        <option value="البنك">البنك</option>
+                        <option value="العملاء">العملاء</option>
+                    </select>
                 </div>
-                <h4 class="font-bold text-purple-700 border-b pb-2 mb-3">الحقول الإضافية - مفتوحة بلا عدد</h4>
+            </div>
+                            <h4 class="font-bold text-purple-700 border-b pb-2 mb-3">الحقول الإضافية - مفتوحة بلا عدد</h4>
                 <div id="customFieldsContainer" class="space-y-2 mb-3"></div>
                 <button onclick="addCustomField()" class="w-full bg-blue-100 text-blue-700 p-2 rounded-lg font-bold mb-4">
                     <i class="fas fa-plus"></i> إضافة حقل جديد
@@ -596,7 +596,7 @@
     let allProjects = [];
     let unsubscribeProjects = null;
 
-    // تسجيل الدخول
+    // تسجيل الدخول - التعديل الوحيد هنا
     window.doLogin = async () => {
         const username = document.getElementById('login_username').value.trim();
         const password = document.getElementById('login_password').value.trim();
@@ -610,22 +610,27 @@
 
         try {
             const snap = await db.collection('managers')
-             .where('phone', '==', username)
-             .where('password', '==', password)
-             .get();
+            .where('phone', '==', username)
+            .where('password', '==', password)
+            .get();
 
             if(snap.empty) {
                 Swal.fire('خطأ', 'اسم المستخدم أو كلمة المرور غلط', 'error');
+                document.getElementById('loginBtn').disabled = false;
+                document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول';
                 return;
             }
 
+            // نجح الدخول - نسوي دخول مخفي لـ Firebase عشان قواعد الكتابة
+            await auth.signInAnonymously();
+            
             const doc = snap.docs[0];
             const managerData = {id: doc.id,...doc.data()};
             localStorage.setItem('currentManager', JSON.stringify(managerData));
             location.reload();
         } catch (error) {
+            console.error(error);
             Swal.fire('خطأ', 'فشل تسجيل الدخول', 'error');
-        } finally {
             document.getElementById('loginBtn').disabled = false;
             document.getElementById('loginBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول';
         }
@@ -700,7 +705,6 @@
         const select = document.getElementById('newManagerProject');
         select.innerHTML = '<option value="">-- اختر المشروع --</option>';
         
-        // نستخدم onSnapshot عشان تتحدث لحظياً
         if(unsubscribeProjects) unsubscribeProjects();
         unsubscribeProjects = db.collection('projects').onSnapshot(snap => {
             allProjects = snap.docs.map(d => ({id: d.id,...d.data()}));
@@ -1106,7 +1110,7 @@
     window.saveBox = async () => {
         const name = document.getElementById('modal_boxName').value.trim();
         if(!name) return Swal.fire('خطأ', 'اكتب اسم الصندوق', 'error');
-                await db.collection('boxes').add({ name, projectCode, createdAt: new Date() });
+        await db.collection('boxes').add({ name, projectCode, createdAt: new Date() });
         closeModal('boxModal');
         loadPaymentsAndBoxes();
     }
@@ -1301,13 +1305,13 @@
                     <td class="p-3">${d.delegateName || '---'}</td>
                     <td class="p-3">${d.type || '---'}</td>
                     <td class="p-3 font-bold ${amountClass}">${sign}${d.amount || 0}</td>
-                    <td class="p-3">${d.status || 'غير محدد'}</td>
-                    <td class="p-3">
-                        <button onclick="viewBond('${docSnap.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-sm">
+                  <td class="p-3">${d.status || 'غير محدد'}</td>
+<td class="p-3">
+                           <button onclick="viewBond('${docSnap.id}')" class="bg-blue-500 text-white px-2 py-1 rounded text-sm">
                             <i class="fas fa-eye"></i>
                         </button>
                     </td>
-                </tr>
+                </tr> 
             `;
         });
     }
@@ -1417,7 +1421,6 @@
             const statusClass = isActive ? 'status-active' : 'status-inactive';
             const statusText = isActive ? 'نشط' : 'متوقف';
             
-            // المدير العام الأساسي ما يقدر يحذف نفسه
             const canDelete = !p.isSystem || currentManager.isSuper;
             
             list.innerHTML += `
@@ -1484,7 +1487,6 @@
             return Swal.fire('خطأ', 'املأ كود واسم المشروع', 'error');
         }
 
-        // تحقق من عدم تكرار الكود
         const exists = await db.collection('projects').where('code', '==', code).get();
         if(!exists.empty) {
             return Swal.fire('خطأ', 'كود المشروع موجود مسبقاً', 'error');
@@ -1520,7 +1522,6 @@
                 </select>
             `,
             didOpen: async () => {
-                // تحميل المشاريع في الـ select
                 const projectsSnap = await db.collection('projects').where('status', '==', 'active').get();
                 const select = document.getElementById('swal-manager-project');
                 projectsSnap.forEach(doc => {
@@ -1639,7 +1640,6 @@
             return Swal.fire('خطأ', 'املأ كل البيانات', 'error');
         }
 
-        // تحقق من عدم تكرار رقم الجوال
         const exists = await db.collection('managers').where('phone', '==', phone).get();
         if(!exists.empty) {
             return Swal.fire('خطأ', 'رقم الجوال مسجل مسبقاً', 'error');
@@ -1667,4 +1667,4 @@
 
 </script>
 </body>
-</html>
+</html> 
