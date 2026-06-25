@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة تحكم المدير - سندات برو</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body {
@@ -15,18 +16,18 @@
       background: white; padding: 40px; border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 90%; max-width: 450px;
     }
-    .dashboard { max-width: 900px; display: none; }
+    .dashboard { max-width: 1000px; display: none; }
     h2 { color: #667eea; text-align: center; margin-bottom: 30px; }
     .error {
       background: #fee; color: #c33; padding: 12px; border-radius: 8px;
       margin-bottom: 20px; text-align: center; display: none;
     }
     label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
-    input {
+    input, textarea {
       width: 100%; padding: 12px; border: 2px solid #e0e0e0;
       border-radius: 8px; margin-bottom: 20px; font-size: 16px;
     }
-    input:focus { outline: none; border-color: #667eea; }
+    input:focus, textarea:focus { outline: none; border-color: #667eea; }
     button {
       width: 100%; padding: 14px; background: #667eea; color: white;
       border: none; border-radius: 8px; font-size: 18px; font-weight: bold;
@@ -39,10 +40,20 @@
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { padding: 12px; text-align: right; border-bottom: 1px solid #eee; }
     th { background: #f8f9fa; color: #667eea; }
-    .delete-btn { background: #e74c3c; padding: 6px 12px; font-size: 14px; width: auto; }
+    .btn-small { background: #27ae60; padding: 6px 12px; font-size: 14px; width: auto; margin: 0 4px; }
+    .delete-btn { background: #e74c3c; }
     .delete-btn:hover { background: #c0392b; }
     .add-form { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-    .add-form input { margin-bottom: 10px; }
+    .add-form input, .add-form textarea { margin-bottom: 10px; }
+    .modal {
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px;
+    }
+    .modal-content canvas { margin: 20px 0; }
+    .close-modal { background: #95a5a6; width: auto; padding: 10px 30px; }
   </style>
 </head>
 <body>
@@ -59,13 +70,14 @@
   </div>
   <div class="dashboard" id="dashboard">
     <div class="header">
-      <h2>لوحة التحكم</h2>
+      <h2>لوحة التحكم - سندات برو</h2>
       <button class="logout" id="logoutBtn">تسجيل خروج</button>
     </div>
     <div class="add-form">
       <h3>إضافة سند جديد</h3>
-      <input type="text" id="sanadTitle">
-      <input type="text" id="sanadAmount">
+      <input type="text" id="sanadTitle" placeholder="عنوان السند">
+      <input type="text" id="sanadAmount" placeholder="المبلغ">
+      <textarea id="sanadDetails" rows="3" placeholder="تفاصيل السند"></textarea>
       <button id="addSanadBtn">إضافة سند</button>
     </div>
     <h3>قائمة السندات</h3>
@@ -75,30 +87,43 @@
           <th>العنوان</th>
           <th>المبلغ</th>
           <th>التاريخ</th>
+          <th>الكيو آر</th>
           <th>حذف</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
+  <div class="modal" id="qrModal">
+    <div class="modal-content">
+      <h3>رمز QR للسند</h3>
+      <div id="qrcode"></div>
+      <p id="qrLink" style="word-break: break-all; font-size: 12px; color: #666;"></p>
+      <button class="close-modal" onclick="closeQRModal()">إغلاق</button>
+    </div>
+  </div>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    
+    // ⚠️ حط مفاتيحك الأصلية هنا من Firebase Console → Project Settings
     const firebaseConfig = {
-      apiKey: "AIzaSyCjvjjJ4rW0X2D0E4BqJ9Q7k5m1n3p6r8s",
-      authDomain: "sanadat-pro.firebaseapp.com",
+      apiKey: "حط_الـ_apiKey_حقك_هنا",
+      authDomain: "حط_الـ_authDomain_حقك_هنا",
       projectId: "sanadat-pro",
-      storageBucket: "sanadat-pro.appspot.com",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abc123def456ghi789"
+      storageBucket: "حط_الـ_storageBucket_حقك_هنا",
+      messagingSenderId: "حط_الـ_messagingSenderId_حقك_هنا",
+      appId: "حط_الـ_appId_حقك_هنا"
     };
+    
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const loginBox = document.getElementById('loginBox');
     const dashboard = document.getElementById('dashboard');
     const errorMsg = document.getElementById('errorMsg');
+    
     document.getElementById('loginBtn').onclick = async () => {
       const code = document.getElementById('projectCode').value.trim();
       const phone = document.getElementById('phone').value.trim();
@@ -117,7 +142,9 @@
         errorMsg.style.display = 'block';
       }
     };
+    
     document.getElementById('logoutBtn').onclick = () => signOut(auth);
+    
     onAuthStateChanged(auth, (user) => {
       if (user) {
         loginBox.style.display = 'none';
@@ -128,6 +155,7 @@
         dashboard.style.display = 'none';
       }
     });
+    
     function loadSanadat() {
       const q = query(collection(db, 'sanadat'), orderBy('createdAt', 'desc'));
       onSnapshot(q, (snapshot) => {
@@ -140,28 +168,50 @@
             <td>${data.title || '-'}</td>
             <td>${data.amount || '-'}</td>
             <td>${data.createdAt ? new Date(data.createdAt.toDate()).toLocaleDateString('ar-SA') : '-'}</td>
-            <td><button class="delete-btn" onclick="deleteSanad('${docSnap.id}')">حذف</button></td>
+            <td><button class="btn-small" onclick="showQR('${docSnap.id}')">عرض QR</button></td>
+            <td><button class="btn-small delete-btn" onclick="deleteSanad('${docSnap.id}')">حذف</button></td>
           `;
           tbody.appendChild(tr);
         });
       });
     }
+    
     document.getElementById('addSanadBtn').onclick = async () => {
       const title = document.getElementById('sanadTitle').value.trim();
       const amount = document.getElementById('sanadAmount').value.trim();
-      if (!title || !amount) return alert('عبي كل الحقول');
+      const details = document.getElementById('sanadDetails').value.trim();
+      if (!title || !amount) return alert('عبي العنوان والمبلغ');
       await addDoc(collection(db, 'sanadat'), {
         title: title,
         amount: amount,
+        details: details,
         createdAt: serverTimestamp()
       });
       document.getElementById('sanadTitle').value = '';
       document.getElementById('sanadAmount').value = '';
+      document.getElementById('sanadDetails').value = '';
     };
+    
     window.deleteSanad = async (id) => {
       if (confirm('متأكد تبي تحذف السند؟')) {
         await deleteDoc(doc(db, 'sanadat', id));
       }
+    };
+    
+    window.showQR = (id) => {
+      const url = `https://abdaleali123.github.io/sndt-pro/sanad.html?id=${id}`;
+      const qrContainer = document.getElementById('qrcode');
+      qrContainer.innerHTML = '';
+      QRCode.toCanvas(url, { width: 250 }, (err, canvas) => {
+        if (err) return console.error(err);
+        qrContainer.appendChild(canvas);
+      });
+      document.getElementById('qrLink').innerText = url;
+      document.getElementById('qrModal').style.display = 'flex';
+    };
+    
+    window.closeQRModal = () => {
+      document.getElementById('qrModal').style.display = 'none';
     };
   </script>
 </body>
