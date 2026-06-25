@@ -561,7 +561,6 @@
         if (confirm('متأكد من حذف المدير؟')) await deleteDoc(doc(db, 'users', id));
     };
 
-    // ===== المناديب - المدراء يضيفو =====
     function loadDelegates() {
         const tbody = document.getElementById('delegatesTableBody');
         let q = query(collection(db, 'users'), where('role', '==', 'delegate'));
@@ -643,7 +642,7 @@
         if (confirm('متأكد من حذف المندوب؟')) await deleteDoc(doc(db, 'users', id));
     };
 
-    // ===== السندات =====
+
     function loadBonds() {
         const tbody = document.getElementById('bondsTableBody');
         let q = query(collection(db, 'bonds'), orderBy('createdAt', 'desc'));
@@ -705,7 +704,7 @@
         if (confirm('متأكد من حذف السند؟')) await deleteDoc(doc(db, 'bonds', id));
     };
 
-    // ===== الكيو آر + واتساب =====
+    
     window.showQR = (id) => {
         const url = `${window.location.origin}/sanad.html?id=${id}`;
         const qrContainer = document.getElementById('qrcode');
@@ -738,7 +737,7 @@
         window.open(whatsappUrl, '_blank');
     };
 
-    // ===== تصدير إكسل =====
+
     window.exportExcel = async () => {
         const snap = await getDocs(collection(db, 'bonds'));
         const data = [];
@@ -757,7 +756,7 @@
         XLSX.writeFile(wb, 'bonds.xlsx');
     };
 
-    // ===== الإعدادات =====
+
     async function loadSettings() {
         const settingsSnap = await getDoc(doc(db, 'settings', 'app'));
         if (settingsSnap.exists()) {
@@ -795,7 +794,7 @@
         alert('تم الحفظ');
     };
 
-    // تحميل البيانات
+
     function loadAllData() {
         loadStats();
         loadProjects();
@@ -824,4 +823,4 @@
     }
     </script>
 </body>
-</html>                                  
+</html>
