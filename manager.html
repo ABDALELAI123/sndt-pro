@@ -260,6 +260,116 @@
         });
 
     </script>
+        // ===== الخطوة 1: التبويبات + جدول المشاريع =====
+        function loadTabsAndProjects() {
+            const container = document.querySelector('.container-fluid.mt-4');
+            container.innerHTML += `
+                <ul class="nav nav-tabs mt-4" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button"><i class="bi bi-folder-fill"></i> المشاريع</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="mainTabContent">
+                    <div class="tab-pane fade show active" id="projects" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-3 rounded">
+                            <h5 class="mb-0"><i class="bi bi-folder"></i> المشاريع</h5>
+                            <button class="btn btn-primary" id="addProjectBtn" style="display:none;"><i class="bi bi-plus-circle"></i> إضافة مشروع</button>
+                        </div>
+                        <div class="table-responsive bg-white p-3 rounded">
+                            <table class="table table-hover">
+                                <thead><tr><th>#</th><th>اسم المشروع</th><th>المدير</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                                <tbody id="projectsTableBody"><tr><td colspan="5" class="text-center text-muted py-4">لا توجد مشاريع</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- مودال إضافة مشروع -->
+                <div class="modal fade" id="projectModal" tabindex="-1">
+                    <div class="modal-dialog"><div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title">إضافة مشروع جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <form id="projectForm">
+                                <div class="mb-3"><label class="form-label">اسم المشروع</label><input type="text" class="form-control" id="projectName" required></div>
+                                <div class="mb-3"><label class="form-label">الوصف</label><textarea class="form-control" id="projectDesc" rows="3"></textarea></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-primary" onclick="saveProject()">حفظ</button></div>
+                    </div></div>
+                </div>
+            `;
+
+            // زر الإضافة يظهر للسوبر أدمن فقط
+            if (isSuperAdmin) {
+                document.getElementById('addProjectBtn').style.display = 'inline-block';
+                document.getElementById('addProjectBtn').onclick = () => {
+                    document.getElementById('projectForm').reset();
+                    new bootstrap.Modal(document.getElementById('projectModal')).show();
+                };
+            }
+            
+            loadProjectsData();
+        }
+
+        function loadProjectsData() {
+            const tbody = document.getElementById('projectsTableBody');
+            onSnapshot(query(collection(db, 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
+                tbody.innerHTML = '';
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">لا توجد مشاريع</td></tr>';
+                    document.getElementById('totalProjects').textContent = 0;
+                    return;
+                }
+                let i = 1;
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${i++}</td>
+                            <td><strong>${data.name}</strong></td>
+                            <td>${data.managerName || '-'}</td>
+                            <td><span class="badge bg-${data.active? 'success' : 'secondary'}">${data.active? 'نشط' : 'موقوف'}</span></td>
+                            <td>-</td>
+                        </tr>`;
+                });
+                document.getElementById('totalProjects').textContent = snapshot.size;
+            });
+        }
+
+        window.saveProject = async () => {
+            const name = document.getElementById('projectName').value.trim();
+            const desc = document.getElementById('projectDesc').value.trim();
+            if (!name) return alert('اكتب اسم المشروع');
+
+            await addDoc(collection(db, 'projects'), {
+                name, desc, active: true, 
+                createdAt: serverTimestamp(), 
+                createdBy: currentUser.uid
+            });
+            bootstrap.Modal.getInstance(document.getElementById('projectModal')).hide();
+        };
+
+        // عدلنا onAuthStateChanged عشان ينادي الدوال
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                    isSuperAdmin = currentUserData.role === 'superadmin';
+                    document.getElementById('userName').textContent = currentUserData.name;
+                    document.getElementById('userRole').textContent = getRoleText(currentUserData.role);
+                    loadTabsAndProjects(); // هنا نشغل التبويبات
+                }
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+            } else {
+                document.getElementById('loginSection').style.display = 'flex';
+                document.getElementById('dashboardSection').style.display = 'none';
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
+        });
+
+    </script>
 </body>
-</html>
 </html>
