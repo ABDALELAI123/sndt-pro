@@ -497,7 +497,6 @@
                                     <canvas id="tasksChart"></canvas>
                                 </div>
                             </div>
-                        </div>
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-body">
@@ -678,12 +677,27 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
-    <!-- Firebase Configuration - استخدم firebase.js -->
+    <!-- Firebase Configuration - مدموجة مباشرة -->
     <script type="module">
-        // استدعاء من firebase.js بدل كتابة الكونفيق هنا
-        import { auth, db } from './firebase.js';
-        import { signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { collection, doc, setDoc, getDocs, updateDoc, deleteDoc, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        // Firebase Imports
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+        // Firebase Config - مفاتيح مشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6Mca0MufvGqr2fY",
+            authDomain: "sanadat-pro.firebaseapp.com",
+            projectId: "sanadat-pro",
+            storageBucket: "sanadat-pro.firebasestorage.app",
+            messagingSenderId: "1039476751095",
+            appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // Global Variables
         let currentUser = null;
@@ -898,12 +912,11 @@
                             <td>${managerName}</td>
                             <td>${data.startDate || '-'}</td>
                             <td>${data.endDate || '-'}</td>
-                            <td><span class="badge bg-info">${tasksSnapshot.size}</span></td>
+                                                        <td><span class="badge bg-info">${tasksSnapshot.size}</span></td>
                             <td>${statusBadge}</td>
                             <td>
                                 <button class="btn btn-sm btn-primary me-1" onclick="viewProject('${docSnap.id}')">
-                                   
-                               <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye"></i>
                                 </button>
                                 <button class="btn btn-sm btn-warning me-1" onclick="editProject('${docSnap.id}')">
                                     <i class="bi bi-pencil"></i>
