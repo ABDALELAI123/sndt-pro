@@ -12,91 +12,46 @@
 
   <style>
     :root {
-      --primary: #0d6efd;
-      --success: #198754;
-      --danger: #dc3545;
-      --warning: #ffc107;
-      --dark: #212529;
-      --light: #f8f9fa;
-      --border: #dee2e6;
+      --primary: #0d6efd; --success: #198754; --danger: #dc3545;
+      --warning: #ffc107; --dark: #212529; --light: #f8f9fa; --border: #dee2e6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f0f2f5;
-      color: var(--dark);
-    }
+    body { font-family: 'Cairo', sans-serif; background: #f0f2f5; color: var(--dark); }
   .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-  .header {
-      background: white; padding: 15px 20px; border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex;
-      justify-content: space-between; align-items: center; margin-bottom: 20px;
-    }
+  .header { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .header h1 { font-size: 22px; }
   .user-info { display: flex; align-items: center; gap: 15px; }
-  .btn {
-      padding: 10px 20px; border: none; border-radius: 8px;
-      font-family: 'Cairo'; font-weight: 600; cursor: pointer; transition: 0.2s;
-    }
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; font-family: 'Cairo'; font-weight: 600; cursor: pointer; transition: 0.2s; }
   .btn-primary { background: var(--primary); color: white; }
   .btn-danger { background: var(--danger); color: white; }
   .btn-success { background: var(--success); color: white; }
   .btn-sm { padding: 5px 10px; font-size: 14px; }
   .btn:hover { opacity: 0.9; }
-  .card {
-      background: white; border-radius: 12px; padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;
-    }
-  .card-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
-    }
+  .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
   .card-header h2 { font-size: 18px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 12px; text-align: right; border-bottom: 1px solid var(--border); }
     th { background: #f8f9fa; font-weight: 700; }
-  .loader {
-      display: flex; justify-content: center; align-items: center;
-      height: 100vh; flex-direction: column; gap: 15px;
-    }
-  .spinner {
-      width: 50px; height: 50px; border: 5px solid var(--border);
-      border-top-color: var(--primary); border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
+  .loader { display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 15px; }
+  .spinner { width: 50px; height: 50px; border: 5px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     #main-content { display: none; }
-  .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-      width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-      justify-content: center; align-items: center;
-    }
+  .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
   .modal.active { display: flex; }
-  .modal-content {
-      background: white; padding: 25px; border-radius: 12px;
-      width: 90%; max-width: 500px;
-    }
-  .modal-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-    }
+  .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .close-btn { font-size: 24px; cursor: pointer; }
   .form-group { margin-bottom: 15px; }
   .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
-  .form-group input {
-      width: 100%; padding: 10px; border: 1px solid var(--border);
-      border-radius: 8px; font-family: 'Cairo';
-    }
+  .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Cairo'; }
   .lang-switch { cursor: pointer; padding: 8px 12px; border-radius: 8px; background: #e9ecef; font-weight: 700; }
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
   .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
   .stat-card h3 { font-size: 32px; color: var(--primary); margin: 10px 0; }
   .stat-card p { color: #6c757d; font-size: 14px; }
-    @media print {
-      body * { visibility: hidden; }
-    .print-area,.print-area * { visibility: visible; }
-    .print-area { position: absolute; left: 0; top: 0; width: 100%; }
-    .no-print { display: none!important; }
-    }
+  .error-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    @media print { body * { visibility: hidden; }.print-area,.print-area * { visibility: visible; }.print-area { position: absolute; left: 0; top: 0; width: 100%; }.no-print { display: none!important; } }
     [dir="ltr"] { text-align: left; }
     [dir="ltr"] th, [dir="ltr"] td { text-align: left; }
   </style>
@@ -106,11 +61,11 @@
   <div id="loader" class="loader">
     <div class="spinner"></div>
     <p data-i18n="loading">جاري التحميل...</p>
+    <div id="errorMsg" class="error-box" style="display:none;"></div>
   </div>
 
   <div id="main-content">
     <div class="container">
-      
       <div class="header">
         <h1><i class="fa-solid fa-user-tie"></i> <span data-i18n="dashboard">الرئيسية</span></h1>
         <div class="user-info">
@@ -126,18 +81,9 @@
       </div>
 
       <div class="stats-grid no-print">
-        <div class="stat-card">
-          <p data-i18n="bondsCount">عدد السندات</p>
-          <h3 id="totalBondsCount">0</h3>
-        </div>
-        <div class="stat-card">
-          <p data-i18n="totalIncome">إجمالي القبض</p>
-          <h3 id="totalIncomeAmount">0</h3>
-        </div>
-        <div class="stat-card">
-          <p data-i18n="totalExpense">إجمالي الصرف</p>
-          <h3 id="totalExpenseAmount">0</h3>
-        </div>
+        <div class="stat-card"><p data-i18n="bondsCount">عدد السندات</p><h3 id="totalBondsCount">0</h3></div>
+        <div class="stat-card"><p data-i18n="totalIncome">إجمالي القبض</p><h3 id="totalIncomeAmount">0</h3></div>
+        <div class="stat-card"><p data-i18n="totalExpense">إجمالي الصرف</p><h3 id="totalExpenseAmount">0</h3></div>
       </div>
 
       <div class="card">
@@ -149,14 +95,7 @@
         </div>
         <div style="overflow-x: auto;">
           <table id="delegatesTable">
-            <thead>
-              <tr>
-                <th data-i18n="delegate">المندوب</th>
-                <th data-i18n="phone">رقم الجوال</th>
-                <th data-i18n="bondsCount">عدد السندات</th>
-                <th class="no-print" data-i18n="actions">تحكم</th>
-              </tr>
-            </thead>
+            <thead><tr><th data-i18n="delegate">المندوب</th><th data-i18n="phone">رقم الجوال</th><th data-i18n="bondsCount">عدد السندات</th><th class="no-print" data-i18n="actions">تحكم</th></tr></thead>
             <tbody id="delegatesTableBody"></tbody>
           </table>
         </div>
@@ -171,20 +110,11 @@
         </div>
         <div style="overflow-x: auto;">
           <table id="bondsTable" class="print-area">
-            <thead>
-              <tr>
-                <th data-i18n="bondNumber">رقم السند</th>
-                <th data-i18n="delegate">المندوب</th>
-                <th data-i18n="amount">المبلغ</th>
-                <th data-i18n="date">التاريخ</th>
-                <th data-i18n="status">الحالة</th>
-              </tr>
-            </thead>
+            <thead><tr><th data-i18n="bondNumber">رقم السند</th><th data-i18n="delegate">المندوب</th><th data-i18n="amount">المبلغ</th><th data-i18n="date">التاريخ</th><th data-i18n="status">الحالة</th></tr></thead>
             <tbody id="bondsTableBody"></tbody>
           </table>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -195,25 +125,11 @@
         <span class="close-btn" id="closeDelegateModal">&times;</span>
       </div>
       <form id="addDelegateForm">
-        <div class="form-group">
-          <label data-i18n="delegate">اسم المندوب</label>
-          <input type="text" id="delegateName" required>
-        </div>
-        <div class="form-group">
-          <label data-i18n="phone">رقم الجوال</label>
-          <input type="tel" id="delegatePhone" data-i18n-placeholder="phone" placeholder="05xxxxxxxx" required>
-        </div>
-        <div class="form-group">
-          <label data-i18n="email">البريد الإلكتروني</label>
-          <input type="email" id="delegateEmail" placeholder="email@example.com" required>
-        </div>
-        <div class="form-group">
-          <label data-i18n="password">كلمة المرور</label>
-          <input type="password" id="delegatePassword" data-i18n-placeholder="newPassword" placeholder="6 أحرف على الأقل" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          <i class="fa-solid fa-save"></i> <span data-i18n="save">حفظ</span>
-        </button>
+        <div class="form-group"><label data-i18n="delegate">اسم المندوب</label><input type="text" id="delegateName" required></div>
+        <div class="form-group"><label data-i18n="phone">رقم الجوال</label><input type="tel" id="delegatePhone" data-i18n-placeholder="phone" placeholder="05xxxxxxxx" required></div>
+        <div class="form-group"><label data-i18n="email">البريد الإلكتروني</label><input type="email" id="delegateEmail" placeholder="email@example.com" required></div>
+        <div class="form-group"><label data-i18n="password">كلمة المرور</label><input type="password" id="delegatePassword" data-i18n-placeholder="newPassword" placeholder="6 أحرف على الأقل" required></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-save"></i> <span data-i18n="save">حفظ</span></button>
       </form>
     </div>
   </div>
@@ -236,7 +152,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ملف اللغة
     const translations = {
       ar: { appName: "السندات الذكية", login: "تسجيل الدخول", phone: "رقم الجوال", password: "كلمة المرور", projectCode: "كود المشروع", error: "خطأ", fillAllFields: "عبي الجوال وكلمة السر", enterProjectCode: "ادخل كود المشروع", userNotFound: "المستخدم غير موجود", wrongPassword: "كلمة السر غلط", accountSuspended: "حسابك موقوف", projectSuspended: "المشروع موقوف", checkData: "تأكد من البيانات", logout: "خروج", delegate: "مندوب", dashboard: "الرئيسية", createBond: "إنشاء سند", myBonds: "سنداتي", printPreview: "معاينة الطباعة", smartSheet: "الصفحة الذكية", totalIncome: "إجمالي قبض سنداتي", totalExpense: "إجمالي صرف سنداتي", bondsCount: "عدد سنداتي", currency: "ريال سعودي", bond: "سند", noPermission: "تنبيه: لا تملك أي صلاحيات لإنشاء سندات. راجع مدير المشروع.", bondType: "نوع السند", selectBondType: "اختر نوع السند", amount: "المبلغ", date: "التاريخ", clientName: "اسم العميل", clientPhone: "جوال العميل", requiredForReceipt: "مطلوب لسندات القبض فقط", paymentMethod: "طريقة الدفع", selectPaymentMethod: "اختر طريقة الدفع", description: "البيان", saveBond: "حفظ السند", bondNumber: "رقم السند", type: "النوع", client: "العميل", actions: "تحكم", preview: "معاينة", print: "طباعة", selectBondToPreview: "اختر سند من تبويب \"سنداتي\" واضغط \"معاينة\" عشان تشوفه هنا", sendWhatsapp: "إرسال واتساب", sendToClient: "إرسال للعميل", downloadPdf: "تحميل PDF", search: "بحث...", exportExcel: "تصدير Excel", total: "الإجمالي:", receiver: "المستلم", accountant: "المحاسب", thankYou: "شكراً لتعاملكم معنا", dear: "عزيزي", receivedAmount: "تم استلام مبلغ", bondDetails: "تفاصيل السند", alert: "تنبيه", noClientPhone: "لا يوجد رقم جوال للعميل", comingSoon: "قريباً", exportSoon: "ميزة التصدير للإكسل قيد التطوير", changePassword: "تغيير كلمة السر", oldPassword: "كلمة السر القديمة", newPassword: "كلمة السر الجديدة", save: "حفظ", cancel: "إلغاء", wrongOldPassword: "كلمة السر القديمة غلط", passwordChanged: "تغيرت كلمة السر", done: "تم", rejected: "مرفوض", phoneRequiredForReceipt: "جوال العميل مطلوب لسندات القبض", invalidPhone: "رقم الجوال لازم يبدأ بـ 05 ويكون 10 أرقام", amountExceeded: "المبلغ تجاوز الحد المسموح للسند الواحد:", dailyLimitReached: "وصلت الحد الأقصى للسندات اليوم:", totalLimitReached: "وصلت الحد الأقصى لإجمالي السندات:", totalAmountExceeded: "إجمالي المبالغ راح يتجاوز الحد:", sequenceEnded: "وصلت لنهاية التسلسل لهذا النوع", bondSaved: "انحفظ السند رقم", loading: "جاري التحميل..." },
       en: { appName: "Smart Bonds", login: "Login", phone: "Phone Number", password: "Password", projectCode: "Project Code", error: "Error", fillAllFields: "Fill phone and password", enterProjectCode: "Enter project code", userNotFound: "User not found", wrongPassword: "Wrong password", accountSuspended: "Your account is suspended", projectSuspended: "Project is suspended", checkData: "Check your data", logout: "Logout", delegate: "Delegate", dashboard: "Dashboard", createBond: "Create Bond", myBonds: "My Bonds", printPreview: "Print Preview", smartSheet: "Smart Sheet", totalIncome: "Total Receipts", totalExpense: "Total Expenses", bondsCount: "Bonds Count", currency: "SAR", bond: "Bond", noPermission: "Alert: You have no permissions to create bonds. Contact project manager.", bondType: "Bond Type", selectBondType: "Select Bond Type", amount: "Amount", date: "Date", clientName: "Client Name", clientPhone: "Client Phone", requiredForReceipt: "Required for receipt bonds only", paymentMethod: "Payment Method", selectPaymentMethod: "Select Payment Method", description: "Description", saveBond: "Save Bond", bondNumber: "Bond Number", type: "Type", client: "Client", actions: "Actions", preview: "Preview", print: "Print", selectBondToPreview: "Select a bond from 'My Bonds' and click 'Preview' to view it here", sendWhatsapp: "Send WhatsApp", sendToClient: "Send to Client", downloadPdf: "Download PDF", search: "Search...", exportExcel: "Export Excel", total: "Total:", receiver: "Receiver", accountant: "Accountant", thankYou: "Thank you for your business", dear: "Dear", receivedAmount: "Amount received", bondDetails: "Bond Details", alert: "Alert", noClientPhone: "No client phone number", comingSoon: "Coming Soon", exportSoon: "Excel export feature is under development", changePassword: "Change Password", oldPassword: "Old Password", newPassword: "New Password", save: "Save", cancel: "Cancel", wrongOldPassword: "Old password is wrong", passwordChanged: "Password changed", done: "Done", rejected: "Rejected", phoneRequiredForReceipt: "Client phone is required for receipt bonds", invalidPhone: "Phone must start with 05 and be 10 digits", amountExceeded: "Amount exceeded the limit per bond:", dailyLimitReached: "Daily bond limit reached:", totalLimitReached: "Total bonds limit reached:", totalAmountExceeded: "Total amount will exceed the limit:", sequenceEnded: "Reached the end of sequence for this type", bondSaved: "Bond saved number", loading: "Loading..." }
@@ -258,15 +173,12 @@
       });
     }
 
-    let currentUserData = null;
-    let currentProjectData = null;
-    let allDelegates = [];
-    let allBonds = [];
-    let unsubscribeDelegates = null;
-    let unsubscribeBonds = null;
-    let isRedirecting = false;
+    let currentUserData = null, currentProjectData = null, allDelegates = [], allBonds = [];
+    let unsubscribeDelegates = null, unsubscribeBonds = null;
+    let authChecked = false;
 
     const loader = document.getElementById('loader');
+    const errorMsg = document.getElementById('errorMsg');
     const mainContent = document.getElementById('main-content');
     const logoutBtn = document.getElementById('logoutBtn');
     const managerNameEl = document.getElementById('managerName');
@@ -292,47 +204,52 @@
       if(allDelegates.length > 0) loadDelegates();
     });
 
+    // الحل الجذري: نوقف اللوب
     onAuthStateChanged(auth, async (user) => {
-      if (isRedirecting) return;
-      if (user) {
-        const managerDoc = await getDoc(doc(db, "managers", user.uid));
-        if (managerDoc.exists()) {
-          currentUserData = { id: user.uid,...managerDoc.data() };
-          managerNameEl.textContent = currentUserData.name;
-          
-          const projectDoc = await getDoc(doc(db, "projects", currentUserData.projectCode));
-          if (projectDoc.exists()) {
-            currentProjectData = projectDoc.data();
-            projectNameEl.textContent = currentProjectData.name;
-          }
-          
-          applyLanguage();
-          langSwitch.textContent = currentLang === 'ar'? 'EN' : 'AR';
-          loadBonds();
-          loadDelegates();
-          
-          loader.style.display = 'none';
-          mainContent.style.display = 'block';
-        } else {
-          isRedirecting = true;
-          alert(t('noPermission'));
-          await signOut(auth);
-          window.location.href = 'index.html';
-        }
-      } else {
-        isRedirecting = true;
+      if (authChecked) return;
+      authChecked = true;
+      
+      if (!user) {
         window.location.href = 'index.html';
+        return;
+      }
+
+      try {
+        const managerDoc = await getDoc(doc(db, "managers", user.uid));
+        if (!managerDoc.exists()) {
+          errorMsg.textContent = t('noPermission');
+          errorMsg.style.display = 'block';
+          setTimeout(() => { signOut(auth); window.location.href = 'index.html'; }, 3000);
+          return;
+        }
+
+        currentUserData = { id: user.uid,...managerDoc.data() };
+        managerNameEl.textContent = currentUserData.name;
+        
+        const projectDoc = await getDoc(doc(db, "projects", currentUserData.projectCode));
+        if (projectDoc.exists()) {
+          currentProjectData = projectDoc.data();
+          projectNameEl.textContent = currentProjectData.name;
+        }
+        
+        applyLanguage();
+        langSwitch.textContent = currentLang === 'ar'? 'EN' : 'AR';
+        loadBonds();
+        loadDelegates();
+        
+        loader.style.display = 'none';
+        mainContent.style.display = 'block';
+      } catch (e) {
+        errorMsg.textContent = t('error') + ': ' + e.message;
+        errorMsg.style.display = 'block';
       }
     });
 
     logoutBtn.addEventListener('click', () => signOut(auth));
     addDelegateBtn.addEventListener('click', () => addDelegateModal.classList.add('active'));
     closeDelegateModal.addEventListener('click', () => addDelegateModal.classList.remove('active'));
-    window.addEventListener('click', (e) => {
-      if (e.target == addDelegateModal) addDelegateModal.classList.remove('active');
-    });
+    window.addEventListener('click', (e) => { if (e.target == addDelegateModal) addDelegateModal.classList.remove('active'); });
 
-    // الحل: نستخدم تطبيق ثانوي عشان ما نسجل خروج
     addDelegateForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('delegateName').value.trim();
@@ -348,24 +265,17 @@
       if (!phoneQuery.empty) return alert(t('phone') + ' ' + t('error'));
 
       try {
-        // إنشاء تطبيق ثانوي مؤقت
         const secondaryApp = initializeApp(firebaseConfig, "Secondary");
         const secondaryAuth = getAuth(secondaryApp);
-        
         const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
         const uid = userCredential.user.uid;
         await updateProfile(userCredential.user, { displayName: name });
-
         await setDoc(doc(db, "delegates", uid), {
           uid: uid, name: name, phone: phone, email: email,
-          projectCode: currentUserData.projectCode,
-          managerId: currentUserData.id,
+          projectCode: currentUserData.projectCode, managerId: currentUserData.id,
           createdAt: serverTimestamp(), isActive: true
         });
-
-        // نحذف التطبيق الثانوي
         await deleteApp(secondaryApp);
-
         alert(t('done'));
         addDelegateForm.reset();
         addDelegateModal.classList.remove('active');
@@ -388,18 +298,7 @@
           const delegate = { id: doc.id,...doc.data() };
           allDelegates.push(delegate);
           const bondCount = allBonds.filter(b => b.delegateId == delegate.id).length;
-          const row = `
-            <tr>
-              <td>${delegate.name}</td>
-              <td>${delegate.phone}</td>
-              <td>${bondCount}</td>
-              <td class="no-print">
-                <button class="btn btn-danger btn-sm" onclick="deleteDelegate('${delegate.id}', '${delegate.name}')">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </td>
-            </tr>
-          `;
+          const row = `<tr><td>${delegate.name}</td><td>${delegate.phone}</td><td>${bondCount}</td><td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteDelegate('${delegate.id}', '${delegate.name}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
           delegatesTableBody.innerHTML += row;
         });
       });
@@ -427,18 +326,9 @@
           allBonds.push(bond);
           if(bond.type === 'receipt') totalIncome += bond.amount;
           else totalExpense += bond.amount;
-          
           const date = bond.createdAt? new Date(bond.createdAt.seconds * 1000).toLocaleDateString(currentLang === 'ar'? 'ar-SA' : 'en-US') : '...';
           const statusText = bond.status == 'مسدد'? t('done') : t('rejected');
-          const row = `
-            <tr>
-              <td>${bond.id.substring(0, 6)}</td>
-              <td>${bond.delegateName}</td>
-              <td>${bond.amount.toLocaleString()} ${t('currency')}</td>
-              <td>${date}</td>
-              <td><span style="color: ${bond.status == 'مسدد'? 'green' : 'orange'}">${statusText}</span></td>
-            </tr>
-          `;
+          const row = `<tr><td>${bond.id.substring(0, 6)}</td><td>${bond.delegateName}</td><td>${bond.amount.toLocaleString()} ${t('currency')}</td><td>${date}</td><td><span style="color: ${bond.status == 'مسدد'? 'green' : 'orange'}">${statusText}</span></td></tr>`;
           bondsTableBody.innerHTML += row;
         });
         totalBondsCount.textContent = allBonds.length;
@@ -450,7 +340,6 @@
 
     printBondsBtn.addEventListener('click', () => window.print());
     applyLanguage();
-
   </script>
 </body>
 </html>
