@@ -580,45 +580,69 @@
             });
         }
 
-        window.openManagerModal = async () => {
-            document.getElementById('managerForm').reset();
-            document.getElementById('managerId').value = '';
-            const select = document.getElementById('managerProject');
-            const snap = await getDocs(collection(db, 'projects'));
-            select.innerHTML = '<option value="">اختر مشروع</option>';
+     window.openManagerModal = async () => {
+    try {
+        document.getElementById('managerForm').reset();
+        document.getElementById('managerId').value = '';
+        const select = document.getElementById('managerProject');
+        select.innerHTML = '<option value="">جاري تحميل المشاريع...</option>';
+
+        const snap = await getDocs(collection(db, 'projects'));
+        select.innerHTML = '<option value="">اختر مشروع</option>';
+        if (snap.empty) {
+            select.innerHTML = '<option value="">لا توجد مشاريع - أضف مشروع أول</option>';
+        } else {
             snap.forEach(d => {
-                select.innerHTML += `<option value="${d.id}" data-name="${d.data().name}">${d.data().name}</option>`;
+                select.innerHTML += `<option value="${d.id}" data-name="${d.data().name}">${d.data().name} - ${d.data().code}</option>`;
             });
-            new bootstrap.Modal(document.getElementById('managerModal')).show();
-        };
+        }
+        new bootstrap.Modal(document.getElementById('managerModal')).show();
+    } catch (e) {
+        console.error('خطأ تحميل المشاريع:', e);
+        Swal.fire('خطأ', 'ما قدرنا نحمل المشاريع. تأكد من اتصالك وقواعد Firestore', 'error');
+    }
+};
 
-        window.saveManager = async () => {
-            const id = document.getElementById('managerId').value;
-            const name = document.getElementById('managerName').value.trim();
-            const phone = document.getElementById('managerPhone').value.trim();
-            const password = document.getElementById('managerPassword').value;
-            const projectId = document.getElementById('managerProject').value;
-            const projectName = document.getElementById('managerProject').selectedOptions[0]?.dataset.name;
+window.saveManager = async () => {
+    const id = document.getElementById('managerId').value;
+    const name = document.getElementById('managerName').value.trim();
+    const phone = document.getElementById('managerPhone').value.trim();
+    const password = document.getElementById('managerPassword').value;
+    const projectId = document.getElementById('managerProject').value;
+    const projectName = document.getElementById('managerProject').selectedOptions[0]?.dataset.name;
 
-            if (!name ||!phone ||!projectId) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
+    if (!name ||!phone ||!projectId) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
 
-            const email = `user${phone}@gmail.com`;
-            try {
-                if (id) {
-                    await updateDoc(doc(db, 'users', id), { name, phone, projectId, projectName, updatedAt: serverTimestamp() });
-                } else {
-                    if (!password) return Swal.fire('خطأ', 'اكتب كلمة المرور للمدير الجديد', 'error');
-                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, 'users', userCred.user.uid), {
-                        name, phone, email, role: 'manager', projectId, projectName, active: true, createdAt: serverTimestamp()
-                    });
-                }
-                bootstrap.Modal.getInstance(document.getElementById('managerModal')).hide();
-                Swal.fire('تم', 'تم حفظ المدير بنجاح', 'success');
-            } catch(e) {
-                Swal.fire('خطأ', e.message, 'error');
-            }
-        };
+    const email = `user${phone}@gmail.com`;
+    try {
+        if (id) {
+            await updateDoc(doc(db, 'users', id), { name, phone, projectId, projectName, updatedAt: serverTimestamp() });
+            Swal.fire('تم', 'تم تعديل المدير بنجاح', 'success');
+        } else {
+            if (!password) return Swal.fire('خطأ', 'اكتب كلمة المرور للمدير الجديد', 'error');
+            if (password.length < 6) return Swal.fire('خطأ', 'كلمة المرور لازم 6 خانات على الأقل', 'error');
+
+            const userCred = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, 'users', userCred.user.uid), {
+                name, phone, email, role: 'manager', projectId, projectName, active: true, createdAt: serverTimestamp()
+            });
+            Swal.fire('تم', 'تم حفظ المدير بنجاح', 'success');
+        }
+        bootstrap.Modal.getInstance(document.getElementById('managerModal')).hide();
+    } catch(e) {
+        console.error(e);
+        if (e.code === 'auth/email-already-in-use') {
+            Swal.fire('خطأ', 'رقم الجوال مستخدم من قبل', 'error');
+        } else if (e.code === 'auth/weak-password') {
+            Swal.fire('خطأ', 'كلمة المرور ضعيفة', 'error');
+        } else if (e.code === 'auth/operation-not-allowed') {
+            Swal.fire('خطأ', 'لازم تفعل Email/Password من Firebase Console > Authentication > Sign-in method', 'error');
+        } else {
+            Swal.fire('خطأ', e.message, 'error');
+        }
+    }
+};
+       
 
         window.editManager = async (id) => {
             const docSnap = await getDoc(doc(db, 'users', id));
