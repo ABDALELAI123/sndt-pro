@@ -23,25 +23,19 @@
     </div>
 
     <div id="app" class="hidden">
-        <!-- Header -->
         <header class="bg-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
                     <h1 class="text-xl font-bold text-blue-600" data-lang="app_title">السندات الذكية - السوبر ادمن</h1>
                     <div class="flex items-center gap-4">
-                        <button id="langToggle" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-semibold">
-                            EN
-                        </button>
-                        <span id="userEmail" class="text-sm text-gray-600"></span>
-                        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm" data-lang="logout">
-                            تسجيل خروج
-                        </button>
+                        <button id="langToggle" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-semibold">EN</button>
+                        <span id="userName" class="text-sm text-gray-600"></span>
+                        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm" data-lang="logout">تسجيل خروج</button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Tabs -->
         <div class="bg-white border-b">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex gap-8">
@@ -52,7 +46,6 @@
             </div>
         </div>
 
-        <!-- Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Projects Tab -->
             <div id="projects" class="tab-content">
@@ -68,7 +61,6 @@
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2" data-lang="add">إضافة</button>
                     </form>
                 </div>
-
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <table class="w-full">
                         <thead class="bg-gray-50">
@@ -91,7 +83,6 @@
                     <form id="managerForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input type="text" id="managerName" placeholder="اسم المدير" class="border rounded px-3 py-2" required data-lang-placeholder="manager_name">
                         <input type="text" id="managerPhone" placeholder="رقم الجوال" class="border rounded px-3 py-2" required data-lang-placeholder="phone">
-                        <input type="email" id="managerEmail" placeholder="الايميل" class="border rounded px-3 py-2" required data-lang-placeholder="email">
                         <input type="password" id="managerPassword" placeholder="كلمة المرور" class="border rounded px-3 py-2" required data-lang-placeholder="password">
                         <select id="managerProject" class="border rounded px-3 py-2" required>
                             <option value="" data-lang="select_project">اختر المشروع</option>
@@ -99,14 +90,12 @@
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2" data-lang="add">إضافة</button>
                     </form>
                 </div>
-
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="manager_name">اسم المدير</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="phone">الجوال</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="email">الايميل</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="project">المشروع</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="actions">إجراءات</th>
                             </tr>
@@ -132,7 +121,6 @@
                         <p id="totalExpense" class="text-3xl font-bold text-red-600 mt-2">0</p>
                     </div>
                 </div>
-
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <div class="p-4 border-b">
                         <h2 class="text-lg font-bold" data-lang="projects_summary">ملخص المشاريع</h2>
@@ -155,8 +143,8 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6Mca0MufvGqr2fY",
@@ -171,10 +159,24 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let currentLang = localStorage.getItem('lang') || 'ar';
-        let currentUser = null;
+        // حماية الصفحة الجديدة - بدون Firebase Auth
+        const userSession = JSON.parse(sessionStorage.getItem('user'));
+        if (!userSession || userSession.role !== 'superadmin') {
+            window.location.href = 'index.html';
+        }
+
+        signInAnonymously(auth).then(() => {
+            document.getElementById('userName').textContent = userSession.name + ' - ' + userSession.phone;
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            updateLanguage();
+            loadProjects();
+            loadManagers();
+            loadReports();
+        });
 
         // Language System
+        let currentLang = localStorage.getItem('lang') || 'ar';
         function updateLanguage() {
             applyLanguage(currentLang);
             document.documentElement.lang = currentLang;
@@ -191,35 +193,6 @@
             updateLanguage();
         });
 
-        // Auth Check - No Blink Solution
-        let authInitialized = false;
-        onAuthStateChanged(auth, async (user) => {
-            if (authInitialized) return;
-            authInitialized = true;
-            
-            if (!user) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (!userDoc.exists() || userDoc.data().role !== 'superadmin') {
-                alert(t('no_permission'));
-                await signOut(auth);
-                window.location.href = 'index.html';
-                return;
-            }
-
-            currentUser = user;
-            document.getElementById('userEmail').textContent = user.email;
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            updateLanguage();
-            loadProjects();
-            loadManagers();
-            loadReports();
-        });
-
         // Tabs
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -227,27 +200,25 @@
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('text-gray-500'));
                 btn.classList.add('tab-active');
                 btn.classList.remove('text-gray-500');
-                
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
                 document.getElementById(btn.dataset.tab).classList.remove('hidden');
             });
         });
 
         // Logout
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await signOut(auth);
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.removeItem('user');
             window.location.href = 'index.html';
         });
 
         // Projects
         async function loadProjects() {
-            const q = query(collection(db, 'projects'));
-            const snapshot = await getDocs(q);
+            const snapshot = await getDocs(collection(db, 'projects'));
             const tbody = document.getElementById('projectsTable');
             const select = document.getElementById('managerProject');
             tbody.innerHTML = '';
             select.innerHTML = `<option value="">${t('select_project')}</option>`;
-            
+
             snapshot.forEach(doc => {
                 const data = doc.data();
                 tbody.innerHTML += `
@@ -266,7 +237,7 @@
                         </td>
                     </tr>
                 `;
-                select.innerHTML += `<option value="${doc.id}">${data.name} - ${data.code}</option>`;
+                select.innerHTML += `<option value="${data.code}">${data.name} - ${data.code}</option>`;
             });
         }
 
@@ -276,6 +247,14 @@
             const code = document.getElementById('projectCode').value;
             const status = document.getElementById('projectStatus').value;
             
+            // منع تكرار الكود
+            const q = query(collection(db, 'projects'), where('code', '==', code));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+                alert('كود المشروع موجود مسبقاً');
+                return;
+            }
+
             await addDoc(collection(db, 'projects'), { name, code, status, createdAt: new Date() });
             e.target.reset();
             loadProjects();
@@ -289,21 +268,20 @@
 
         // Managers
         async function loadManagers() {
-            const q = query(collection(db, 'managers'));
-            const snapshot = await getDocs(q);
+            const snapshot = await getDocs(collection(db, 'managers'));
             const tbody = document.getElementById('managersTable');
             tbody.innerHTML = '';
-            
+
             for (const docSnap of snapshot.docs) {
                 const data = docSnap.data();
-                const projectDoc = await getDoc(doc(db, 'projects', data.projectCode));
-                const projectName = projectDoc.exists() ? projectDoc.data().name : '-';
-                
+                const q = query(collection(db, 'projects'), where('code', '==', data.projectCode));
+                const projectSnap = await getDocs(q);
+                const projectName = !projectSnap.empty ? projectSnap.docs[0].data().name : '-';
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="px-6 py-4">${data.name}</td>
                         <td class="px-6 py-4">${data.phone}</td>
-                        <td class="px-6 py-4">${data.email}</td>
                         <td class="px-6 py-4">${projectName}</td>
                         <td class="px-6 py-4">
                             <button onclick="deleteManager('${docSnap.id}')" class="text-red-600 hover:text-red-800 text-sm" data-lang="delete">حذف</button>
@@ -317,28 +295,19 @@
             e.preventDefault();
             const name = document.getElementById('managerName').value;
             const phone = document.getElementById('managerPhone').value;
-            const email = document.getElementById('managerEmail').value;
             const password = document.getElementById('managerPassword').value;
             const projectCode = document.getElementById('managerProject').value;
-            
-            try {
-                // Create auth user
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const uid = userCredential.user.uid;
-                
-                // Add to users collection
-                await setDoc(doc(db, 'users', uid), { email, role: 'manager', projectCode });
-                
-                // Add to managers collection
-                await addDoc(collection(db, 'managers'), { name, phone, email, projectCode, uid, createdAt: new Date() });
-                
-                // Sign back in as superadmin - prevents auto logout
-                await signOut(auth);
-                alert(t('manager_added_success'));
-                window.location.reload();
-            } catch (error) {
-                alert(t('error') + ': ' + error.message);
+
+            const q = query(collection(db, 'managers'), where('phone', '==', phone));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+                alert(t('phone_exists'));
+                return;
             }
+
+            await addDoc(collection(db, 'managers'), { name, phone, password, projectCode, createdAt: new Date() });
+            e.target.reset();
+            loadManagers();
         });
 
         window.deleteManager = async (id) => {
@@ -352,31 +321,31 @@
         async function loadReports() {
             const bondsSnapshot = await getDocs(collection(db, 'bonds'));
             const projectsSnapshot = await getDocs(collection(db, 'projects'));
-            
+
             let totalBonds = 0, totalIncome = 0, totalExpense = 0;
             const projectStats = {};
-            
+
             projectsSnapshot.forEach(doc => {
-                projectStats[doc.id] = { name: doc.data().name, bonds: 0, income: 0, expense: 0 };
+                projectStats[doc.data().code] = { name: doc.data().name, bonds: 0, income: 0, expense: 0 };
             });
-            
+
             bondsSnapshot.forEach(doc => {
                 const data = doc.data();
                 totalBonds++;
                 if (data.type === 'income') totalIncome += data.amount || 0;
                 if (data.type === 'expense') totalExpense += data.amount || 0;
-                
+
                 if (projectStats[data.projectCode]) {
                     projectStats[data.projectCode].bonds++;
                     if (data.type === 'income') projectStats[data.projectCode].income += data.amount || 0;
                     if (data.type === 'expense') projectStats[data.projectCode].expense += data.amount || 0;
                 }
             });
-            
+
             document.getElementById('totalBonds').textContent = totalBonds;
             document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
             document.getElementById('totalExpense').textContent = totalExpense.toLocaleString();
-            
+
             const tbody = document.getElementById('reportsTable');
             tbody.innerHTML = '';
             Object.values(projectStats).forEach(stat => {
