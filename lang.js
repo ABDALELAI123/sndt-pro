@@ -1,3 +1,16 @@
+تمام شفت ملف `lang.js` حقك. ناقصه سطرين بس عشان `terms.js` يشتغل ✅
+
+### **الملف 1 من 12: `config.js` - تم ✅**
+اضغط حفظ وانتهينا منه.
+
+---
+
+### **تحديث الملف: `lang.js` - انسخ هذا كامل واستبدل اللي عندك**
+
+أضفت لك `termsAndConditions` + `iAgree` في العربي والانجليزي. الباقي زي ما هو.
+
+```js
+// lang.js - ملف اللغة كامل جاهز نسخ لصق
 const translations = {
     ar: {
         appName: "السندات الذكية",
@@ -43,7 +56,7 @@ const translations = {
         actions: "تحكم",
         preview: "معاينة",
         print: "طباعة",
-               selectBondToPreview: "اختر سند من تبويب \"سنداتي\" واضغط \"معاينة\" عشان تشوفه هنا",
+        selectBondToPreview: "اختر سند من تبويب \"سنداتي\" واضغط \"معاينة\" عشان تشوفه هنا",
         sendWhatsapp: "إرسال واتساب",
         sendToClient: "إرسال للعميل",
         downloadPdf: "تحميل PDF",
@@ -76,9 +89,11 @@ const translations = {
         totalLimitReached: "وصلت الحد الأقصى لإجمالي السندات:",
         totalAmountExceeded: "إجمالي المبالغ راح يتجاوز الحد:",
         sequenceEnded: "وصلت لنهاية التسلسل لهذا النوع",
-        bondSaved: "انحفظ السند رقم"
+        bondSaved: "انحفظ السند رقم",
+        termsAndConditions: "الشروط والأحكام",
+        iAgree: "أوافق"
     },
-       en: {
+    en: {
         appName: "Smart Bonds",
         login: "Login",
         phone: "Phone Number",
@@ -155,9 +170,12 @@ const translations = {
         totalLimitReached: "Total bonds limit reached:",
         totalAmountExceeded: "Total amount will exceed the limit:",
         sequenceEnded: "Reached the end of sequence for this type",
-        bondSaved: "Bond saved number"
+        bondSaved: "Bond saved number",
+        termsAndConditions: "Terms & Conditions",
+        iAgree: "I Agree"
     }
 };
+
 let currentLang = localStorage.getItem('language') || 'ar';
 if (!localStorage.getItem('language')) {
     localStorage.setItem('language', 'ar');
