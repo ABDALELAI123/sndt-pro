@@ -3,65 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم - سندات برو</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>لوحة تحكم السوبر - سندات برو</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * { font-family: 'Cairo', sans-serif; }
-        body { background: #f5f7fa; min-height: 100vh; }
-        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .navbar-brand { font-weight: 700; font-size: 1.3rem; }
-        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .login-card { background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); padding: 40px; width: 100%; max-width: 420px; }
-        .login-card h3 { color: #667eea; font-weight: 700; margin-bottom: 30px; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); }
+        .navbar { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .navbar-brand { font-weight: 900; font-size: 1.5rem; color: white !important; }
+        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { padding: 50px; width: 100%; max-width: 450px; }
+        .login-card h3 { color: #667eea; font-weight: 900; margin-bottom: 30px; font-size: 2rem; }
         .dashboard-container { padding: 30px 0; display: none; }
-        .stat-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: 0.3s; border-right: 4px solid #667eea; }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(0,0,0,0.12); }
-        .stat-icon { font-size: 2.5rem; color: #667eea; opacity: 0.8; }
-        .stat-value { font-size: 2rem; font-weight: 700; color: #2d3748; margin: 10px 0 5px; }
-        .stat-label { color: #718096; font-size: 0.95rem; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .spinner-border { width: 3rem; height: 3rem; border-width: 0.3rem; }
-        .nav-tabs { border-bottom: 2px solid #e2e8f0; margin-bottom: 25px; }
-        .nav-tabs .nav-link { color: #718096; font-weight: 600; border: none; padding: 12px 25px; }
-        .nav-tabs .nav-link.active { color: #667eea; background: none; border-bottom: 3px solid #667eea; }
-        .tab-content { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .table thead th { background: #f7fafc; color: #2d3748; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding: 15px; }
-        .table tbody td { padding: 15px; vertical-align: middle; }
-        .badge { padding: 6px 12px; font-weight: 600; font-size: 0.85rem; }
-        .btn-primary { background: #667eea; border: none; padding: 10px 25px; font-weight: 600; }
-        .btn-primary:hover { background: #5568d3; }
-        .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .stat-card { padding: 30px; transition: 0.4s; border-right: 5px solid #667eea; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, transparent, rgba(102,126,234,0.1)); opacity: 0; transition: 0.4s; }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+        .stat-icon { font-size: 3rem; opacity: 0.9; }
+        .stat-value { font-size: 2.5rem; font-weight: 900; margin: 15px 0 5px; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { color: #718096; font-size: 1rem; font-weight: 600; }
+        .nav-tabs { border: none; margin-bottom: 25px; gap: 10px; }
+        .nav-tabs .nav-link { color: #718096; font-weight: 700; border: none; padding: 15px 30px; border-radius: 15px; background: rgba(255,255,255,0.7); transition: 0.3s; }
+        .nav-tabs .nav-link.active { color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); transform: translateY(-2px); }
+        .tab-content { padding: 30px; }
+        .table thead th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 700; border: none; padding: 18px; font-size: 0.95rem; }
+        .table tbody td { padding: 18px; vertical-align: middle; border-color: #e2e8f0; }
+        .table tbody tr:hover { background: #f7fafc; transform: scale(1.01); transition: 0.2s; }
+        .badge { padding: 8px 16px; font-weight: 700; font-size: 0.85rem; border-radius: 20px; }
+        .btn { border-radius: 12px; font-weight: 700; padding: 10px 25px; transition: 0.3s; border: none; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5); }
+        .btn-success { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+        .btn-danger { background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); }
+        .btn-warning { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; }
+        .modal-content { border-radius: 20px; border: none; overflow: hidden; }
+        .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; }
         .modal-header .btn-close { filter: brightness(0) invert(1); }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .form-control, .form-select { border-radius: 12px; padding: 12px 18px; border: 2px solid #e2e8f0; transition: 0.3s; }
+        .form-control:focus, .form-select:focus { border-color: #667eea; box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1); }
+        .settings-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 2px solid #e2e8f0; }
+        .settings-card h6 { color: #667eea; font-weight: 900; margin-bottom: 20px; font-size: 1.1rem; }
     </style>
 </head>
 <body>
     <div class="loading-overlay" id="loadingOverlay">
         <div class="text-center">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-3 text-muted">جاري التحميل...</p>
+            <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;"></div>
+            <p class="mt-3 text-muted fw-bold">جاري التحميل...</p>
         </div>
     </div>
 
     <div class="login-container" id="loginSection">
-        <div class="login-card">
-            <h3 class="text-center"><i class="bi bi-shield-lock"></i> تسجيل دخول المدير</h3>
+        <div class="login-card glass">
+            <h3 class="text-center"><i class="bi bi-shield-lock-fill"></i> سندات برو</h3>
             <div class="alert alert-danger d-none" id="loginError"></div>
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label">كود المشروع</label>
-                    <input type="text" class="form-control" id="projectCode" required>
+                    <label class="form-label fw-bold">كود المشروع</label>
+                    <input type="text" class="form-control" id="projectCode" required placeholder="001122334455">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">رقم الجوال</label>
-                    <input type="text" class="form-control" id="phoneInput" required>
+                    <label class="form-label fw-bold">رقم الجوال</label>
+                    <input type="text" class="form-control" id="phoneInput" required placeholder="05xxxxxxxx">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">كلمة المرور</label>
+                    <label class="form-label fw-bold">كلمة المرور</label>
                     <input type="password" class="form-control" id="passwordInput" required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right"></i> دخول</button>
+                <button type="submit" class="btn btn-primary w-100 py-3"><i class="bi bi-box-arrow-in-right"></i> دخول</button>
             </form>
         </div>
     </div>
@@ -69,10 +82,10 @@
     <div class="dashboard-container" id="dashboardSection">
         <nav class="navbar navbar-dark navbar-expand-lg">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#"><i class="bi bi-kanban"></i> سندات برو</a>
+                <a class="navbar-brand" href="#"><i class="bi bi-kanban-fill"></i> سندات برو</a>
                 <div class="d-flex align-items-center">
-                    <span class="text-white me-3"><i class="bi bi-person-circle"></i> <span id="userName">مستخدم</span> - <span id="userRole">دور</span></span>
-                    <button class="btn btn-light btn-sm" onclick="doLogout()"><i class="bi bi-box-arrow-left"></i> خروج</button>
+                    <span class="text-white me-3 fw-bold"><i class="bi bi-person-circle"></i> <span id="userName"></span> - <span id="userRole"></span></span>
+                    <button class="btn btn-light btn-sm fw-bold" onclick="doLogout()"><i class="bi bi-box-arrow-left"></i> خروج</button>
                 </div>
             </div>
         </nav>
@@ -80,62 +93,80 @@
         <div class="container-fluid mt-4">
             <div class="row g-4 mb-4">
                 <div class="col-md-3">
-                    <div class="stat-card">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div><div class="stat-value" id="totalManagers">0</div><div class="stat-label">المدراء</div></div>
-                            <i class="bi bi-person-badge stat-icon"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card" style="border-right-color: #48bb78;">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div><div class="stat-value" id="totalDelegates">0</div><div class="stat-label">المناديب</div></div>
-                            <i class="bi bi-people stat-icon" style="color: #48bb78;"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-card" style="border-right-color: #ed8936;">
+                    <div class="stat-card glass">
                         <div class="d-flex justify-content-between align-items-start">
                             <div><div class="stat-value" id="totalProjects">0</div><div class="stat-label">المشاريع</div></div>
-                            <i class="bi bi-folder stat-icon" style="color: #ed8936;"></i>
+                            <i class="bi bi-folder-fill stat-icon" style="color: #ed8936;"></i>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="stat-card" style="border-right-color: #f56565;">
+                    <div class="stat-card glass">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div><div class="stat-value" id="totalManagers">0</div><div class="stat-label">المدراء</div></div>
+                            <i class="bi bi-person-badge-fill stat-icon" style="color: #667eea;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card glass">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div><div class="stat-value" id="totalDelegates">0</div><div class="stat-label">المناديب</div></div>
+                            <i class="bi bi-people-fill stat-icon" style="color: #48bb78;"></i>
+                        </div>
+                    </div>
+                <div class="col-md-3">
+                    <div class="stat-card glass">
                         <div class="d-flex justify-content-between align-items-start">
                             <div><div class="stat-value" id="totalBonds">0</div><div class="stat-label">السندات</div></div>
-                            <i class="bi bi-receipt stat-icon" style="color: #f56565;"></i>
+                            <i class="bi bi-receipt-cutoff stat-icon" style="color: #f56565;"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="tabsContainer"></div>
+            <ul class="nav nav-tabs" id="mainTabs" role="tablist"></ul>
+            <div class="tab-content glass" id="mainTabContent"></div>
         </div>
     </div>
 
-    <!-- مودال إضافة مشروع -->
+    <!-- مودال المشروع -->
     <div class="modal fade" id="projectModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">إضافة مشروع جديد</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-dialog modal-lg"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title fw-bold">إضافة/تعديل مشروع</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <form id="projectForm">
-                    <div class="mb-3"><label class="form-label">اسم المشروع</label><input type="text" class="form-control" id="projectName" required></div>
-                    <div class="mb-3"><label class="form-label">الوصف</label><textarea class="form-control" id="projectDesc" rows="3"></textarea></div>
+                    <input type="hidden" id="projectId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3"><label class="form-label fw-bold">اسم المشروع</label><input type="text" class="form-control" id="projectName" required></div>
+                        <div class="col-md-6 mb-3"><label class="form-label fw-bold">كود المشروع</label><input type="text" class="form-control" id="projectCodeInput" required></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">نوع المدة</label>
+                            <select class="form-select" id="projectDurationType" onchange="toggleDuration()">
+                                <option value="unlimited">مطلق - بدون مدة</option>
+                                <option value="limited">محدود - بتاريخ انتهاء</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="endDateDiv" style="display:none;">
+                            <label class="form-label fw-bold">تاريخ الانتهاء</label>
+                            <input type="date" class="form-control" id="projectEndDate">
+                        </div>
+                    </div>
+                    <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea class="form-control" id="projectDesc" rows="3"></textarea></div>
+                    <div class="mb-3"><label class="form-label fw-bold">رقم واتساب المشروع</label><input type="text" class="form-control" id="projectWhatsApp" placeholder="9665xxxxxxxx"></div>
                 </form>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-primary" onclick="saveProject()">حفظ</button></div>
         </div></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, serverTimestamp, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, onSnapshot, doc, serverTimestamp, query, orderBy, getDocs, getDoc, setDoc, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
@@ -154,6 +185,7 @@
         let currentUser = null;
         let currentUserData = null;
         let isSuperAdmin = false;
+        let systemSettings = {};
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -161,17 +193,13 @@
             const phone = document.getElementById('phoneInput').value.trim();
             const pass = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('loginError');
-
             errorDiv.classList.add('d-none');
-
-            if (code!== '001122334455') {
+            if (code !== '001122334455') {
                 errorDiv.textContent = 'كود المشروع غير صحيح';
                 errorDiv.classList.remove('d-none');
                 return;
             }
-
             const email = `user${phone}@gmail.com`;
-
             try {
                 await signInWithEmailAndPassword(auth, email, pass);
             } catch (e) {
@@ -191,7 +219,9 @@
                     isSuperAdmin = currentUserData.role === 'superadmin';
                     document.getElementById('userName').textContent = currentUserData.name;
                     document.getElementById('userRole').textContent = getRoleText(currentUserData.role);
-                    initTabs();
+                    await loadSystemSettings();
+                    buildTabs();
+                    loadStats();
                 }
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('dashboardSection').style.display = 'block';
@@ -207,39 +237,84 @@
             return roles[role] || role;
         }
 
-        function initTabs() {
-            const container = document.getElementById('tabsContainer');
-            container.innerHTML = `
-                <ul class="nav nav-tabs mt-4" id="mainTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button"><i class="bi bi-folder-fill"></i> المشاريع</button>
-                    </li>
-                </ul>
-                <div class="tab-content" id="mainTabContent">
-                    <div class="tab-pane fade show active" id="projects" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-3 rounded">
-                            <h5 class="mb-0"><i class="bi bi-folder"></i> المشاريع</h5>
-                            <button class="btn btn-primary" id="addProjectBtn" style="display:none;"><i class="bi bi-plus-circle"></i> إضافة مشروع</button>
-                        </div>
-                        <div class="table-responsive bg-white p-3 rounded">
-                            <table class="table table-hover">
-                                <thead><tr><th>#</th><th>اسم المشروع</th><th>المدير</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                                <tbody id="projectsTableBody"><tr><td colspan="5" class="text-center text-muted py-4">جاري التحميل...</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `
+        async function loadSystemSettings() {
+            const snap = await getDoc(doc(db, 'settings', 'system'));
+            systemSettings = snap.exists() ? snap.data() : {};
+        }
+
+        function buildTabs() {
+            const tabsEl = document.getElementById('mainTabs');
+            const contentEl = document.getElementById('mainTabContent');
+            let tabs = '';
+            let content = '';
 
             if (isSuperAdmin) {
-                document.getElementById('addProjectBtn').style.display = 'inline-block';
-                document.getElementById('addProjectBtn').onclick = () => {
-                    document.getElementById('projectForm').reset();
-                    new bootstrap.Modal(document.getElementById('projectModal')).show();
-                };
+                tabs += `
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#projects"><i class="bi bi-folder-fill"></i> المشاريع</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#managers"><i class="bi bi-person-badge-fill"></i> المدراء</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#projectSettings"><i class="bi bi-sliders"></i> إعدادات المشاريع</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#systemSettings"><i class="bi bi-gear-fill"></i> إعدادات النظام</button></li>
+                `;
+                content += `
+                    <div class="tab-pane fade show active" id="projects">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-folder"></i> إدارة المشاريع</h5>
+                            <button class="btn btn-primary" onclick="openProjectModal()"><i class="bi bi-plus-circle"></i> إضافة مشروع</button>
+                        </div>
+                        <div class="table-responsive"><table class="table table-hover">
+                            <thead><tr><th>#</th><th>اسم المشروع</th><th>الكود</th><th>المدة</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="projectsTableBody"><tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr></tbody>
+                        </table></div>
+                    </div>
+                    <div class="tab-pane fade" id="managers">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-person-badge"></i> المدراء</h5>
+                        </div>
+                        <div class="table-responsive"><table class="table table-hover">
+                            <thead><tr><th>#</th><th>الاسم</th><th>الجوال</th><th>المشروع</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                            <tbody id="managersTableBody"><tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr></tbody>
+                        </table></div>
+                    </div>
+                    <div class="tab-pane fade" id="projectSettings">
+                        <h5 class="mb-4 fw-bold"><i class="bi bi-sliders"></i> إعدادات المشاريع المتقدمة</h5>
+                        <div id="projectSettingsList"></div>
+                    </div>
+                    <div class="tab-pane fade" id="systemSettings">
+                        <h5 class="mb-4 fw-bold"><i class="bi bi-gear-fill"></i> إعدادات النظام</h5>
+                        <div class="settings-card">
+                            <h6><i class="bi bi-eye-slash"></i> إخفاء التبويبات</h6>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">إخفاء برقم المشروع</label>
+                                <input type="text" class="form-control" id="hideProjectCode" placeholder="أدخل كود المشروع لإخفاء تبويباته">
+                                <button class="btn btn-warning btn-sm mt-2" onclick="addHiddenProject()">إضافة</button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">إخفاء برقم جوال المدير</label>
+                                <input type="text" class="form-control" id="hideManagerPhone" placeholder="05xxxxxxxx">
+                                <button class="btn btn-warning btn-sm mt-2" onclick="addHiddenManager()">إضافة</button>
+                            </div>
+                            <div id="hiddenItemsList"></div>
+                        </div>
+                    </div>
+                `;
             }
+
+            tabsEl.innerHTML = tabs;
+            contentEl.innerHTML = content;
             
-            loadProjects();
+            if (isSuperAdmin) {
+                loadProjects();
+                loadManagers();
+                loadProjectSettings();
+                loadHiddenItems();
+            }
+        }
+
+        function loadStats() {
+            onSnapshot(collection(db, 'projects'), snap => document.getElementById('totalProjects').textContent = snap.size);
+            onSnapshot(query(collection(db, 'users'), where('role', '==', 'manager')), snap => document.getElementById('totalManagers').textContent = snap.size);
+            onSnapshot(query(collection(db, 'users'), where('role', '==', 'delegate')), snap => document.getElementById('totalDelegates').textContent = snap.size);
+            onSnapshot(collection(db, 'bonds'), snap => document.getElementById('totalBonds').textContent = snap.size);
         }
 
         function loadProjects() {
@@ -247,37 +322,193 @@
             onSnapshot(query(collection(db, 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
                 tbody.innerHTML = '';
                 if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">لا توجد مشاريع</td></tr>';
-                    document.getElementById('totalProjects').textContent = 0;
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد مشاريع</td></tr>';
                     return;
                 }
                 let i = 1;
                 snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
+                    const d = docSnap.data();
+                    const isExpired = d.durationType === 'limited' && d.endDate && new Date(d.endDate) < new Date();
+                    const status = isExpired ? 'منتهي' : (d.active ? 'نشط' : 'موقوف');
+                    const statusClass = isExpired ? 'danger' : (d.active ? 'success' : 'secondary');
+                    const duration = d.durationType === 'unlimited' ? 'مطلق' : (d.endDate || '-');
                     tbody.innerHTML += `
                         <tr>
                             <td>${i++}</td>
-                            <td><strong>${data.name}</strong></td>
-                            <td>${data.managerName || '-'}</td>
-                            <td><span class="badge bg-${data.active? 'success' : 'secondary'}">${data.active? 'نشط' : 'موقوف'}</span></td>
-                            <td>-</td>
+                            <td><strong>${d.name}</strong></td>
+                            <td><code>${d.code}</code></td>
+                            <td>${duration}</td>
+                            <td><span class="badge bg-${statusClass}">${status}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editProject('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-${d.active ? 'secondary' : 'success'}" onclick="toggleProject('${docSnap.id}', ${!d.active})"><i class="bi bi-${d.active ? 'pause' : 'play'}"></i></button>
+                                <button class="btn btn-sm btn-success" onclick="whatsappProject('${d.whatsapp || ''}')"><i class="bi bi-whatsapp"></i></button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteProject('${docSnap.id}')"><i class="bi bi-trash"></i></button>
+                            </td>
                         </tr>`;
                 });
-                document.getElementById('totalProjects').textContent = snapshot.size;
             });
         }
 
-        window.saveProject = async () => {
-            const name = document.getElementById('projectName').value.trim();
-            const desc = document.getElementById('projectDesc').value.trim();
-            if (!name) return alert('اكتب اسم المشروع');
+        window.openProjectModal = () => {
+            document.getElementById('projectForm').reset();
+            document.getElementById('projectId').value = '';
+            document.getElementById('endDateDiv').style.display = 'none';
+            new bootstrap.Modal(document.getElementById('projectModal')).show();
+        };
 
-            await addDoc(collection(db, 'projects'), {
-                name, desc, active: true, 
-                createdAt: serverTimestamp(), 
-                createdBy: currentUser.uid
-            });
+        window.toggleDuration = () => {
+            const type = document.getElementById('projectDurationType').value;
+            document.getElementById('endDateDiv').style.display = type === 'limited' ? 'block' : 'none';
+        };
+
+        window.saveProject = async () => {
+            const id = document.getElementById('projectId').value;
+            const name = document.getElementById('projectName').value.trim();
+            const code = document.getElementById('projectCodeInput').value.trim();
+            const durationType = document.getElementById('projectDurationType').value;
+            const endDate = document.getElementById('projectEndDate').value;
+            const desc = document.getElementById('projectDesc').value.trim();
+            const whatsapp = document.getElementById('projectWhatsApp').value.trim();
+            
+            if (!name || !code) return Swal.fire('خطأ', 'اكتب اسم وكود المشروع', 'error');
+            if (durationType === 'limited' && !endDate) return Swal.fire('خطأ', 'حدد تاريخ الانتهاء', 'error');
+
+            const data = { name, code, desc, whatsapp, durationType, endDate: durationType === 'limited' ? endDate : null, active: true, updatedAt: serverTimestamp() };
+            
+            if (id) {
+                await updateDoc(doc(db, 'projects', id), data);
+            } else {
+                data.createdAt = serverTimestamp();
+                data.createdBy = currentUser.uid;
+                await addDoc(collection(db, 'projects'), data);
+            }
             bootstrap.Modal.getInstance(document.getElementById('projectModal')).hide();
+            Swal.fire('تم', 'تم حفظ المشروع بنجاح', 'success');
+        };
+
+        window.editProject = async (id) => {
+            const snap = await getDoc(doc(db, 'projects', id));
+            const d = snap.data();
+            document.getElementById('projectId').value = id;
+            document.getElementById('projectName').value = d.name;
+            document.getElementById('projectCodeInput').value = d.code;
+            document.getElementById('projectDurationType').value = d.durationType || 'unlimited';
+            document.getElementById('projectEndDate').value = d.endDate || '';
+            document.getElementById('projectDesc').value = d.desc || '';
+            document.getElementById('projectWhatsApp').value = d.whatsapp || '';
+            toggleDuration();
+            new bootstrap.Modal(document.getElementById('projectModal')).show();
+        };
+
+        window.toggleProject = async (id, active) => {
+            await updateDoc(doc(db, 'projects', id), { active });
+            Swal.fire('تم', active ? 'تم تنشيط المشروع' : 'تم إيقاف المشروع', 'success');
+        };
+
+        window.deleteProject = async (id) => {
+            const result = await Swal.fire({
+                title: 'متأكد؟', text: 'بينحذف المشروع وكل البيانات المرتبطة', icon: 'warning',
+                showCancelButton: true, confirmButtonText: 'نعم احذف', cancelButtonText: 'إلغاء'
+            });
+            if (result.isConfirmed) {
+                await deleteDoc(doc(db, 'projects', id));
+                Swal.fire('تم الحذف', '', 'success');
+            }
+        };
+
+        window.whatsappProject = (num) => {
+            if (!num) return Swal.fire('تنبيه', 'لا يوجد رقم واتساب للمشروع', 'warning');
+            window.open(`https://wa.me/${num}`, '_blank');
+        };
+
+        function loadManagers() {
+            const tbody = document.getElementById('managersTableBody');
+            onSnapshot(query(collection(db, 'users'), where('role', '==', 'manager')), (snapshot) => {
+                tbody.innerHTML = '';
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا يوجد مدراء</td></tr>';
+                    return;
+                }
+                let i = 1;
+                snapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${i++}</td>
+                            <td><strong>${d.name}</strong></td>
+                            <td>${d.phone}</td>
+                            <td>${d.projectName || '-'}</td>
+                            <td><span class="badge bg-${d.active ? 'success' : 'secondary'}">${d.active ? 'نشط' : 'موقوف'}</span></td>
+                            <td>-</td>
+                        </tr>`;
+                });
+            });
+        }
+
+        function loadProjectSettings() {
+            const div = document.getElementById('projectSettingsList');
+            onSnapshot(collection(db, 'projects'), (snapshot) => {
+                div.innerHTML = '';
+                snapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    div.innerHTML += `
+                        <div class="settings-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">${d.name} - <code>${d.code}</code></h6>
+                                <div>
+                                    <button class="btn btn-sm btn-${d.active ? 'secondary' : 'success'}" onclick="toggleProject('${docSnap.id}', ${!d.active})">${d.active ? 'إيقاف' : 'تنشيط'}</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteProject('${docSnap.id}')"><i class="bi bi-trash"></i> حذف</button>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        window.addHiddenProject = async () => {
+            const code = document.getElementById('hideProjectCode').value.trim();
+            if (!code) return;
+            const hidden = systemSettings.hiddenProjects || [];
+            if (!hidden.includes(code)) {
+                hidden.push(code);
+                await setDoc(doc(db, 'settings', 'system'), { hiddenProjects: hidden }, { merge: true });
+                document.getElementById('hideProjectCode').value = '';
+                loadHiddenItems();
+                Swal.fire('تم', 'تم إضافة المشروع للقائمة المخفية', 'success');
+            }
+        };
+
+        window.addHiddenManager = async () => {
+            const phone = document.getElementById('hideManagerPhone').value.trim();
+            if (!phone) return;
+            const hidden = systemSettings.hiddenManagers || [];
+            if (!hidden.includes(phone)) {
+                hidden.push(phone);
+                await setDoc(doc(db, 'settings', 'system'), { hiddenManagers: hidden }, { merge: true });
+                document.getElementById('hideManagerPhone').value = '';
+                loadHiddenItems();
+                Swal.fire('تم', 'تم إضافة المدير للقائمة المخفية', 'success');
+            }
+        };
+
+        function loadHiddenItems() {
+            const div = document.getElementById('hiddenItemsList');
+            const projects = (systemSettings.hiddenProjects || []).map(p => `<span class="badge bg-danger me-2">${p} <i class="bi bi-x" onclick="removeHidden('project','${p}')" style="cursor:pointer"></i></span>`).join('');
+            const managers = (systemSettings.hiddenManagers || []).map(m => `<span class="badge bg-warning me-2">${m} <i class="bi bi-x" onclick="removeHidden('manager','${m}')" style="cursor:pointer"></i></span>`).join('');
+            div.innerHTML = `<div class="mb-2"><strong>المشاريع المخفية:</strong><br>${projects || 'لا يوجد'}</div><div><strong>المدراء المخفيين:</strong><br>${managers || 'لا يوجد'}</div>`;
+        }
+
+        window.removeHidden = async (type, val) => {
+            if (type === 'project') {
+                const arr = (systemSettings.hiddenProjects || []).filter(p => p !== val);
+                await setDoc(doc(db, 'settings', 'system'), { hiddenProjects: arr }, { merge: true });
+            } else {
+                const arr = (systemSettings.hiddenManagers || []).filter(m => m !== val);
+                await setDoc(doc(db, 'settings', 'system'), { hiddenManagers: arr }, { merge: true });
+            }
+            await loadSystemSettings();
+            loadHiddenItems();
         };
     </script>
 </body>
