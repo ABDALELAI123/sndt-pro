@@ -3,379 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNDT Pro - النظام</title>
+    <title>السندات - سندات برو</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
+        @media print {.no-print { display: none; } }
+      .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <!-- شاشة تسجيل الدخول -->
-    <div id="auth-screen" class="min-h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-96">
-            <div class="text-center mb-6">
-                <i class="fa-solid fa-building text-5xl text-green-600 mb-3"></i>
-                <h1 class="text-2xl font-bold">SNDT Pro</h1>
-            </div>
-            
-            <!-- اختيار نوع الدخول -->
-            <div id="role-step">
-                <button onclick="showManagerLogin()" class="w-full bg-blue-600 text-white p-4 rounded-lg font-bold mb-3">
-                    <i class="fa-solid fa-user-shield ml-2"></i>دخول المدراء
-                </button>
-                <button onclick="showDelegateLogin()" class="w-full bg-green-600 text-white p-4 rounded-lg font-bold">
-                    <i class="fa-solid fa-user-tie ml-2"></i>دخول المناديب
-                </button>
-            </div>
-
-            <!-- دخول المدراء OTP -->
-            <div id="manager-step" class="hidden">
-                <p class="text-center text-sm text-gray-600 mb-3">دخول المدراء بـ SMS</p>
-                <input id="manager-phone" type="tel" placeholder="رقم الجوال 05xxxxxxxx" class="w-full p-3 mb-3 border rounded-lg">
-                <div id="recaptcha-container" class="mb-3"></div>
-                <button onclick="sendManagerOTP()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold mb-2">ارسال كود</button>
-                <button onclick="backToRole()" class="w-full text-gray-500 p-2 text-sm">رجوع</button>
-            </div>
-
-            <!-- ادخال كود المدير -->
-            <div id="manager-otp-step" class="hidden">
-                <input id="manager-otp" type="text" placeholder="ادخل كود التحقق" class="w-full p-3 mb-3 border rounded-lg text-center">
-                <button onclick="verifyManagerOTP()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">تأكيد</button>
-            </div>
-
-            <!-- دخول المناديب -->
-            <div id="delegate-step" class="hidden">
-                <p class="text-center text-sm text-gray-600 mb-3">دخول المناديب</p>
-                <input id="delegate-phone" type="tel" placeholder="رقم الجوال 05xxxxxxxx" class="w-full p-3 mb-3 border rounded-lg">
-                <input id="delegate-password" type="password" placeholder="كلمة المرور" class="w-full p-3 mb-3 border rounded-lg">
-                <button onclick="delegateLogin()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold mb-2">دخول</button>
-                <button onclick="backToRole()" class="w-full text-gray-500 p-2 text-sm">رجوع</button>
-            </div>
-
-            <!-- تغيير كلمة مرور المندوب اختياري -->
-            <div id="change-pass-step" class="hidden">
-                <p class="text-sm text-orange-600 mb-4 text-center font-bold">يمكنك تغيير كلمة المرور</p>
-                <input id="new-password" type="password" placeholder="كلمة مرور جديدة" class="w-full p-3 mb-3 border rounded-lg">
-                <input id="confirm-password" type="password" placeholder="تأكيد كلمة المرور" class="w-full p-3 mb-3 border rounded-lg">
-                <button onclick="changeDelegatePassword()" class="w-full bg-orange-600 text-white p-3 rounded-lg font-bold mb-2">تغيير</button>
-                <button onclick="skipChangePass()" class="w-full text-gray-500 p-2 text-sm">تخطي</button>
-            </div>
-
-            <p id="auth-error" class="text-red-500 text-sm mt-3 text-center"></p>
-        </div>
-    </div>
-
-    <!-- شاشة المدراء -->
-    <div id="manager-screen" class="hidden p-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow">
-                <h1 class="text-2xl font-bold"><i class="fa-solid fa-user-shield text-blue-600 ml-2"></i>لوحة المدير</h1>
-                <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm">خروج</button>
-            </div>
-
-            <!-- اضافة مندوب -->
-            <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
-                <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-user-plus ml-2"></i>إضافة مندوب جديد</h2>
-                <div class="grid grid-cols-3 gap-3">
-                    <input id="new-delegate-name" placeholder="اسم المندوب *" class="p-3 border rounded-lg">
-                    <input id="new-delegate-phone" type="tel" placeholder="رقم الجوال 05xxxxxxxx *" class="p-3 border rounded-lg">
-                    <button onclick="addDelegate()" class="bg-green-600 text-white p-3 rounded-lg font-bold">إضافة</button>
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- هذي تظهر لو الرابط فيه id سند واحد للعميل -->
+        <div id="singleBondView" class="hidden">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-3xl mx-auto">
+                <div id="publicBondArea" class="p-8"></div>
+                <div class="p-4 border-t flex gap-2 no-print">
+                    <button id="publicPrintBtn" class="flex-1 bg-blue-600 text-white p-3 rounded-lg">طباعة PDF</button>
+                    <button id="publicShareBtn" class="flex-1 bg-green-600 text-white p-3 rounded-lg">مشاركة واتساب</button>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">كلمة المرور الافتراضية: 123456</p>
-                <p id="manager-msg" class="text-sm mt-3 text-center font-bold"></p>
-            </div>
-
-            <!-- قائمة المناديب -->
-            <div class="bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-list ml-2"></i>المناديب</h2>
-                <div id="delegates-list" class="space-y-2"></div>
             </div>
         </div>
-    </div>
 
-    <!-- شاشة المندوب -->
-    <div id="delegate-screen" class="hidden p-6">
-        <div class="max-w-5xl mx-auto">
-            <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow">
-                <div>
-                    <h1 class="text-2xl font-bold"><i class="fa-solid fa-hand-wave text-yellow-500"></i> مرحبا <span id="delegate-name"></span></h1>
-                    <p class="text-sm text-gray-600">الجوال: <span id="delegate-phone-display"></span></p>
+        <!-- هذي لوحة التحكم للمدير والسوبر -->
+        <div id="dashboardView" class="hidden">
+            <!-- الهيدر -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 no-print">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-blue-600">إدارة السندات</h1>
+                        <p id="userInfo" class="text-gray-500 mt-1"></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="exportExcelBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">تصدير Excel</button>
+                        <button id="exportPDFBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">تصدير PDF</button>
+                        <button id="backBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">رجوع</button>
+                    </div>
                 </div>
-                <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm">خروج</button>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-md">
-                <h3 class="text-xl font-bold mb-4"><i class="fa-solid fa-file-circle-plus text-green-600 ml-2"></i>إنشاء سند جديد</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <select id="bond-type" class="p-2 border rounded-lg">
-                        <option value="">اختر نوع السند *</option>
-                        <option value="قبض">قبض</option>
-                        <option value="صرف">صرف</option>
+            <!-- الفلاتر المتقدمة -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 no-print">
+                <h2 class="text-xl font-bold mb-4">بحث متقدم</h2>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <input type="text" id="searchQuery" class="p-3 border rounded-lg" placeholder="رقم سند، اسم عميل، جوال...">
+                    <select id="filterStatus" class="p-3 border rounded-lg">
+                        <option value="">كل الحالات</option>
+                        <option value="غير مورد">غير مورد</option>
+                        <option value="مورد">مورد</option>
+                        <option value="موثق">موثق</option>
                     </select>
-                    <input id="bond-amount" type="number" placeholder="المبلغ *" class="p-2 border rounded-lg">
-                    <input id="client-name" placeholder="اسم العميل *" class="p-2 border rounded-lg">
-                    <input id="client-account" placeholder="رقم حساب العميل - اختياري" class="p-2 border rounded-lg">
+                    <select id="filterType" class="p-3 border rounded-lg">
+                        <option value="">كل الأنواع</option>
+                        <option value="قبض">سند قبض</option>
+                        <option value="صرف">سند صرف</option>
+                    </select>
+                    <input type="date" id="dateFrom" class="p-3 border rounded-lg">
+                    <input type="date" id="dateTo" class="p-3 border rounded-lg">
                 </div>
-                <textarea id="bond-desc" placeholder="البيان / التفاصيل *" class="p-2 border rounded-lg w-full mt-3" rows="2"></textarea>
-                <button onclick="createBond()" class="w-full bg-green-600 text-white p-3 rounded-lg mt-3 font-bold">إنشاء السند</button>
-                <p id="bond-msg" class="text-sm mt-2 text-center font-bold"></p>
+            </div>
+
+            <!-- جدول السندات -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div id="bondsTableContainer" class="overflow-x-auto">
+                    <p class="text-center text-gray-500 p-8">جاري التحميل...</p>
+                </div>
             </div>
         </div>
     </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- نافذة عرض السند للمدير -->
+    <div id="adminBondModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-3xl w-full max-h- overflow-y-auto">
+            <div id="adminBondArea" class="p-8"></div>
+            <div class="p-4 border-t flex gap-2 no-print">
+                <button id="verifyBtn" class="flex-1 bg-green-600 text-white p-3 rounded-lg">توثيق السند</button>
+                <button id="submitBtn" class="flex-1 bg-blue-600 text-white p-3 rounded-lg">توريد السند</button>
+                <button onclick="document.getElementById('adminBondModal').classList.add('hidden')" class="px-6 bg-gray-500 text-white rounded-lg">إغلاق</button>
+            </div>
+        </div>
+    </div>
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCxKr-2tej7PaBmJLXKJVudl00HnPkqH5Q",
-        authDomain: "sndt-pro-v2.firebaseapp.com",
-        projectId: "sndt-pro-v2",
-        storageBucket: "sndt-pro-v2.firebasestorage.app",
-        messagingSenderId: "255580444878",
-        appId: "1:255580444878:web:80400b33c29ba0b174589f"
-    };
+    <script type="module">
+        import { auth, db } from './firebase.js';
+        import { getCurrentUserData } from './auth.js';
+        import { formatMoney, formatDate, showSuccess, showError } from './core.js';
+        import { toArabicNumbers } from './utils.js';
+        import { collection, query, where, getDocs, orderBy, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    firebase.initializeApp(firebaseConfig);
-    const appCheck = firebase.appCheck();
-    appCheck.activate('6Lf75BctAAAAAJQqpSVLTVU0PKOtexfrbi6nuqeQ', true);
-    
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    let confirmationResult = null;
-    let currentUser = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const bondId = urlParams.get('id');
+        const projectCode = urlParams.get('project');
 
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
-
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            currentUser = user;
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            if (userDoc.exists) {
-                const role = userDoc.data().role;
-                if (role === 'manager') {
-                    showManagerScreen();
-                } else {
-                    showDelegateScreen();
-                }
-            }
+        // 1. لو الرابط فيه id = عرض سند واحد للعميل
+        if (bondId && projectCode) {
+            document.getElementById('singleBondView').classList.remove('hidden');
+            loadPublicBond(bondId, projectCode);
         } else {
-            showAuthScreen();
+            // 2. لوحة تحكم المدير/السوبر
+            document.getElementById('dashboardView').classList.remove('hidden');
+            await initDashboard();
         }
-    });
 
-    function showAuthScreen() {
-        hideAll();
-        document.getElementById('auth-screen').classList.remove('hidden');
-        document.getElementById('role-step').classList.remove('hidden');
-    }
-
-    function showManagerScreen() {
-        hideAll();
-        document.getElementById('manager-screen').classList.remove('hidden');
-        loadDelegates();
-    }
-
-    function showDelegateScreen() {
-        hideAll();
-        document.getElementById('delegate-screen').classList.remove('hidden');
-        loadDelegateData();
-    }
-
-    function hideAll() {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('manager-screen').classList.add('hidden');
-        document.getElementById('delegate-screen').classList.add('hidden');
-        document.getElementById('manager-step').classList.add('hidden');
-        document.getElementById('manager-otp-step').classList.add('hidden');
-        document.getElementById('delegate-step').classList.add('hidden');
-        document.getElementById('change-pass-step').classList.add('hidden');
-        document.getElementById('role-step').classList.add('hidden');
-    }
-
-    window.showManagerLogin = () => {
-        hideAll();
-        document.getElementById('auth-screen').classList.remove('hidden');
-        document.getElementById('manager-step').classList.remove('hidden');
-    };
-
-    window.showDelegateLogin = () => {
-        hideAll();
-        document.getElementById('auth-screen').classList.remove('hidden');
-        document.getElementById('delegate-step').classList.remove('hidden');
-    };
-
-    window.backToRole = () => {
-        hideAll();
-        document.getElementById('auth-screen').classList.remove('hidden');
-        document.getElementById('role-step').classList.remove('hidden');
-    };
-
-    // دخول المدراء OTP
-    window.sendManagerOTP = async () => {
-        const phone = document.getElementById('manager-phone').value.trim();
-        const errorEl = document.getElementById('auth-error');
-        if (!phone.startsWith('05') || phone.length !== 10) {
-            errorEl.textContent = 'رقم الجوال لازم 10 أرقام ويبدأ بـ 05';
-            return;
-        }
-        const phoneNumber = '+966' + phone.substring(1);
-        try {
-            confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
-            document.getElementById('manager-step').classList.add('hidden');
-            document.getElementById('manager-otp-step').classList.remove('hidden');
-            errorEl.textContent = '';
-        } catch (error) {
-            errorEl.textContent = 'خطأ: ' + error.message;
-        }
-    };
-
-    window.verifyManagerOTP = async () => {
-        const code = document.getElementById('manager-otp').value;
-        try {
-            const result = await confirmationResult.confirm(code);
-            const userDoc = await db.collection('users').doc(result.user.uid).get();
-            if (!userDoc.exists) {
-                await db.collection('users').doc(result.user.uid).set({
-                    role: 'manager',
-                    phone: document.getElementById('manager-phone').value,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+        // عرض سند للعميل عبر QR
+        async function loadPublicBond(id, project) {
+            const bondDoc = await getDoc(doc(db, 'bonds', id));
+            if (!bondDoc.exists() || bondDoc.data().projectCode!== project) {
+                document.getElementById('publicBondArea').innerHTML = '<p class="text-center text-red-500 text-xl">السند غير موجود</p>';
+                return;
             }
-        } catch (error) {
-            document.getElementById('auth-error').textContent = 'كود التحقق خطأ';
-        }
-    };
 
-    // دخول المناديب
-    window.delegateLogin = async () => {
-        const phone = document.getElementById('delegate-phone').value.trim();
-        const password = document.getElementById('delegate-password').value;
-        const errorEl = document.getElementById('auth-error');
-        errorEl.textContent = '';
-        
-        if (!phone.startsWith('05') || phone.length !== 10) {
-            errorEl.textContent = 'رقم الجوال لازم 10 أرقام ويبدأ بـ 05';
-            return;
-        }
-        if (!password) {
-            errorEl.textContent = 'ادخل كلمة المرور';
-            return;
-        }
+            const b = bondDoc.data();
+            const projectDoc = await getDoc(doc(db, 'projects', project));
+            const projectName = projectDoc.exists()? projectDoc.data().name : project;
 
-        const email = phone + '@sndt.local';
-        try {
-            const userCred = await auth.signInWithEmailAndPassword(email, password);
-            const userDoc = await db.collection('users').doc(userCred.user.uid).get();
-            if (userDoc.data().mustChangePassword) {
-                document.getElementById('delegate-step').classList.add('hidden');
-                document.getElementById('change-pass-step').classList.remove('hidden');
-            }
-        } catch (error) {
-            errorEl.textContent = 'رقم الجوال أو كلمة المرور خاطئة';
-        }
-    };
+            const statusColor = b.status === 'مورد'? 'text-green-600' : b.status === 'موثق'? 'text-blue-600' : 'text-yellow-600';
+            const effectText = b.accountingEffect === 'إيجابي'? 'غير مورد' : 'غير موثق';
 
-    window.changeDelegatePassword = async () => {
-        const newPass = document.getElementById('new-password').value;
-        const confirmPass = document.getElementById('confirm-password').value;
-        const errorEl = document.getElementById('auth-error');
-        
-        if (newPass.length < 6) {
-            errorEl.textContent = 'كلمة المرور لازم 6 أحرف على الأقل';
-            return;
-        }
-        if (newPass !== confirmPass) {
-            errorEl.textContent = 'كلمة المرور غير متطابقة';
-            return;
-        }
-        
-        await auth.currentUser.updatePassword(newPass);
-        await db.collection('users').doc(auth.currentUser.uid).update({ mustChangePassword: false });
-        showDelegateScreen();
-    };
+            document.getElementById('publicBondArea').innerHTML = `
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold">${projectName}</h2>
+                    <p class="text-gray-600 text-lg">سند ${b.bondType}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6 text-lg">
+                    <div><strong>رقم السند:</strong> ${b.bondNumber}</div>
+                    <div><strong>التاريخ:</strong> ${b.bondDate}</div>
+                    <div><strong>المبلغ:</strong> ${formatMoney(b.amount)}</div>
+                    <div><strong>نوع الدفع:</strong> ${b.paymentType}</div>
+                    <div><strong>العميل:</strong> ${b.clientName || '-'}</div>
+                    <div><strong>الصندوق:</strong> ${b.fundName || '-'}</div>
+                </div>
+                <div class="mb-6 text-lg"><strong>المبلغ كتابة:</strong> ${toArabicNumbers(b.amount)} ريال سعودي فقط</div>
+                <div class="mb-6 text-xl">
+                    <strong>الحالة:</strong>
+                    <span class="font-bold ${statusColor}">${b.status}</span>
+                    <span class="text-sm text-gray-500">(${effectText})</span>
+                </div>
+                ${b.notes? `<div class="mb-6"><strong>ملاحظات:</strong> ${b.notes}</div>` : ''}
+                <div class="flex justify-between items-center mt-8 pt-6 border-t">
+                    <div><strong>المحاسب:</strong> ${b.accountantName || '-'}</div>
+                    <div id="publicQR"></div>
+                </div>
+            `;
 
-    window.skipChangePass = () => {
-        showDelegateScreen();
-    };
-
-    // المدير يضيف مندوب - بدون Cloud Function
-    window.addDelegate = async () => {
-        const name = document.getElementById('new-delegate-name').value.trim();
-        const phone = document.getElementById('new-delegate-phone').value.trim();
-        const msgEl = document.getElementById('manager-msg');
-        
-        if (!name || !phone.startsWith('05') || phone.length !== 10) {
-            msgEl.textContent = 'تأكد من البيانات';
-            msgEl.className = 'text-sm mt-3 text-center font-bold text-red-500';
-            return;
-        }
-
-        const email = phone + '@sndt.local';
-        const password = '123456';
-
-        try {
-            const userCred = await auth.createUserWithEmailAndPassword(email, password);
-            await db.collection('users').doc(userCred.user.uid).set({
-                name: name,
-                phone: phone,
-                role: 'delegate',
-                mustChangePassword: true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            new QRCode(document.getElementById('publicQR'), {
+                text: window.location.href,
+                width: 120,
+                height: 120
             });
-            
-            await auth.signOut(); // نسجل خروج عشان نرجع للمدير
-            
-            msgEl.textContent = 'تم إضافة المندوب ✅ سجل دخولك مرة ثانية';
-            msgEl.className = 'text-sm mt-3 text-center font-bold text-green-600';
-            document.getElementById('new-delegate-name').value = '';
-            document.getElementById('new-delegate-phone').value = '';
-            
-            setTimeout(() => location.reload(), 2000);
-        } catch (error) {
-            msgEl.textContent = 'خطأ: ' + error.message;
-            msgEl.className = 'text-sm mt-3 text-center font-bold text-red-500';
+
+            // أزرار العميل
+            document.getElementById('publicPrintBtn').onclick = () => {
+                html2pdf().from(document.getElementById('publicBondArea')).save(`سند-${b.bondNumber}.pdf`);
+            };
+
+            document.getElementById('publicShareBtn').onclick = () => {
+                const text = `*سند ${b.bondType} - ${projectName}*\nرقم: ${b.bondNumber}\nالمبلغ: ${formatMoney(b.amount)}\nالتاريخ: ${b.bondDate}\nالحالة: ${b.status}\n\n${window.location.href}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+            };
         }
-    };
 
-    async function loadDelegates() {
-        const listEl = document.getElementById('delegates-list');
-        const snapshot = await db.collection('users').where('role', '==', 'delegate').get();
-        listEl.innerHTML = '';
-        if (snapshot.empty) {
-            listEl.innerHTML = '<p class="text-gray-500 text-center">لا يوجد مناديب</p>';
-            return;
+        // لوحة تحكم المدير
+        async function initDashboard() {
+            const userData = await getCurrentUserData();
+            if (!userData || (userData.role!== 'manager' && userData.role!== 'superadmin')) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('userInfo').textContent = `${userData.name} | ${userData.role === 'superadmin'? 'سوبر ادمن' : 'مدير مشروع: ' + userData.projectCode}`;
+            document.getElementById('backBtn').onclick = () => {
+                window.location.href = userData.role === 'superadmin'? 'super-admin.html' : 'manager.html';
+            };
+
+            window.currentUser = userData;
+            await loadBondsTable();
+
+            // فلاتر
+            ['searchQuery', 'filterStatus', 'filterType', 'dateFrom', 'dateTo'].forEach(id => {
+                document.getElementById(id).onchange = loadBondsTable;
+            });
+            document.getElementById('searchQuery').oninput = loadBondsTable;
         }
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            listEl.innerHTML += `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div><p class="font-bold">${data.name}</p><p class="text-sm text-gray-600">${data.phone}</p></div>
-                    <span class="text-xs px-2 py-1 rounded ${data.mustChangePassword ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">
-                        ${data.mustChangePassword ? 'لم يغير كلمته' : 'نشط'}
-                    </span>
-                </div>`;
-        });
-    }
 
-    async function loadDelegateData() {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const data = userDoc.data();
-        document.getElementById('delegate-name').textContent = data.name;
-        document.getElementById('delegate-phone-display').textContent = data.phone;
-    }
+        async function loadBondsTable() {
+            const userData = window.currentUser;
+            let q = query(collection(db, 'bonds'), orderBy('createdAt', 'desc'));
 
-    window.createBond = () => {
-        document.getElementById('bond-msg').textContent = 'تم إنشاء السند';
-        document.getElementById('bond-msg').className = 'text-sm mt-2 text-center font-bold text-green-600';
-    };
+            // المدير يشوف مشروعه بس، السوبر يشوف الكل
+            if (userData.role === 'manager') {
+                q = query(q, where('projectCode', '==', userData.projectCode));
+            }
 
-    window.logout = () => auth.signOut();
-</script>
+            const snap = await getDocs(q);
+            let bonds = snap.docs.map(d => ({ id: d.id,...d.data() }));
+
+            // فلترة
+            const search = document.getElementById('searchQuery').value.toLowerCase();
+            const status = document.getElementById('filterStatus').value;
+            const type = document.getElementById('filterType').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+
+            if (search) bonds = bonds.filter(b =>
+                b.bondNumber.toLowerCase().includes(search) ||
+                b.clientName?.toLowerCase().includes(search) ||
+                b.clientPhone?.includes(search) ||
+                b.createdByName?.toLowerCase().includes(search)
+            );
+            if (status) bonds = bonds.filter(b => b.status === status);
+            if (type) bonds = bonds.filter(b => b.bondType === type);
+            if (dateFrom) bonds = bonds.filter(b => b.bondDate >= dateFrom);
+            if (dateTo) bonds = bonds.filter(b => b.bondDate <= dateTo);
+
+            window.filteredBonds = bonds;
+
+            // عرض الجدول
+            const container = document.getElementById('bondsTableContainer');
+            if (bonds.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 p-8">لا توجد سندات</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-right">رقم السند</th>
+                            <th class="p-3 text-right">المبلغ</th>
+                            <th class="p-3 text-right">النوع</th>
+                            <th class="p-3 text-right">العميل</th>
+                            <th class="p-3 text-right">المندوب</th>
+                            <th class="p-3 text-right">التاريخ</th>
+                            <th class="p-3 text-right">الحالة</th>
+                            <th class="p-3 text-right">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${bonds.map(b => `
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3 font-bold">${b.bondNumber}</td>
+                                <td class="p-3">${formatMoney(b.amount)}</td>
+                                <td class="p-3">${b.bondType}</td>
+                                <td class="p-3">${b.clientName || '-'}</td>
+                                <td class="p-3">${b.createdByName}</td>
+                                <td class="p-3">${b.bondDate}</td>
+                                <td class="p-3">
+                                    <span class="px-2 py-1 rounded text-xs ${b.status === 'مورد'? 'bg-green-100 text-green-800' : b.status === 'موثق'? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">
+                                        <span class="status-dot ${b.status === 'مورد'? 'bg-green-500' : b.status === 'موثق'? 'bg-blue-500' : 'bg-yellow-500'}"></span>
+                                        ${b.status}
+                                    </span>
+                                </td>
+                                <td class="p-3">
+                                    <button onclick="viewAdminBond('${b.id}')" class="text-blue-600 hover:underline text-sm">عرض/تعديل</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // عرض سند للمدير مع أزرار توثيق/توريد
+        window.viewAdminBond = async (id) => {
+            const bondDoc = await getDoc(doc(db, 'bonds', id));
+            const b = bondDoc.data();
+
+            document.getElementById('adminBondArea').innerHTML = `
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold">سند ${b.bondType}</h2>
+                    <p class="text-gray-600">${b.bondNumber}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div><strong>المبلغ:</strong> ${formatMoney(b.amount)}</div>
+                    <div><strong>التاريخ:</strong> ${b.bondDate}</div>
+                    <div><strong>العميل:</strong> ${b.clientName || '-'}</div>
+                    <div><strong>جوال العميل:</strong> ${b.clientPhone || '-'}</div>
+                    <div><strong>الصندوق:</strong> ${b.fundName || '-'}</div>
+                    <div><strong>المحاسب:</strong> ${b.accountantName || '-'}</div>
+                    <div><strong>المندوب:</strong> ${b.createdByName}</div>
+                    <div><strong>نوع الدفع:</strong> ${b.paymentType}</div>
+                </div>
+                <div class="mb-4 p-4 rounded-lg ${b.status === 'مورد'? 'bg-green-50' : b.status === 'موثق'? 'bg-blue-50' : 'bg-yellow-50'}">
+                    <strong>الحالة الحالية:</strong>
+                    <span class="font-bold text-lg">${b.status}</span>
+                    <p class="text-sm mt-1">الأثر: ${b.accountingEffect === 'إيجابي'? 'غير مورد' : 'غير موثق'}</p>
+                </div>
+            `;
+
+            // أزرار التوثيق والتوريد
+            const verifyBtn = document.getElementById('verifyBtn');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // إخفاء الأزرار لو الحالة منتهية
+            if (b.status === 'مورد' && b.accountingEffect === 'إيجابي') {
+                submitBtn.classList.add('hidden');
+            }
+            if (b.status === 'موثق' && b.accountingEffect === 'سلبي') {
+                verifyBtn.classList.add('hidden');
+            }
+
+            verifyBtn.onclick = async () => {
+                await updateDoc(doc(db, 'bonds', id), { status: 'موثق' });
+                showSuccess('تم توثيق السند');
+                document.getElementById('adminBondModal').classList.add('hidden');
+                loadBondsTable();
+            };
+
+            submitBtn.onclick = async () => {
+                await updateDoc(doc(db, 'bonds', id), { status: 'مورد' });
+                showSuccess('تم توريد السند');
+                document.getElementById('adminBondModal').classList.add('hidden');
+                loadBondsTable();
+            };
+
+            document.getElementById('adminBondModal').classList.remove('hidden');
+        };
+
+        // تصدير Excel
+        document.getElementById('exportExcelBtn').onclick = () => {
+            const ws = XLSX.utils.json_to_sheet(window.filteredBonds.map(b => ({
+                'رقم السند': b.bondNumber,
+                'المبلغ': b.amount,
+                'نوع السند': b.bondType,
+                'نوع الدفع': b.paymentType,
+                'العميل': b.clientName,
+                'جوال العميل': b.clientPhone,
+                'المندوب': b.createdByName,
+                'التاريخ': b.bondDate,
+                'الحالة': b.status,
+                'الأثر': b.accountingEffect,
+                'ملاحظات': b.notes
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'السندات');
+            XLSX.writeFile(wb, `السندات-${Date.now()}.xlsx`);
+        };
+
+        // تصدير PDF
+        document.getElementById('exportPDFBtn').onclick = () => {
+            html2pdf().from(document.getElementById('bondsTableContainer')).save(`السندات-${Date.now()}.pdf`);
+        };
+    </script>
 </body>
 </html>
