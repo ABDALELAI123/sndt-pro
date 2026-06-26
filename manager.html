@@ -187,106 +187,91 @@
         let userRole = null;
         let systemSettings = {};
 
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const code = document.getElementById('projectCode').value.trim();
             const phone = document.getElementById('phoneInput').value.trim();
             const pass = document.getElementById('passwordInput').value;
-            await login(code, phone, pass);
-        });
-
-        async function login(code, phone, pass) {
             const errorDiv = document.getElementById('loginError');
             errorDiv.classList.add('d-none');
-            
+
             if (!code ||!phone ||!pass) {
                 errorDiv.textContent = 'املأ جميع الحقول';
                 errorDiv.classList.remove('d-none');
-                return false;
+                return;
             }
 
             const email = `user${phone}@gmail.com`;
-            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
             try {
+                // 1. تسجيل الدخول
                 const userCredential = await signInWithEmailAndPassword(auth, email, pass);
                 const user = userCredential.user;
 
+                // 2. نجيب بيانات المستخدم
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (!userDoc.exists()) {
                     await signOut(auth);
-                    errorDiv.textContent = 'حسابك غير مسجل في النظام';
-                    errorDiv.classList.remove('d-none');
-                    return false;
+                    throw new Error('حسابك غير مسجل في النظام');
                 }
 
                 currentUserData = userDoc.data();
                 userRole = currentUserData.role;
+                currentUser = user;
 
+                // 3. سوبر أدمن
                 if (userRole === 'superadmin') {
-                    if (code !== '001122334455') {
+                    if (code!== '001122334455') {
                         await signOut(auth);
-                        errorDiv.textContent = 'كود المشروع غير صحيح للسوبر أدمن';
-                        errorDiv.classList.remove('d-none');
-                        return false;
+                        throw new Error('كود المشروع غير صحيح للسوبر أدمن');
                     }
-                    currentUser = user;
                     isSuperAdmin = true;
-                    return true;
+                    await initDashboard();
+                    return;
                 }
 
+                // 4. مدير مشروع
                 if (userRole === 'manager') {
                     const projQ = query(collection(db, 'projects'), where('code', '==', code));
                     const projSnap = await getDocs(projQ);
                     if (projSnap.empty) {
                         await signOut(auth);
-                        errorDiv.textContent = 'كود المشروع غير صحيح';
-                        errorDiv.classList.remove('d-none');
-                        return false;
+                        throw new Error('كود المشروع غير صحيح');
                     }
-                    currentProject = { id: projSnap.docs[0].id, ...projSnap.docs[0].data() };
+                    currentProject = { id: projSnap.docs[0].id,...projSnap.docs[0].data() };
 
-                    if (currentUserData.projectId !== currentProject.id) {
+                    if (currentUserData.projectId!== currentProject.id) {
                         await signOut(auth);
-                        errorDiv.textContent = 'غير مصرح لك بهذا المشروع';
-                        errorDiv.classList.remove('d-none');
-                        return false;
+                        throw new Error('غير مصرح لك بهذا المشروع');
                     }
-                    
-                    currentUser = user;
+
                     currentManager = currentUserData;
                     isSuperAdmin = false;
-                    return true;
+                    await initDashboard();
+                    return;
                 }
 
+                // 5. أي دور ثاني
                 await signOut(auth);
-                errorDiv.textContent = 'دور المستخدم غير معروف';
-                errorDiv.classList.remove('d-none');
-                return false;
+                throw new Error('دور المستخدم غير مدعوم حاليا');
 
             } catch (e) {
                 console.error(e);
-                errorDiv.textContent = 'رقم الجوال أو كلمة المرور غلط';
+                errorDiv.textContent = e.message || 'رقم الجوال أو كلمة المرور غلط';
                 errorDiv.classList.remove('d-none');
-                return false;
+                document.getElementById('loadingOverlay').style.display = 'none';
             }
-        }
+        });
 
         window.doLogout = () => signOut(auth);
 
+        // نحذف onAuthStateChanged القديم كامل عشان ما يتعارض
         onAuthStateChanged(auth, async (user) => {
-            if (user && currentUserData) {
-                currentUser = user;
-                document.getElementById('userName').textContent = currentUserData.name;
-                document.getElementById('userRole').textContent = getRoleText(userRole);
-                
-                await loadSystemSettings();
-                buildDashboard();
-                
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('dashboardSection').style.display = 'block';
-            } else {
+            if (!user) {
                 document.getElementById('loginSection').style.display = 'flex';
                 document.getElementById('dashboardSection').style.display = 'none';
+                document.getElementById('loadingOverlay').style.display = 'none';
                 currentUser = null;
                 currentUserData = null;
                 currentProject = null;
@@ -294,8 +279,19 @@
                 userRole = null;
                 isSuperAdmin = false;
             }
-            document.getElementById('loadingOverlay').style.display = 'none';
         });
+
+        async function initDashboard() {
+            document.getElementById('userName').textContent = currentUserData.name;
+            document.getElementById('userRole').textContent = getRoleText(userRole);
+
+            await loadSystemSettings();
+            buildDashboard();
+
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
 
         function getRoleText(role) {
             const roles = { superadmin: 'سوبر أدمن', manager: 'مدير', delegate: 'مندوب' };
@@ -304,12 +300,12 @@
 
         async function loadSystemSettings() {
             const snap = await getDoc(doc(db, 'settings', 'system'));
-            systemSettings = snap.exists() ? snap.data() : {};
+            systemSettings = snap.exists()? snap.data() : {};
         }
 
         function buildDashboard() {
             const container = document.getElementById('tabsContainer');
-            
+
             if (isSuperAdmin) {
                 container.innerHTML = `
                     <ul class="nav nav-tabs" id="mainTabs">
@@ -362,6 +358,7 @@
                                             <button class="btn btn-warning" onclick="addHiddenManager()">إضافة</button>
                                         </div>
                                     </div>
+                                </div>
                                 <div id="hiddenItemsList" class="mt-3"></div>
                             </div>
                         </div>
@@ -373,6 +370,9 @@
                 loadHiddenItems();
             } else if (userRole === 'manager') {
                 container.innerHTML = `
+                    <div class="alert alert-success mb-4">
+                        <strong>مرحبا ${currentManager.name}</strong> - أنت مدير مشروع: ${currentProject.name}
+                    </div>
                     <ul class="nav nav-tabs" id="managerTabs">
                         <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#delegates"><i class="bi bi-people-fill"></i> المناديب</button></li>
                         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#voucherTypes"><i class="bi bi-file-earmark-text"></i> أنواع السندات</button></li>
@@ -422,10 +422,17 @@
         }
 
         function loadStats() {
-            onSnapshot(collection(db, 'projects'), snap => document.getElementById('totalProjects').textContent = snap.size);
-            onSnapshot(query(collection(db, 'users'), where('role', '==', 'manager')), snap => document.getElementById('totalManagers').textContent = snap.size);
-            onSnapshot(query(collection(db, 'users'), where('role', '==', 'delegate')), snap => document.getElementById('totalDelegates').textContent = snap.size);
-            onSnapshot(collection(db, 'bonds'), snap => document.getElementById('totalBonds').textContent = snap.size);
+            if (isSuperAdmin) {
+                onSnapshot(collection(db, 'projects'), snap => document.getElementById('totalProjects').textContent = snap.size);
+                onSnapshot(query(collection(db, 'users'), where('role', '==', 'manager')), snap => document.getElementById('totalManagers').textContent = snap.size);
+                onSnapshot(query(collection(db, 'users'), where('role', '==', 'delegate')), snap => document.getElementById('totalDelegates').textContent = snap.size);
+                onSnapshot(collection(db, 'bonds'), snap => document.getElementById('totalBonds').textContent = snap.size);
+            } else if (userRole === 'manager') {
+                document.getElementById('totalProjects').textContent = 1;
+                onSnapshot(query(collection(db, 'users'), where('role', '==', 'delegate'), where('projectId', '==', currentProject.id)), snap => document.getElementById('totalDelegates').textContent = snap.size);
+                onSnapshot(query(collection(db, 'bonds'), where('projectId', '==', currentProject.id)), snap => document.getElementById('totalBonds').textContent = snap.size);
+                document.getElementById('totalManagers').textContent = 1;
+            }
         }
 
         function loadProjects() {
@@ -441,9 +448,9 @@
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
                     const isExpired = d.durationType === 'limited' && d.endDate && new Date(d.endDate) < new Date();
-                    const status = isExpired ? 'منتهي' : (d.active ? 'نشط' : 'موقوف');
-                    const statusClass = isExpired ? 'danger' : (d.active ? 'success' : 'secondary');
-                    const duration = d.durationType === 'unlimited' ? '<span class="badge bg-info">مطلق</span>' : (d.endDate || '-');
+                    const status = isExpired? 'منتهي' : (d.active? 'نشط' : 'موقوف');
+                    const statusClass = isExpired? 'danger' : (d.active? 'success' : 'secondary');
+                    const duration = d.durationType === 'unlimited'? '<span class="badge bg-info">مطلق</span>' : (d.endDate || '-');
                     tbody.innerHTML += `
                         <tr>
                             <td>${i++}</td>
@@ -453,8 +460,8 @@
                             <td><span class="badge bg-${statusClass}">${status}</span></td>
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="editProject('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-${d.active ? 'secondary' : 'success'}" onclick="toggleProject('${docSnap.id}', ${!d.active})"><i class="bi bi-${d.active ? 'pause' : 'play'}"></i></button>
-                                ${d.perms?.whatsapp !== false ? `<button class="btn btn-sm btn-success" onclick="whatsappProject('${d.whatsapp || ''}', '${d.name}')"><i class="bi bi-whatsapp"></i></button>` : ''}
+                                <button class="btn btn-sm btn-${d.active? 'secondary' : 'success'}" onclick="toggleProject('${docSnap.id}', ${!d.active})"><i class="bi bi-${d.active? 'pause' : 'play'}"></i></button>
+                                ${d.perms?.whatsapp!== false? `<button class="btn btn-sm btn-success" onclick="whatsappProject('${d.whatsapp || ''}', '${d.name}')"><i class="bi bi-whatsapp"></i></button>` : ''}
                                 <button class="btn btn-sm btn-danger" onclick="deleteProject('${docSnap.id}')"><i class="bi bi-trash"></i></button>
                             </td>
                         </tr>`;
@@ -471,7 +478,7 @@
 
         window.toggleDuration = () => {
             const type = document.getElementById('projectDurationType').value;
-            document.getElementById('endDateDiv').style.display = type === 'limited' ? 'block' : 'none';
+            document.getElementById('endDateDiv').style.display = type === 'limited'? 'block' : 'none';
         };
 
         window.saveProject = async () => {
@@ -487,8 +494,8 @@
                 export: document.getElementById('permExport').checked,
                 qr: document.getElementById('permQR').checked
             };
-            
-                                      if (!name ||!code) return Swal.fire('خطأ', 'اكتب اسم وكود المشروع', 'error');
+
+            if (!name ||!code) return Swal.fire('خطأ', 'اكتب اسم وكود المشروع', 'error');
             if (durationType === 'limited' &&!endDate) return Swal.fire('خطأ', 'حدد تاريخ الانتهاء', 'error');
 
             const data = { name, code, desc, whatsapp, durationType, endDate: durationType === 'limited'? endDate : null, perms, active: true, updatedAt: serverTimestamp() };
