@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم السوبر - سندات برو</title>
+    <title>لوحة تحكم - سندات برو</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
         .stat-icon { font-size: 3rem; opacity: 0.9; }
         .stat-value { font-size: 2.5rem; font-weight: 900; margin: 15px 0 5px; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .stat-label { color: #718096; font-size: 1rem; font-weight: 700; }
-        .nav-tabs { border: none; margin-bottom: 25px; gap: 10px; }
+        .nav-tabs { border: none; margin-bottom: 25px; gap: 10px; flex-wrap: wrap; }
         .nav-tabs .nav-link { color: #718096; font-weight: 700; border: none; padding: 15px 30px; border-radius: 15px; background: rgba(255,255,255,0.7); transition: 0.3s; }
         .nav-tabs .nav-link.active { color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); transform: translateY(-2px); }
         .tab-content { padding: 30px; }
@@ -62,7 +62,7 @@
             <form id="loginForm">
                 <div class="mb-3">
                     <label class="form-label fw-bold">كود المشروع</label>
-                    <input type="text" class="form-control" id="projectCode" required placeholder="001122334455">
+                    <input type="text" class="form-control" id="projectCode" required placeholder="كود المشروع أو 001122334455 للسوبر">
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">رقم الجوال</label>
@@ -123,7 +123,6 @@
                             <label class="form-label fw-bold">تاريخ الانتهاء</label>
                             <input type="date" class="form-control" id="projectEndDate">
                         </div>
-                    </div>
                     <div class="mb-3"><label class="form-label fw-bold">رقم واتساب المشروع</label><input type="text" class="form-control" id="projectWhatsApp" placeholder="9665xxxxxxxx"></div>
                     <div class="mb-3"><label class="form-label fw-bold">الوصف</label><textarea class="form-control" id="projectDesc" rows="3"></textarea></div>
                     <div class="mb-3">
@@ -183,6 +182,9 @@
         let currentUser = null;
         let currentUserData = null;
         let isSuperAdmin = false;
+        let currentProject = null;
+        let currentManager = null;
+        let userRole = null;
         let systemSettings = {};
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -190,43 +192,107 @@
             const code = document.getElementById('projectCode').value.trim();
             const phone = document.getElementById('phoneInput').value.trim();
             const pass = document.getElementById('passwordInput').value;
+            await login(code, phone, pass);
+        });
+
+        async function login(code, phone, pass) {
             const errorDiv = document.getElementById('loginError');
             errorDiv.classList.add('d-none');
-            if (code !== '001122334455') {
-                errorDiv.textContent = 'كود المشروع غير صحيح';
+            
+            if (!code ||!phone ||!pass) {
+                errorDiv.textContent = 'املأ جميع الحقول';
                 errorDiv.classList.remove('d-none');
-                return;
+                return false;
             }
+
             const email = `user${phone}@gmail.com`;
+            
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
+                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                const user = userCredential.user;
+
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (!userDoc.exists()) {
+                    await signOut(auth);
+                    errorDiv.textContent = 'حسابك غير مسجل في النظام';
+                    errorDiv.classList.remove('d-none');
+                    return false;
+                }
+
+                currentUserData = userDoc.data();
+                userRole = currentUserData.role;
+
+                if (userRole === 'superadmin') {
+                    if (code !== '001122334455') {
+                        await signOut(auth);
+                        errorDiv.textContent = 'كود المشروع غير صحيح للسوبر أدمن';
+                        errorDiv.classList.remove('d-none');
+                        return false;
+                    }
+                    currentUser = user;
+                    isSuperAdmin = true;
+                    return true;
+                }
+
+                if (userRole === 'manager') {
+                    const projQ = query(collection(db, 'projects'), where('code', '==', code));
+                    const projSnap = await getDocs(projQ);
+                    if (projSnap.empty) {
+                        await signOut(auth);
+                        errorDiv.textContent = 'كود المشروع غير صحيح';
+                        errorDiv.classList.remove('d-none');
+                        return false;
+                    }
+                    currentProject = { id: projSnap.docs[0].id, ...projSnap.docs[0].data() };
+
+                    if (currentUserData.projectId !== currentProject.id) {
+                        await signOut(auth);
+                        errorDiv.textContent = 'غير مصرح لك بهذا المشروع';
+                        errorDiv.classList.remove('d-none');
+                        return false;
+                    }
+                    
+                    currentUser = user;
+                    currentManager = currentUserData;
+                    isSuperAdmin = false;
+                    return true;
+                }
+
+                await signOut(auth);
+                errorDiv.textContent = 'دور المستخدم غير معروف';
+                errorDiv.classList.remove('d-none');
+                return false;
+
             } catch (e) {
+                console.error(e);
                 errorDiv.textContent = 'رقم الجوال أو كلمة المرور غلط';
                 errorDiv.classList.remove('d-none');
+                return false;
             }
-        });
+        }
 
         window.doLogout = () => signOut(auth);
 
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
+            if (user && currentUserData) {
                 currentUser = user;
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (userDoc.exists()) {
-                    currentUserData = userDoc.data();
-                    isSuperAdmin = currentUserData.role === 'superadmin';
-                    document.getElementById('userName').textContent = currentUserData.name;
-                    document.getElementById('userRole').textContent = getRoleText(currentUserData.role);
-                    await loadSystemSettings();
-                    buildTabs();
-                    loadStats();
-                    checkExpiredProjects();
-                }
+                document.getElementById('userName').textContent = currentUserData.name;
+                document.getElementById('userRole').textContent = getRoleText(userRole);
+                
+                await loadSystemSettings();
+                buildDashboard();
+                
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('dashboardSection').style.display = 'block';
             } else {
                 document.getElementById('loginSection').style.display = 'flex';
                 document.getElementById('dashboardSection').style.display = 'none';
+                currentUser = null;
+                currentUserData = null;
+                currentProject = null;
+                currentManager = null;
+                userRole = null;
+                isSuperAdmin = false;
             }
             document.getElementById('loadingOverlay').style.display = 'none';
         });
@@ -241,71 +307,118 @@
             systemSettings = snap.exists() ? snap.data() : {};
         }
 
-        function buildTabs() {
+        function buildDashboard() {
             const container = document.getElementById('tabsContainer');
-            if (!isSuperAdmin) return;
-
-            container.innerHTML = `
-                <ul class="nav nav-tabs" id="mainTabs">
-                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#projects"><i class="bi bi-folder-fill"></i> المشاريع</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#managers"><i class="bi bi-person-badge-fill"></i> المدراء</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#projectSettings"><i class="bi bi-sliders"></i> إعدادات المشاريع</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#systemSettings"><i class="bi bi-gear-fill"></i> إعدادات النظام</button></li>
-                </ul>
-                <div class="tab-content glass">
-                    <div class="tab-pane fade show active" id="projects">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0 fw-bold"><i class="bi bi-folder"></i> إدارة المشاريع</h5>
-                            <button class="btn btn-primary" onclick="openProjectModal()"><i class="bi bi-plus-circle"></i> إضافة مشروع</button>
-                        </div>
-                        <div class="table-responsive"><table class="table table-hover">
-                            <thead><tr><th>#</th><th>اسم المشروع</th><th>الكود</th><th>المدة</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="projectsTableBody"><tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr></tbody>
-                        </table></div>
-                    </div>
-                    <div class="tab-pane fade" id="managers">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0 fw-bold"><i class="bi bi-person-badge"></i> المدراء</h5>
-                            <button class="btn btn-primary" onclick="openManagerModal()"><i class="bi bi-plus-circle"></i> إضافة مدير</button>
-                        </div>
-                        <div class="table-responsive"><table class="table table-hover">
-                            <thead><tr><th>#</th><th>الاسم</th><th>الجوال</th><th>المشروع</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-                            <tbody id="managersTableBody"><tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr></tbody>
-                        </table></div>
-                    </div>
-                    <div class="tab-pane fade" id="projectSettings">
-                        <h5 class="mb-4 fw-bold"><i class="bi bi-sliders"></i> إعدادات المشاريع المتقدمة</h5>
-                        <div id="projectSettingsList"></div>
-                    </div>
-                    <div class="tab-pane fade" id="systemSettings">
-                        <h5 class="mb-4 fw-bold"><i class="bi bi-gear-fill"></i> إعدادات النظام</h5>
-                        <div class="settings-card">
-                            <h6><i class="bi bi-eye-slash"></i> إخفاء التبويبات</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">إخفاء برقم المشروع</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="hideProjectCode" placeholder="أدخل كود المشروع">
-                                        <button class="btn btn-warning" onclick="addHiddenProject()">إضافة</button>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">إخفاء برقم جوال المدير</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="hideManagerPhone" placeholder="05xxxxxxxx">
-                                        <button class="btn btn-warning" onclick="addHiddenManager()">إضافة</button>
-                                    </div>
-                                </div>
-                            <div id="hiddenItemsList" class="mt-3"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
             
-            loadProjects();
-            loadManagers();
-            loadProjectSettings();
-            loadHiddenItems();
+            if (isSuperAdmin) {
+                container.innerHTML = `
+                    <ul class="nav nav-tabs" id="mainTabs">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#projects"><i class="bi bi-folder-fill"></i> المشاريع</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#managers"><i class="bi bi-person-badge-fill"></i> المدراء</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#projectSettings"><i class="bi bi-sliders"></i> إعدادات المشاريع</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#systemSettings"><i class="bi bi-gear-fill"></i> إعدادات النظام</button></li>
+                    </ul>
+                    <div class="tab-content glass">
+                        <div class="tab-pane fade show active" id="projects">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0 fw-bold"><i class="bi bi-folder"></i> إدارة المشاريع</h5>
+                                <button class="btn btn-primary" onclick="openProjectModal()"><i class="bi bi-plus-circle"></i> إضافة مشروع</button>
+                            </div>
+                            <div class="table-responsive"><table class="table table-hover">
+                                <thead><tr><th>#</th><th>اسم المشروع</th><th>الكود</th><th>المدة</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                                <tbody id="projectsTableBody"><tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr></tbody>
+                            </table></div>
+                        </div>
+                        <div class="tab-pane fade" id="managers">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0 fw-bold"><i class="bi bi-person-badge"></i> المدراء</h5>
+                                <button class="btn btn-primary" onclick="openManagerModal()"><i class="bi bi-plus-circle"></i> إضافة مدير</button>
+                            </div>
+                            <div class="table-responsive"><table class="table table-hover">
+                                <thead><tr><th>#</th><th>الاسم</th><th>الجوال</th><th>المشروع</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                                <tbody id="managersTableBody"><tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr></tbody>
+                            </table></div>
+                        </div>
+                        <div class="tab-pane fade" id="projectSettings">
+                            <h5 class="mb-4 fw-bold"><i class="bi bi-sliders"></i> إعدادات المشاريع المتقدمة</h5>
+                            <div id="projectSettingsList"></div>
+                        </div>
+                        <div class="tab-pane fade" id="systemSettings">
+                            <h5 class="mb-4 fw-bold"><i class="bi bi-gear-fill"></i> إعدادات النظام</h5>
+                            <div class="settings-card">
+                                <h6><i class="bi bi-eye-slash"></i> إخفاء التبويبات</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">إخفاء برقم المشروع</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="hideProjectCode" placeholder="أدخل كود المشروع">
+                                            <button class="btn btn-warning" onclick="addHiddenProject()">إضافة</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">إخفاء برقم جوال المدير</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="hideManagerPhone" placeholder="05xxxxxxxx">
+                                            <button class="btn btn-warning" onclick="addHiddenManager()">إضافة</button>
+                                        </div>
+                                    </div>
+                                <div id="hiddenItemsList" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                loadProjects();
+                loadManagers();
+                loadProjectSettings();
+                loadHiddenItems();
+            } else if (userRole === 'manager') {
+                container.innerHTML = `
+                    <ul class="nav nav-tabs" id="managerTabs">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#delegates"><i class="bi bi-people-fill"></i> المناديب</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#voucherTypes"><i class="bi bi-file-earmark-text"></i> أنواع السندات</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#accountants"><i class="bi bi-calculator"></i> المحاسبين</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#payments"><i class="bi bi-credit-card"></i> طرق الدفع</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#boxes"><i class="bi bi-box-seam"></i> الصناديق</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#customFields"><i class="bi bi-input-cursor-text"></i> الحقول المخصصة</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#companySettings"><i class="bi bi-building"></i> إعدادات الشركة</button></li>
+                    </ul>
+                    <div class="tab-content glass">
+                        <div class="tab-pane fade show active" id="delegates">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0 fw-bold"><i class="bi bi-people"></i> إدارة المناديب</h5>
+                                <button class="btn btn-primary"><i class="bi bi-plus-circle"></i> إضافة مندوب</button>
+                            </div>
+                            <div class="alert alert-info">سيتم تفعيل تبويب المناديب في الدفعة القادمة</div>
+                        </div>
+                        <div class="tab-pane fade" id="voucherTypes">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-file-earmark-text"></i> أنواع السندات</h5>
+                            <div class="alert alert-info mt-3">سيتم تفعيله في الدفعة القادمة</div>
+                        </div>
+                        <div class="tab-pane fade" id="accountants">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-calculator"></i> المحاسبين</h5>
+                            <div class="alert alert-info mt-3">سيتم تفعيله في الدفعة القادمة</div>
+                        </div>
+                        <div class="tab-pane fade" id="payments">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-credit-card"></i> طرق الدفع</h5>
+                            <div class="alert alert-info mt-3">سيتم تفعيله في الدفعة القادمة</div>
+                        </div>
+                        <div class="tab-pane fade" id="boxes">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam"></i> الصناديق</h5>
+                            <div class="alert alert-info mt-3">سيتم تفعيله في الدفعة القادمة</div>
+                        </div>
+                        <div class="tab-pane fade" id="customFields">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-input-cursor-text"></i> الحقول المخصصة</h5>
+                            <div class="alert alert-info mt-3">سيتم تفعيله في الدفعة القادمة</div>
+                        </div>
+                        <div class="tab-pane fade" id="companySettings">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-building"></i> إعدادات الشركة</h5>
+                            <div class="alert alert-info mt-3">سيتم تفعيله في الدفعة القادمة</div>
+                        </div>
+                    </div>
+                `;
+            }
+            loadStats();
+            checkExpiredProjects();
         }
 
         function loadStats() {
@@ -317,6 +430,7 @@
 
         function loadProjects() {
             const tbody = document.getElementById('projectsTableBody');
+            if (!tbody) return;
             onSnapshot(query(collection(db, 'projects'), orderBy('createdAt', 'desc')), (snapshot) => {
                 tbody.innerHTML = '';
                 if (snapshot.empty) {
@@ -340,7 +454,7 @@
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="editProject('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
                                 <button class="btn btn-sm btn-${d.active ? 'secondary' : 'success'}" onclick="toggleProject('${docSnap.id}', ${!d.active})"><i class="bi bi-${d.active ? 'pause' : 'play'}"></i></button>
-                                ${d.perms?.whatsapp !== false ? `<button class="btn btn-sm btn-success" onclick="whatsappProject('${d.whatsapp || ''}')"><i class="bi bi-whatsapp"></i></button>` : ''}
+                                ${d.perms?.whatsapp !== false ? `<button class="btn btn-sm btn-success" onclick="whatsappProject('${d.whatsapp || ''}', '${d.name}')"><i class="bi bi-whatsapp"></i></button>` : ''}
                                 <button class="btn btn-sm btn-danger" onclick="deleteProject('${docSnap.id}')"><i class="bi bi-trash"></i></button>
                             </td>
                         </tr>`;
@@ -374,11 +488,11 @@
                 qr: document.getElementById('permQR').checked
             };
             
-            if (!name || !code) return Swal.fire('خطأ', 'اكتب اسم وكود المشروع', 'error');
-            if (durationType === 'limited' && !endDate) return Swal.fire('خطأ', 'حدد تاريخ الانتهاء', 'error');
+                        if (!name ||!code) return Swal.fire('خطأ', 'اكتب اسم وكود المشروع', 'error');
+            if (durationType === 'limited' &&!endDate) return Swal.fire('خطأ', 'حدد تاريخ الانتهاء', 'error');
 
-            const data = { name, code, desc, whatsapp, durationType, endDate: durationType === 'limited' ? endDate : null, perms, active: true, updatedAt: serverTimestamp() };
-            
+            const data = { name, code, desc, whatsapp, durationType, endDate: durationType === 'limited'? endDate : null, perms, active: true, updatedAt: serverTimestamp() };
+
             if (id) {
                 await updateDoc(doc(db, 'projects', id), data);
             } else {
@@ -400,16 +514,16 @@
             document.getElementById('projectEndDate').value = d.endDate || '';
             document.getElementById('projectDesc').value = d.desc || '';
             document.getElementById('projectWhatsApp').value = d.whatsapp || '';
-            document.getElementById('permWhatsApp').checked = d.perms?.whatsapp !== false;
-            document.getElementById('permExport').checked = d.perms?.export !== false;
-            document.getElementById('permQR').checked = d.perms?.qr !== false;
+            document.getElementById('permWhatsApp').checked = d.perms?.whatsapp!== false;
+            document.getElementById('permExport').checked = d.perms?.export!== false;
+            document.getElementById('permQR').checked = d.perms?.qr!== false;
             toggleDuration();
             new bootstrap.Modal(document.getElementById('projectModal')).show();
         };
 
         window.toggleProject = async (id, active) => {
             await updateDoc(doc(db, 'projects', id), { active });
-            Swal.fire('تم', active ? 'تم تنشيط المشروع' : 'تم إيقاف المشروع', 'success');
+            Swal.fire('تم', active? 'تم تنشيط المشروع' : 'تم إيقاف المشروع', 'success');
         };
 
         window.deleteProject = async (id) => {
@@ -423,13 +537,16 @@
             }
         };
 
-        window.whatsappProject = (num) => {
+        window.whatsappProject = (num, projectName) => {
             if (!num) return Swal.fire('تنبيه', 'لا يوجد رقم واتساب للمشروع', 'warning');
-            window.open(`https://wa.me/${num}`, '_blank');
+            const message = `*${projectName}*\n-------------------\nتقرير من نظام سندات برو\n-------------------\n*شركة ${projectName}*\nجوال: ${num}`;
+            const encodedMsg = encodeURIComponent(message);
+            window.open(`https://wa.me/${num}?text=${encodedMsg}`, '_blank');
         };
 
         function loadManagers() {
             const tbody = document.getElementById('managersTableBody');
+            if (!tbody) return;
             onSnapshot(query(collection(db, 'users'), where('role', '==', 'manager')), (snapshot) => {
                 tbody.innerHTML = '';
                 if (snapshot.empty) {
@@ -445,10 +562,10 @@
                             <td><strong>${d.name}</strong></td>
                             <td>${d.phone}</td>
                             <td>${d.projectName || '-'}</td>
-                            <td><span class="badge bg-${d.active ? 'success' : 'secondary'}">${d.active ? 'نشط' : 'موقوف'}</span></td>
+                            <td><span class="badge bg-${d.active? 'success' : 'secondary'}">${d.active? 'نشط' : 'موقوف'}</span></td>
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="editManager('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-${d.active ? 'secondary' : 'success'}" onclick="toggleManager('${docSnap.id}', ${!d.active})"><i class="bi bi-${d.active ? 'pause' : 'play'}"></i></button>
+                                <button class="btn btn-sm btn-${d.active? 'secondary' : 'success'}" onclick="toggleManager('${docSnap.id}', ${!d.active})"><i class="bi bi-${d.active? 'pause' : 'play'}"></i></button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')"><i class="bi bi-trash"></i></button>
                             </td>
                         </tr>`;
@@ -476,12 +593,12 @@
             const projectId = document.getElementById('managerProject').value;
             const projectName = document.getElementById('managerProject').selectedOptions[0]?.dataset.name;
 
-            if (!name || !phone || !projectId) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
+            if (!name ||!phone ||!projectId) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
 
             const email = `user${phone}@gmail.com`;
             try {
                 if (id) {
-                    await updateDoc(doc(db, 'users', id), { name, phone, projectId, projectName });
+                    await updateDoc(doc(db, 'users', id), { name, phone, projectId, projectName, updatedAt: serverTimestamp() });
                 } else {
                     if (!password) return Swal.fire('خطأ', 'اكتب كلمة المرور للمدير الجديد', 'error');
                     const userCred = await createUserWithEmailAndPassword(auth, email, password);
@@ -496,7 +613,7 @@
             }
         };
 
-              window.editManager = async (id) => {
+        window.editManager = async (id) => {
             const docSnap = await getDoc(doc(db, 'users', id));
             const data = docSnap.data();
             document.getElementById('managerId').value = id;
@@ -509,7 +626,7 @@
 
         window.toggleManager = async (id, active) => {
             await updateDoc(doc(db, 'users', id), { active });
-            Swal.fire('تم', active ? 'تم تنشيط المدير' : 'تم إيقاف المدير', 'success');
+            Swal.fire('تم', active? 'تم تنشيط المدير' : 'تم إيقاف المدير', 'success');
         };
 
         window.deleteManager = async (id) => {
@@ -525,6 +642,7 @@
 
         function loadProjectSettings() {
             const div = document.getElementById('projectSettingsList');
+            if (!div) return;
             onSnapshot(collection(db, 'projects'), (snapshot) => {
                 div.innerHTML = '';
                 snapshot.forEach((docSnap) => {
@@ -534,14 +652,14 @@
                         <div class="settings-card">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="mb-0">${d.name} - <code>${d.code}</code></h6>
-                                <span class="badge bg-${isExpired ? 'danger' : (d.active ? 'success' : 'secondary')}">${isExpired ? 'منتهي' : (d.active ? 'نشط' : 'موقوف')}</span>
+                                <span class="badge bg-${isExpired? 'danger' : (d.active? 'success' : 'secondary')}">${isExpired? 'منتهي' : (d.active? 'نشط' : 'موقوف')}</span>
                             </div>
                             <div class="row">
-                                <div class="col-md-4"><small class="text-muted">المدة:</small> <strong>${d.durationType === 'unlimited' ? 'مطلق' : d.endDate}</strong></div>
+                                <div class="col-md-4"><small class="text-muted">المدة:</small> <strong>${d.durationType === 'unlimited'? 'مطلق' : d.endDate}</strong></div>
                                 <div class="col-md-4"><small class="text-muted">واتساب:</small> <strong>${d.whatsapp || '-'}</strong></div>
                                 <div class="col-md-4">
                                     <button class="btn btn-sm btn-warning" onclick="editProject('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-sm btn-${d.active ? 'secondary' : 'success'}" onclick="toggleProject('${docSnap.id}', ${!d.active})">${d.active ? 'إيقاف' : 'تنشيط'}</button>
+                                    <button class="btn btn-sm btn-${d.active? 'secondary' : 'success'}" onclick="toggleProject('${docSnap.id}', ${!d.active})">${d.active? 'إيقاف' : 'تنشيط'}</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteProject('${docSnap.id}')"><i class="bi bi-trash"></i> حذف</button>
                                 </div>
                             </div>
@@ -580,6 +698,7 @@
 
         function loadHiddenItems() {
             const div = document.getElementById('hiddenItemsList');
+            if (!div) return;
             const projects = (systemSettings.hiddenProjects || []).map(p => `<span class="badge bg-danger me-2 mb-2">${p} <i class="bi bi-x" onclick="removeHidden('project','${p}')" style="cursor:pointer"></i></span>`).join('');
             const managers = (systemSettings.hiddenManagers || []).map(m => `<span class="badge bg-warning me-2 mb-2">${m} <i class="bi bi-x" onclick="removeHidden('manager','${m}')" style="cursor:pointer"></i></span>`).join('');
             div.innerHTML = `<div class="mb-2"><strong>المشاريع المخفية:</strong><br>${projects || '<span class="text-muted">لا يوجد</span>'}</div><div><strong>المدراء المخفيين:</strong><br>${managers || '<span class="text-muted">لا يوجد</span>'}</div>`;
@@ -587,10 +706,10 @@
 
         window.removeHidden = async (type, val) => {
             if (type === 'project') {
-                const arr = (systemSettings.hiddenProjects || []).filter(p => p !== val);
+                const arr = (systemSettings.hiddenProjects || []).filter(p => p!== val);
                 await setDoc(doc(db, 'settings', 'system'), { hiddenProjects: arr }, { merge: true });
             } else {
-                const arr = (systemSettings.hiddenManagers || []).filter(m => m !== val);
+                const arr = (systemSettings.hiddenManagers || []).filter(m => m!== val);
                 await setDoc(doc(db, 'settings', 'system'), { hiddenManagers: arr }, { merge: true });
             }
             await loadSystemSettings();
