@@ -200,39 +200,6 @@
                     await loadSystemSettings();
                     buildTabs();
                     loadStats();
-                     loadManagers();
-            loadProjectSettings();
-            loadHiddenItems();
-        }
-
-        function loadManagers() {
-            const tbody = document.getElementById('managersTableBody');
-            if (!tbody) return;
-            onSnapshot(query(collection(db, 'users'), where('role', '==', 'manager')), (snapshot) => {
-                tbody.innerHTML = '';
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا يوجد مدراء</td></tr>';
-                    return;
-                }
-                let i = 1;
-                snapshot.forEach((docSnap) => {
-                    const d = docSnap.data();
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${i++}</td>
-                            <td><strong>${d.name}</strong></td>
-                            <td>${d.phone}</td>
-                            <td>${d.projectName || '-'}</td>
-                            <td><span class="badge bg-${d.active ? 'success' : 'secondary'}">${d.active ? 'نشط' : 'موقوف'}</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-warning" onclick="editManager('${docSnap.id}')"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-${d.active ? 'secondary' : 'success'}" onclick="toggleManager('${docSnap.id}', ${!d.active})"><i class="bi bi-${d.active ? 'pause' : 'play'}"></i></button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteManager('${docSnap.id}')"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>`;
-                });
-            });
-        }
                     checkExpiredProjects();
                 }
                 document.getElementById('loginSection').style.display = 'none';
@@ -281,11 +248,9 @@
                             </table></div>
                         </div>
                         <div class="tab-pane fade" id="managers">
-                           <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0 fw-bold"><i class="bi bi-person-badge"></i> المدراء</h5>
-                                <button class="btn btn-primary" onclick="openManagerModal()"><i class="bi bi-plus-circle"></i> إضافة مدير</button>
                             </div>
-
                             <div class="table-responsive"><table class="table table-hover">
                                 <thead><tr><th>#</th><th>الاسم</th><th>الجوال</th><th>المشروع</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
                                 <tbody id="managersTableBody"><tr><td colspan="6" class="text-center py-4">جاري التحميل...</td></tr></tbody>
@@ -314,6 +279,7 @@
                                             <button class="btn btn-warning" onclick="addHiddenManager()">إضافة</button>
                                         </div>
                                     </div>
+                                </div>
                                 <div id="hiddenItemsList" class="mt-3"></div>
                             </div>
                         </div>
@@ -532,12 +498,12 @@
         function loadHiddenItems() {
             const div = document.getElementById('hiddenItemsList');
             const projects = (systemSettings.hiddenProjects || []).map(p => `<span class="badge bg-danger me-2 mb-2">${p} <i class="bi bi-x" onclick="removeHidden('project','${p}')" style="cursor:pointer"></i></span>`).join('');
-
             const managers = (systemSettings.hiddenManagers || []).map(m => `<span class="badge bg-warning me-2 mb-2">${m} <i class="bi bi-x" onclick="removeHidden('manager','${m}')" style="cursor:pointer"></i></span>`).join('');
             div.innerHTML = `<div class="mb-2"><strong>المشاريع المخفية:</strong><br>${projects || '<span class="text-muted">لا يوجد</span>'}</div><div><strong>المدراء المخفيين:</strong><br>${managers || '<span class="text-muted">لا يوجد</span>'}</div>`;
         }
 
         window.removeHidden = async (type, val) => {
+            
             if (type === 'project') {
                 const arr = (systemSettings.hiddenProjects || []).filter(p => p !== val);
                 await setDoc(doc(db, 'settings', 'system'), { hiddenProjects: arr }, { merge: true });
@@ -562,100 +528,6 @@
         }
 
         setInterval(checkExpiredProjects, 60000);
-  <!-- مودال المدير -->
-    <div class="modal fade" id="managerModal" tabindex="-1">
-        <div class="modal-dialog"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title fw-bold">إضافة/تعديل مدير</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="managerForm">
-                    <input type="hidden" id="managerId">
-                    <div class="mb-3"><label class="form-label fw-bold">اسم المدير</label><input type="text" class="form-control" id="managerName" required></div>
-                    <div class="mb-3"><label class="form-label fw-bold">رقم الجوال</label><input type="text" class="form-control" id="managerPhone" required placeholder="05xxxxxxxx"></div>
-                    <div class="mb-3"><label class="form-label fw-bold">كلمة المرور</label><input type="password" class="form-control" id="managerPassword" placeholder="اتركها فاضية لو ما تبي تغيرها"></div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">المشروع</label>
-                        <select class="form-select" id="managerProject" required>
-                            <option value="">اختر مشروع</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button><button type="button" class="btn btn-primary" onclick="saveManager()">حفظ</button></div>
-        </div></div>
-    </div>
-
-    <script type="module">
-        import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        
-        window.openManagerModal = async () => {
-            document.getElementById('managerForm').reset();
-            document.getElementById('managerId').value = '';
-            const select = document.getElementById('managerProject');
-            const snap = await getDocs(collection(db, 'projects'));
-            select.innerHTML = '<option value="">اختر مشروع</option>';
-            snap.forEach(d => {
-                select.innerHTML += `<option value="${d.id}" data-name="${d.data().name}">${d.data().name}</option>`;
-            });
-            new bootstrap.Modal(document.getElementById('managerModal')).show();
-        };
-
-        window.saveManager = async () => {
-            const id = document.getElementById('managerId').value;
-            const name = document.getElementById('managerName').value.trim();
-            const phone = document.getElementById('managerPhone').value.trim();
-            const password = document.getElementById('managerPassword').value;
-            const projectId = document.getElementById('managerProject').value;
-            const projectName = document.getElementById('managerProject').selectedOptions[0]?.dataset.name;
-
-            if (!name || !phone || !projectId) return Swal.fire('خطأ', 'عبي كل الحقول', 'error');
-
-            const email = `user${phone}@gmail.com`;
-            try {
-                if (id) {
-                    await updateDoc(doc(db, 'users', id), { name, phone, projectId, projectName });
-                    if (password) {
-                        // تحديث كلمة المرور يحتاج Cloud Function - نتخطاها الحين
-                    }
-                } else {
-                    if (!password) return Swal.fire('خطأ', 'اكتب كلمة المرور للمدير الجديد', 'error');
-                    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, 'users', userCred.user.uid), {
-                        name, phone, email, role: 'manager', projectId, projectName, active: true, createdAt: serverTimestamp()
-                    });
-                }
-                bootstrap.Modal.getInstance(document.getElementById('managerModal')).hide();
-                Swal.fire('تم', 'تم حفظ المدير بنجاح', 'success');
-            } catch(e) {
-                Swal.fire('خطأ', e.message, 'error');
-            }
-        };
-
-        window.editManager = async (id) => {
-            const docSnap = await getDoc(doc(db, 'users', id));
-            const data = docSnap.data();
-            document.getElementById('managerId').value = id;
-            document.getElementById('managerName').value = data.name;
-            document.getElementById('managerPhone').value = data.phone;
-            document.getElementById('managerPassword').value = '';
-            await openManagerModal();
-            document.getElementById('managerProject').value = data.projectId;
-        };
-
-        window.toggleManager = async (id, active) => {
-            await updateDoc(doc(db, 'users', id), { active });
-            Swal.fire('تم', active ? 'تم تنشيط المدير' : 'تم إيقاف المدير', 'success');
-        };
-
-        window.deleteManager = async (id) => {
-            const result = await Swal.fire({
-                title: 'متأكد؟', text: 'بينحذف المدير', icon: 'warning',
-                showCancelButton: true, confirmButtonText: 'نعم احذف', cancelButtonText: 'إلغاء', confirmButtonColor: '#e53e3e'
-            });
-            if (result.isConfirmed) {
-                await deleteDoc(doc(db, 'users', id));
-                Swal.fire('تم الحذف', '', 'success');
-            }
-        }; 
     </script>
 </body>
 </html>
