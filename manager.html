@@ -488,7 +488,7 @@
                 qr: document.getElementById('permQR').checked
             };
             
-                        if (!name ||!code) return Swal.fire('خطأ', 'اكتب اسم وكود المشروع', 'error');
+                                      if (!name ||!code) return Swal.fire('خطأ', 'اكتب اسم وكود المشروع', 'error');
             if (durationType === 'limited' &&!endDate) return Swal.fire('خطأ', 'حدد تاريخ الانتهاء', 'error');
 
             const data = { name, code, desc, whatsapp, durationType, endDate: durationType === 'limited'? endDate : null, perms, active: true, updatedAt: serverTimestamp() };
