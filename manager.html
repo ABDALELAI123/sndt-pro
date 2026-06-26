@@ -26,76 +26,76 @@
       background: #f0f2f5;
       color: var(--dark);
     }
-   .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-   .header {
+  .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+  .header {
       background: white; padding: 15px 20px; border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex;
       justify-content: space-between; align-items: center; margin-bottom: 20px;
     }
-   .header h1 { font-size: 22px; }
-   .header.user-info { display: flex; align-items: center; gap: 15px; }
-   .btn {
+  .header h1 { font-size: 22px; }
+  .user-info { display: flex; align-items: center; gap: 15px; }
+  .btn {
       padding: 10px 20px; border: none; border-radius: 8px;
       font-family: 'Cairo'; font-weight: 600; cursor: pointer; transition: 0.2s;
     }
-   .btn-primary { background: var(--primary); color: white; }
-   .btn-danger { background: var(--danger); color: white; }
-   .btn-success { background: var(--success); color: white; }
-   .btn-sm { padding: 5px 10px; font-size: 14px; }
-   .btn:hover { opacity: 0.9; }
-   .card {
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-sm { padding: 5px 10px; font-size: 14px; }
+  .btn:hover { opacity: 0.9; }
+  .card {
       background: white; border-radius: 12px; padding: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;
     }
-   .card-header {
+  .card-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
     }
-   .card-header h2 { font-size: 18px; }
+  .card-header h2 { font-size: 18px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 12px; text-align: right; border-bottom: 1px solid var(--border); }
     th { background: #f8f9fa; font-weight: 700; }
-   .loader {
+  .loader {
       display: flex; justify-content: center; align-items: center;
       height: 100vh; flex-direction: column; gap: 15px;
     }
-   .spinner {
+  .spinner {
       width: 50px; height: 50px; border: 5px solid var(--border);
       border-top-color: var(--primary); border-radius: 50%;
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     #main-content { display: none; }
-   .modal {
+  .modal {
       display: none; position: fixed; z-index: 1000; left: 0; top: 0;
       width: 100%; height: 100%; background: rgba(0,0,0,0.5);
       justify-content: center; align-items: center;
     }
-   .modal.active { display: flex; }
-   .modal-content {
+  .modal.active { display: flex; }
+  .modal-content {
       background: white; padding: 25px; border-radius: 12px;
       width: 90%; max-width: 500px;
     }
-   .modal-header {
+  .modal-header {
       display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
     }
-   .close-btn { font-size: 24px; cursor: pointer; }
-   .form-group { margin-bottom: 15px; }
-   .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
-   .form-group input {
+  .close-btn { font-size: 24px; cursor: pointer; }
+  .form-group { margin-bottom: 15px; }
+  .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+  .form-group input {
       width: 100%; padding: 10px; border: 1px solid var(--border);
       border-radius: 8px; font-family: 'Cairo';
     }
-   .lang-switch { cursor: pointer; padding: 8px 12px; border-radius: 8px; background: #e9ecef; font-weight: 700; }
-   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-   .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-   .stat-card h3 { font-size: 32px; color: var(--primary); margin: 10px 0; }
-   .stat-card p { color: #6c757d; font-size: 14px; }
+  .lang-switch { cursor: pointer; padding: 8px 12px; border-radius: 8px; background: #e9ecef; font-weight: 700; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+  .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .stat-card h3 { font-size: 32px; color: var(--primary); margin: 10px 0; }
+  .stat-card p { color: #6c757d; font-size: 14px; }
     @media print {
       body * { visibility: hidden; }
-     .print-area,.print-area * { visibility: visible; }
-     .print-area { position: absolute; left: 0; top: 0; width: 100%; }
-     .no-print { display: none!important; }
+    .print-area,.print-area * { visibility: visible; }
+    .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+    .no-print { display: none!important; }
     }
     [dir="ltr"] { text-align: left; }
     [dir="ltr"] th, [dir="ltr"] td { text-align: left; }
@@ -219,11 +219,10 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // مفاتيحك من firebase.js
     const firebaseConfig = {
       apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6Mca0MufvGqr2fY",
       authDomain: "sanadat-pro.firebaseapp.com",
@@ -237,7 +236,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ملف اللغة من lang.js
+    // ملف اللغة
     const translations = {
       ar: { appName: "السندات الذكية", login: "تسجيل الدخول", phone: "رقم الجوال", password: "كلمة المرور", projectCode: "كود المشروع", error: "خطأ", fillAllFields: "عبي الجوال وكلمة السر", enterProjectCode: "ادخل كود المشروع", userNotFound: "المستخدم غير موجود", wrongPassword: "كلمة السر غلط", accountSuspended: "حسابك موقوف", projectSuspended: "المشروع موقوف", checkData: "تأكد من البيانات", logout: "خروج", delegate: "مندوب", dashboard: "الرئيسية", createBond: "إنشاء سند", myBonds: "سنداتي", printPreview: "معاينة الطباعة", smartSheet: "الصفحة الذكية", totalIncome: "إجمالي قبض سنداتي", totalExpense: "إجمالي صرف سنداتي", bondsCount: "عدد سنداتي", currency: "ريال سعودي", bond: "سند", noPermission: "تنبيه: لا تملك أي صلاحيات لإنشاء سندات. راجع مدير المشروع.", bondType: "نوع السند", selectBondType: "اختر نوع السند", amount: "المبلغ", date: "التاريخ", clientName: "اسم العميل", clientPhone: "جوال العميل", requiredForReceipt: "مطلوب لسندات القبض فقط", paymentMethod: "طريقة الدفع", selectPaymentMethod: "اختر طريقة الدفع", description: "البيان", saveBond: "حفظ السند", bondNumber: "رقم السند", type: "النوع", client: "العميل", actions: "تحكم", preview: "معاينة", print: "طباعة", selectBondToPreview: "اختر سند من تبويب \"سنداتي\" واضغط \"معاينة\" عشان تشوفه هنا", sendWhatsapp: "إرسال واتساب", sendToClient: "إرسال للعميل", downloadPdf: "تحميل PDF", search: "بحث...", exportExcel: "تصدير Excel", total: "الإجمالي:", receiver: "المستلم", accountant: "المحاسب", thankYou: "شكراً لتعاملكم معنا", dear: "عزيزي", receivedAmount: "تم استلام مبلغ", bondDetails: "تفاصيل السند", alert: "تنبيه", noClientPhone: "لا يوجد رقم جوال للعميل", comingSoon: "قريباً", exportSoon: "ميزة التصدير للإكسل قيد التطوير", changePassword: "تغيير كلمة السر", oldPassword: "كلمة السر القديمة", newPassword: "كلمة السر الجديدة", save: "حفظ", cancel: "إلغاء", wrongOldPassword: "كلمة السر القديمة غلط", passwordChanged: "تغيرت كلمة السر", done: "تم", rejected: "مرفوض", phoneRequiredForReceipt: "جوال العميل مطلوب لسندات القبض", invalidPhone: "رقم الجوال لازم يبدأ بـ 05 ويكون 10 أرقام", amountExceeded: "المبلغ تجاوز الحد المسموح للسند الواحد:", dailyLimitReached: "وصلت الحد الأقصى للسندات اليوم:", totalLimitReached: "وصلت الحد الأقصى لإجمالي السندات:", totalAmountExceeded: "إجمالي المبالغ راح يتجاوز الحد:", sequenceEnded: "وصلت لنهاية التسلسل لهذا النوع", bondSaved: "انحفظ السند رقم", loading: "جاري التحميل..." },
       en: { appName: "Smart Bonds", login: "Login", phone: "Phone Number", password: "Password", projectCode: "Project Code", error: "Error", fillAllFields: "Fill phone and password", enterProjectCode: "Enter project code", userNotFound: "User not found", wrongPassword: "Wrong password", accountSuspended: "Your account is suspended", projectSuspended: "Project is suspended", checkData: "Check your data", logout: "Logout", delegate: "Delegate", dashboard: "Dashboard", createBond: "Create Bond", myBonds: "My Bonds", printPreview: "Print Preview", smartSheet: "Smart Sheet", totalIncome: "Total Receipts", totalExpense: "Total Expenses", bondsCount: "Bonds Count", currency: "SAR", bond: "Bond", noPermission: "Alert: You have no permissions to create bonds. Contact project manager.", bondType: "Bond Type", selectBondType: "Select Bond Type", amount: "Amount", date: "Date", clientName: "Client Name", clientPhone: "Client Phone", requiredForReceipt: "Required for receipt bonds only", paymentMethod: "Payment Method", selectPaymentMethod: "Select Payment Method", description: "Description", saveBond: "Save Bond", bondNumber: "Bond Number", type: "Type", client: "Client", actions: "Actions", preview: "Preview", print: "Print", selectBondToPreview: "Select a bond from 'My Bonds' and click 'Preview' to view it here", sendWhatsapp: "Send WhatsApp", sendToClient: "Send to Client", downloadPdf: "Download PDF", search: "Search...", exportExcel: "Export Excel", total: "Total:", receiver: "Receiver", accountant: "Accountant", thankYou: "Thank you for your business", dear: "Dear", receivedAmount: "Amount received", bondDetails: "Bond Details", alert: "Alert", noClientPhone: "No client phone number", comingSoon: "Coming Soon", exportSoon: "Excel export feature is under development", changePassword: "Change Password", oldPassword: "Old Password", newPassword: "New Password", save: "Save", cancel: "Cancel", wrongOldPassword: "Old password is wrong", passwordChanged: "Password changed", done: "Done", rejected: "Rejected", phoneRequiredForReceipt: "Client phone is required for receipt bonds", invalidPhone: "Phone must start with 05 and be 10 digits", amountExceeded: "Amount exceeded the limit per bond:", dailyLimitReached: "Daily bond limit reached:", totalLimitReached: "Total bonds limit reached:", totalAmountExceeded: "Total amount will exceed the limit:", sequenceEnded: "Reached the end of sequence for this type", bondSaved: "Bond saved number", loading: "Loading..." }
@@ -265,6 +264,7 @@
     let allBonds = [];
     let unsubscribeDelegates = null;
     let unsubscribeBonds = null;
+    let isRedirecting = false;
 
     const loader = document.getElementById('loader');
     const mainContent = document.getElementById('main-content');
@@ -293,6 +293,7 @@
     });
 
     onAuthStateChanged(auth, async (user) => {
+      if (isRedirecting) return;
       if (user) {
         const managerDoc = await getDoc(doc(db, "managers", user.uid));
         if (managerDoc.exists()) {
@@ -313,11 +314,13 @@
           loader.style.display = 'none';
           mainContent.style.display = 'block';
         } else {
+          isRedirecting = true;
           alert(t('noPermission'));
           await signOut(auth);
           window.location.href = 'index.html';
         }
       } else {
+        isRedirecting = true;
         window.location.href = 'index.html';
       }
     });
@@ -329,6 +332,7 @@
       if (e.target == addDelegateModal) addDelegateModal.classList.remove('active');
     });
 
+    // الحل: نستخدم تطبيق ثانوي عشان ما نسجل خروج
     addDelegateForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('delegateName').value.trim();
@@ -344,7 +348,11 @@
       if (!phoneQuery.empty) return alert(t('phone') + ' ' + t('error'));
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // إنشاء تطبيق ثانوي مؤقت
+        const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+        const secondaryAuth = getAuth(secondaryApp);
+        
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
         const uid = userCredential.user.uid;
         await updateProfile(userCredential.user, { displayName: name });
 
@@ -354,6 +362,9 @@
           managerId: currentUserData.id,
           createdAt: serverTimestamp(), isActive: true
         });
+
+        // نحذف التطبيق الثانوي
+        await deleteApp(secondaryApp);
 
         alert(t('done'));
         addDelegateForm.reset();
