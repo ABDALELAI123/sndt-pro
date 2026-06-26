@@ -3,257 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السندات الذكية - لوحة المدير</title>
+    <title>لوحة المدير - سندات برو</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="lang.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-        body { font-family: 'Cairo', sans-serif; }
-       .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
-        [dir="ltr"] { font-family: 'Inter', sans-serif; }
-       .hidden { display: none; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Tajawal', sans-serif; } </style>
 </head>
 <body class="bg-gray-100">
-    <div id="loader" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
-        <div class="text-center">
-            <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p class="mt-4 text-gray-600" data-lang="loading">جاري التحميل...</p>
-        </div>
-    </div>
 
-    <div id="app" class="hidden">
-        <header class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div>
-                        <h1 class="text-xl font-bold text-blue-600" data-lang="manager_panel">لوحة المدير</h1>
-                        <p id="projectName" class="text-xs text-gray-500"></p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <button id="langToggle" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm font-semibold">EN</button>
-                        <span id="userName" class="text-sm text-gray-600"></span>
-                        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm" data-lang="logout">تسجيل خروج</button>
-                    </div>
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- الهيدر -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-green-600">لوحة تحكم المدير</h1>
+                    <p id="managerInfo" class="text-gray-500 mt-1">جاري التحميل...</p>
                 </div>
-            </div>
-        </header>
-
-        <div class="bg-white border-b">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex gap-8">
-                    <button class="tab-btn tab-active py-4 font-semibold" data-tab="delegates" data-lang="delegates_tab">المناديب</button>
-                    <button class="tab-btn py-4 font-semibold text-gray-500" data-tab="bonds" data-lang="bonds_tab">السندات</button>
-                    <button class="tab-btn py-4 font-semibold text-gray-500" data-tab="reports" data-lang="reports_tab">التقارير</button>
-                </div>
+                <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">تسجيل خروج</button>
             </div>
         </div>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Delegates Tab -->
-            <div id="delegates" class="tab-content">
-                <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h2 class="text-lg font-bold mb-4" data-lang="add_delegate">إضافة مندوب جديد</h2>
-                    <form id="delegateForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="text" id="delegateName" placeholder="اسم المندوب" class="border rounded px-3 py-2" required data-lang-placeholder="delegate_name">
-                        <input type="text" id="delegatePhone" placeholder="رقم الجوال" class="border rounded px-3 py-2" required data-lang-placeholder="phone">
-                        <input type="password" id="delegatePassword" placeholder="كلمة المرور" class="border rounded px-3 py-2" required data-lang-placeholder="password">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2" data-lang="add">إضافة</button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="delegate_name">اسم المندوب</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="phone">الجوال</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="bonds_count">عدد السندات</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase" data-lang="actions">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="delegatesTable" class="divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
+        <!-- الإحصائيات -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow">
+                <p class="text-gray-500">إجمالي السندات</p>
+                <p id="totalBonds" class="text-3xl font-bold text-blue-600">0</p>
             </div>
+            <div class="bg-white p-6 rounded-xl shadow">
+                <p class="text-gray-500">إجمالي المبلغ</p>
+                <p id="totalAmount" class="text-3xl font-bold text-green-600">0 ر.س</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow">
+                <p class="text-gray-500">عدد المناديب</p>
+                <p id="totalDelegates" class="text-3xl font-bold text-purple-600">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow">
+                <p class="text-gray-500">سندات اليوم</p>
+                <p id="todayBonds" class="text-3xl font-bold text-orange-600">0</p>
+            </div>
+        </div>
 
-            <!-- Bonds Tab -->
-            <div id="bonds" class="tab-content hidden">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-lg font-bold mb-4" data-lang="all_bonds">كل السندات</h2>
-                    <p class="text-gray-500" data-lang="coming_soon">قريباً...</p>
-                </div>
-            </div>
+        <!-- إضافة مندوب -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4">إضافة مندوب جديد</h2>
+            <form id="addDelegateForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" id="delegateName" class="p-3 border rounded-lg" placeholder="اسم المندوب" required>
+                <input type="tel" id="delegatePhone" class="p-3 border rounded-lg" placeholder="05xxxxxxxx" required>
+                <input type="text" id="delegatePassword" class="p-3 border rounded-lg" placeholder="كلمة المرور" required>
+                <button type="submit" class="bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-700">إضافة</button>
+            </form>
+        </div>
 
-            <!-- Reports Tab -->
-            <div id="reports" class="tab-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-gray-500 text-sm" data-lang="total_delegates">إجمالي المناديب</h3>
-                        <p id="totalDelegates" class="text-3xl font-bold text-blue-600 mt-2">0</p>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-gray-500 text-sm" data-lang="total_income">إجمالي القبض</h3>
-                        <p id="totalIncome" class="text-3xl font-bold text-green-600 mt-2">0</p>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-gray-500 text-sm" data-lang="total_expense">إجمالي الصرف</h3>
-                        <p id="totalExpense" class="text-3xl font-bold text-red-600 mt-2">0</p>
-                    </div>
-                </div>
+        <!-- جدول المناديب -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4">مناديب المشروع</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-right">الاسم</th>
+                            <th class="p-3 text-right">الجوال</th>
+                            <th class="p-3 text-right">عدد السندات</th>
+                            <th class="p-3 text-right">إجمالي المبلغ</th>
+                            <th class="p-3 text-right">الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="delegatesTable">
+                        <tr><td colspan="5" class="p-4 text-center text-gray-500">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
             </div>
-        </main>
+        </div>
+
+        <!-- آخر السندات -->
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">آخر السندات</h2>
+                <a href="bonds.html" class="text-blue-600 font-bold hover:underline">عرض الكل</a>
+            </div>
+            <div id="bondsList" class="space-y-3">
+                <p class="text-gray-500">جاري التحميل...</p>
+            </div>
+        </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { auth, db } from './firebase.js';
+        import { getCurrentUserData, createUser } from './auth.js';
+        import { formatMoney, formatDate, showSuccess, showError, requireAuth, logout } from './core.js';
+        import { isValidSaudiPhone } from './utils.js';
+        import { collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6Mca0MufvGqr2fY",
-            authDomain: "sanadat-pro.firebaseapp.com",
-            projectId: "sanadat-pro",
-            storageBucket: "sanadat-pro.firebasestorage.app",
-            messagingSenderId: "1039476751095",
-            appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // حماية الصفحة
-        const userSession = JSON.parse(sessionStorage.getItem('user'));
-        if (!userSession || userSession.role!== 'manager') {
+        // 1. حماية الصفحة
+        requireAuth();
+        const userData = await getCurrentUserData();
+        if (!userData || userData.role!== 'manager') {
             window.location.href = 'index.html';
         }
 
-        signInAnonymously(auth).then(async () => {
-            document.getElementById('userName').textContent = userSession.name;
+        // 2. عرض معلومات المدير
+        document.getElementById('managerInfo').textContent = `${userData.name} | كود المشروع: ${userData.projectCode}`;
+        document.getElementById('logoutBtn').onclick = logout;
 
-            // جيب اسم المشروع
-            const q = query(collection(db, 'projects'), where('code', '==', userSession.projectCode));
-            const projectSnap = await getDocs(q);
-            if (!projectSnap.empty) {
-                document.getElementById('projectName').textContent = projectSnap.docs[0].data().name;
-            }
-
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            updateLanguage();
-            loadDelegates();
-            loadReports();
-        });
-
-        // Language System
-        let currentLang = localStorage.getItem('lang') || 'ar';
-        function updateLanguage() {
-            applyLanguage(currentLang);
-            document.documentElement.lang = currentLang;
-            document.documentElement.dir = currentLang === 'ar'? 'rtl' : 'ltr';
-            document.getElementById('langToggle').textContent = currentLang === 'ar'? 'EN' : 'عربي';
-            document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
-                el.placeholder = t(el.dataset.langPlaceholder);
+        // 3. تحميل الإحصائيات
+        async function loadStats() {
+            // سندات المشروع كامل
+            const bondsQuery = query(collection(db, 'bonds'), where('projectCode', '==', userData.projectCode));
+            const bondsSnapshot = await getDocs(bondsQuery);
+            
+            let totalAmount = 0;
+            let todayCount = 0;
+            const today = new Date().toDateString();
+            
+            bondsSnapshot.forEach(doc => {
+                const bond = doc.data();
+                totalAmount += parseFloat(bond.amount) || 0;
+                if (bond.createdAt?.toDate().toDateString() === today) todayCount++;
             });
+
+            document.getElementById('totalBonds').textContent = bondsSnapshot.size;
+            document.getElementById('totalAmount').textContent = formatMoney(totalAmount);
+            document.getElementById('todayBonds').textContent = todayCount;
+
+            // عدد المناديب
+            const delegatesQuery = query(collection(db, 'users'), 
+                where('projectCode', '==', userData.projectCode), 
+                where('role', '==', 'delegate')
+            );
+            const delegatesSnapshot = await getDocs(delegatesQuery);
+            document.getElementById('totalDelegates').textContent = delegatesSnapshot.size;
         }
 
-        document.getElementById('langToggle').addEventListener('click', () => {
-            currentLang = currentLang === 'ar'? 'en' : 'ar';
-            localStorage.setItem('lang', currentLang);
-            updateLanguage();
-        });
-
-        // Tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-gray-500'));
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('text-gray-500'));
-                btn.classList.add('tab-active');
-                btn.classList.remove('text-gray-500');
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                document.getElementById(btn.dataset.tab).classList.remove('hidden');
-            });
-        });
-
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            sessionStorage.removeItem('user');
-            window.location.href = 'index.html';
-        });
-
-        // Delegates
-        async function loadDelegates() {
-            const q = query(collection(db, 'delegates'), where('projectCode', '==', userSession.projectCode));
-            const snapshot = await getDocs(q);
-            const tbody = document.getElementById('delegatesTable');
-            tbody.innerHTML = '';
-            document.getElementById('totalDelegates').textContent = snapshot.size;
-
-            for (const docSnap of snapshot.docs) {
-                const data = docSnap.data();
-                const bondsQ = query(collection(db, 'bonds'), where('delegateId', '==', docSnap.id));
-                const bondsSnap = await getDocs(bondsQ);
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4">${data.name}</td>
-                        <td class="px-6 py-4">${data.phone}</td>
-                        <td class="px-6 py-4">${bondsSnap.size}</td>
-                        <td class="px-6 py-4">
-                            <button onclick="deleteDelegate('${docSnap.id}')" class="text-red-600 hover:text-red-800 text-sm" data-lang="delete">حذف</button>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        document.getElementById('delegateForm').addEventListener('submit', async (e) => {
+        // 4. إضافة مندوب
+        document.getElementById('addDelegateForm').onsubmit = async (e) => {
             e.preventDefault();
             const name = document.getElementById('delegateName').value;
             const phone = document.getElementById('delegatePhone').value;
             const password = document.getElementById('delegatePassword').value;
 
-            const q = query(collection(db, 'delegates'), where('phone', '==', phone));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                alert(t('phone_exists'));
+            if (!isValidSaudiPhone(phone)) {
+                showError('رقم الجوال غير صحيح');
                 return;
             }
 
-            await addDoc(collection(db, 'delegates'), {
-                name,
-                phone,
-                password,
-                projectCode: userSession.projectCode,
-                managerId: userSession.id,
-                createdAt: new Date()
-            });
-            e.target.reset();
-            loadDelegates();
-        });
-
-        window.deleteDelegate = async (id) => {
-            if (confirm(t('confirm_delete'))) {
-                await deleteDoc(doc(db, 'delegates', id));
+            try {
+                await createUser(userData.projectCode, phone, password, 'delegate', name);
+                showSuccess('تم إضافة المندوب بنجاح');
+                e.target.reset();
                 loadDelegates();
+                loadStats();
+            } catch (error) {
+                showError(error.message);
+            }
+        };
+
+        // 5. تحميل المناديب
+        async function loadDelegates() {
+            const delegatesTable = document.getElementById('delegatesTable');
+            const q = query(collection(db, 'users'), 
+                where('projectCode', '==', userData.projectCode), 
+                where('role', '==', 'delegate')
+            );
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                delegatesTable.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">لا يوجد مناديب</td></tr>';
+                return;
+            }
+
+            delegatesTable.innerHTML = '';
+            for (const userDoc of snapshot.docs) {
+                const delegate = userDoc.data();
+                
+                // جيب سندات المندوب
+                const bondsQuery = query(collection(db, 'bonds'), 
+                    where('createdBy', '==', userDoc.id)
+                );
+                const bondsSnapshot = await getDocs(bondsQuery);
+                let delegateTotal = 0;
+                bondsSnapshot.forEach(b => delegateTotal += parseFloat(b.data().amount) || 0);
+
+                delegatesTable.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-bold">${delegate.name}</td>
+                        <td class="p-3">${delegate.phone}</td>
+                        <td class="p-3">${bondsSnapshot.size}</td>
+                        <td class="p-3 font-bold text-green-600">${formatMoney(delegateTotal)}</td>
+                        <td class="p-3"><span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">نشط</span></td>
+                    </tr>
+                `;
             }
         }
 
-        // Reports
-        async function loadReports() {
-            const bondsQ = query(collection(db, 'bonds'), where('projectCode', '==', userSession.projectCode));
-            const bondsSnapshot = await getDocs(bondsQ);
+        // 6. تحميل آخر السندات
+        async function loadLatestBonds() {
+            const bondsList = document.getElementById('bondsList');
+            const q = query(collection(db, 'bonds'), 
+                where('projectCode', '==', userData.projectCode),
+                orderBy('createdAt', 'desc'),
+                limit(5)
+            );
+            const snapshot = await getDocs(q);
 
-            let totalIncome = 0, totalExpense = 0;
-            bondsSnapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.type === 'income') totalIncome += data.amount || 0;
-                if (data.type === 'expense') totalExpense += data.amount || 0;
+            if (snapshot.empty) {
+                bondsList.innerHTML = '<p class="text-gray-500">لا توجد سندات</p>';
+                return;
+            }
+
+            bondsList.innerHTML = '';
+            snapshot.forEach(doc => {
+                const bond = doc.data();
+                bondsList.innerHTML += `
+                    <div class="p-4 border rounded-lg bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <p class="font-bold">${bond.bondNumber}</p>
+                            <p class="text-gray-600 text-sm">${bond.clientName || 'بدون اسم'} | ${formatDate(bond.createdAt)}</p>
+                        </div>
+                        <p class="font-bold text-lg text-green-600">${formatMoney(bond.amount)}</p>
+                    </div>
+                `;
             });
-
-            document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
-            document.getElementById('totalExpense').textContent = totalExpense.toLocaleString();
         }
+
+        // تحميل كل شي
+        loadStats();
+        loadDelegates();
+        loadLatestBonds();
     </script>
 </body>
 </html>
