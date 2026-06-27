@@ -64,7 +64,6 @@
                 <h2 class="text-2xl font-bold mb-6">إنشاء سند جديد</h2>
                 <form id="bondForm" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- الحقول الأساسية -->
                         <div>
                             <label class="block font-bold mb-2">المبلغ *</label>
                             <input type="number" id="amount" step="0.01" class="w-full p-3 border rounded-lg" required>
@@ -108,7 +107,6 @@
                         </div>
                     </div>
 
-                    <!-- الحقول الإضافية المخصصة من المدير -->
                     <div id="customFields" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
                     <div>
@@ -121,7 +119,6 @@
                         <input type="file" id="attachment" accept="image/*" class="w-full p-3 border rounded-lg">
                     </div>
 
-                    <!-- GPS -->
                     <div class="bg-blue-50 p-3 rounded-lg text-sm">
                         <span class="font-bold">الموقع: </span>
                         <span id="locationStatus">جاري تحديد الموقع...</span>
@@ -146,7 +143,6 @@
                     </div>
                 </div>
 
-                <!-- فلاتر ذكية -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 p-4 bg-gray-50 rounded-lg no-print">
                     <select id="filterLimit" class="p-2 border rounded-lg">
                         <option value="all">كل السندات</option>
@@ -179,289 +175,6 @@
         </div>
     </div>
 
-    <script type="module">
-        import { auth, db, storage } from './firebase.js';
-        import { getCurrentUserData, logout } from './auth.js';
-        import { formatMoney, formatDate, showSuccess, showError, requireAuth, getTodayDate } from './core.js';
-        import { generateBondNumber, toArabicNumbers } from './utils.js';
-        import { collection, addDoc, getDocs, query, where, orderBy, limit, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-        // 1. حماية + بيانات
-        requireAuth();
-        const userData = await getCurrentUserData();
-        if (!userData || userData.role!== 'delegate') window.location.href = 'index.html';
-
-        const projectDoc = await getDoc(doc(db, 'projects', userData.projectCode));
-        const projectData = projectDoc.exists()? projectDoc.data() : {};
-
-        document.getElementById('delegateInfo').textContent = `${userData.name} | ${projectData.name || userData.projectCode}`;
-        document.getElementById('logoutBtn').onclick = logout;
-        document.getElementById('bondDate').value = getTodayDate();
-
-        // 2. GPS تلقائي
-        let currentLocation = null;
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    document.getElementById('locationStatus').textContent = `تم: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-                },
-                () => document.getElementById('locationStatus').textContent = 'فشل تحديد الموقع'
-            );
-        }
-
-        // 3. تفقيط المبلغ
-        document.getElementById('amount').oninput = (e) => {
-            const num = parseFloat(e.target.value);
-            if (!num) return document.getElementById('amountInWords').textContent = '';
-            document.getElementById('amountInWords').textContent = `فقط ${toArabicNumbers(num)} ريال سعودي`;
-        };
-
-        // 4. التبويبات
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('border-purple-600', 'text-purple-600'));
-                btn.classList.add('border-purple-600', 'text-purple-600');
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                document.getElementById(btn.dataset.tab + 'Tab').classList.remove('hidden');
-                if (btn.dataset.tab === 'bonds') loadBonds();
-            };
-        });
-
-        // 5. حفظ السند
-        document.getElementById('bondForm').onsubmit = async (e) => {
-            e.preventDefault();
-
-            // تشييك القيود من المدير: عدد يومي + مبلغ كلي
-            const todayBonds = await getDocs(query(collection(db, 'bonds'),
-                where('createdBy', '==', userData.uid),
-                where('bondDate', '==', getTodayDate())
-            ));
-
-            if (projectData.dailyBondLimit && todayBonds.size >= projectData.dailyBondLimit) {
-                showError('تجاوزت الحد اليومي للسندات. راجع المدير');
-                return;
-            }
-
-            // آخر رقم سند
-            const lastBondQuery = query(collection(db, 'bonds'),
-                where('projectCode', '==', userData.projectCode),
-                orderBy('createdAt', 'desc'),
-                limit(1)
-            );
-            const lastBondSnap = await getDocs(lastBondQuery);
-            const lastNumber = lastBondSnap.empty? 0 : parseInt(lastBondSnap.docs[0].data().bondNumberRaw) || 0;
-
-            const bondNumberRaw = lastNumber + 1;
-            const bondNumber = generateBondNumber(bondNumberRaw, projectData);
-
-            // رفع الصورة لو فيه
-            let attachmentUrl = '';
-            const file = document.getElementById('attachment').files[0];
-            if (file) {
-                const storageRef = ref(storage, `bonds/${userData.projectCode}/${Date.now()}_${file.name}`);
-                await uploadBytes(storageRef, file);
-                attachmentUrl = await getDownloadURL(storageRef);
-            }
-
-            // حفظ
-            const bondData = {
-                bondNumber,
-                bondNumberRaw,
-                amount: parseFloat(document.getElementById('amount').value),
-                bondType: document.getElementById('bondType').value,
-                paymentType: document.getElementById('paymentType').value,
-                fundName: document.getElementById('fundName').value,
-                clientName: document.getElementById('clientName').value,
-                clientPhone: document.getElementById('clientPhone').value,
-                accountantName: document.getElementById('accountantName').value,
-                notes: document.getElementById('notes').value,
-                bondDate: document.getElementById('bondDate').value,
-                attachmentUrl,
-                location: currentLocation,
-                projectCode: userData.projectCode,
-                createdBy: userData.uid,
-                createdByName: userData.name,
-                createdAt: new Date(),
-                status: 'غير مورد', // يغيره المدير
-                accountingEffect: document.getElementById('bondType').value === 'قبض'? 'إيجابي' : 'سلبي'
-            };
-
-            await addDoc(collection(db, 'bonds'), bondData);
-            showSuccess('تم حفظ السند: ' + bondNumber);
-            e.target.reset();
-            document.getElementById('bondDate').value = getTodayDate();
-            loadStats();
-        };
-
-        document.getElementById('resetBtn').onclick = () => document.getElementById('bondForm').reset();
-
-        // 6. تحميل الإحصائيات
-        async function loadStats() {
-            const q = query(collection(db, 'bonds'), where('createdBy', '==', userData.uid));
-            const snap = await getDocs(q);
-            let totalAmount = 0, todayAmount = 0, todayCount = 0;
-            const today = getTodayDate();
-
-            snap.forEach(doc => {
-                const b = doc.data();
-                totalAmount += b.amount || 0;
-                if (b.bondDate === today) {
-                    todayAmount += b.amount || 0;
-                    todayCount++;
-                }
-            });
-
-            document.getElementById('totalCount').textContent = snap.size;
-            document.getElementById('totalAmount').textContent = formatMoney(totalAmount);
-            document.getElementById('todayCount').textContent = todayCount;
-            document.getElementById('todayAmount').textContent = formatMoney(todayAmount);
-        }
-
-        // 7. تحميل السندات مع فلاتر
-        async function loadBonds() {
-            let q = query(collection(db, 'bonds'),
-                where('createdBy', '==', userData.uid),
-                orderBy('createdAt', 'desc')
-            );
-
-            const limitVal = document.getElementById('filterLimit').value;
-            if (limitVal!== 'all') q = query(q, limit(parseInt(limitVal)));
-
-            const snap = await getDocs(q);
-            let bonds = snap.docs.map(d => ({ id: d.id,...d.data() }));
-
-            // فلترة بالجافاسكربت
-            const search = document.getElementById('filterSearch').value.toLowerCase();
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
-
-            if (search) bonds = bonds.filter(b =>
-                b.bondNumber.toLowerCase().includes(search) ||
-                b.clientName?.toLowerCase().includes(search) ||
-                b.clientPhone?.includes(search)
-            );
-            if (dateFrom) bonds = bonds.filter(b => b.bondDate >= dateFrom);
-            if (dateTo) bonds = bonds.filter(b => b.bondDate <= dateTo);
-
-            // عرض
-            const container = document.getElementById('bondsTableContainer');
-            if (bonds.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 p-8">لا توجد سندات</p>';
-                return;
-            }
-
-            container.innerHTML = `
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="p-3 text-right">رقم السند</th>
-                            <th class="p-3 text-right">المبلغ</th>
-                            <th class="p-3 text-right">العميل</th>
-                            <th class="p-3 text-right">التاريخ</th>
-                            <th class="p-3 text-right">الحالة</th>
-                            <th class="p-3 text-right">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${bonds.map(b => `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 font-bold">${b.bondNumber}</td>
-                                <td class="p-3">${formatMoney(b.amount)}</td>
-                                <td class="p-3">${b.clientName || '-'}</td>
-                                <td class="p-3">${formatDate(b.createdAt)}</td>
-                                <td class="p-3"><span class="px-2 py-1 rounded text-xs ${b.status === 'مورد'? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${b.status}</span></td>
-                                <td class="p-3">
-                                    <button onclick="viewBond('${b.id}')" class="text-blue-600 hover:underline text-sm">عرض</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-
-            window.allBonds = bonds; // للتصدير
-        }
-
-        // 8. عرض السند + QR + طباعة + واتساب
-        window.viewBond = async (id) => {
-            const bondDoc = await getDoc(doc(db, 'bonds', id));
-            const b = bondDoc.data();
-            const qrUrl = `${window.location.origin}/bonds.html?id=${id}&project=${b.projectCode}`;
-
-            document.getElementById('bondPrintArea').innerHTML = `
-                <div class="bond-preview p-6">
-                    <div class="text-center mb-6">
-                        <h2 class="text-2xl font-bold">${projectData.name}</h2>
-                        <p class="text-gray-600">سند ${b.bondType}</p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div><strong>رقم السند:</strong> ${b.bondNumber}</div>
-                        <div><strong>التاريخ:</strong> ${b.bondDate}</div>
-                        <div><strong>المبلغ:</strong> ${formatMoney(b.amount)}</div>
-                        <div><strong>نوع الدفع:</strong> ${b.paymentType}</div>
-                        <div><strong>العميل:</strong> ${b.clientName || '-'}</div>
-                        <div><strong>الصندوق:</strong> ${b.fundName || '-'}</div>
-                    </div>
-                    <div class="mb-6"><strong>المبلغ كتابة:</strong> ${toArabicNumbers(b.amount)} ريال سعودي فقط</div>
-                    <div class="mb-6"><strong>الحالة:</strong> <span class="font-bold ${b.status === 'مورد'? 'text-green-600' : 'text-yellow-600'}">${b.status}</span></div>
-                    ${b.notes? `<div class="mb-6"><strong>ملاحظات:</strong> ${b.notes}</div>` : ''}
-                    <div class="flex justify-between items-center mt-8">
-                        <div><strong>المحاسب:</strong> ${b.accountantName || '-'}</div>
-                        <div id="qrcode"></div>
-                    </div>
-                </div>
-            `;
-
-            new QRCode(document.getElementById('qrcode'), { text: qrUrl, width: 100, height: 100 });
-            document.getElementById('bondModal').classList.remove('hidden');
-
-            // أزرار
-            document.getElementById('printBond').onclick = () => {
-                const element = document.getElementById('bondPrintArea');
-                html2pdf().from(element).save(`سند-${b.bondNumber}.pdf`);
-            };
-
-            document.getElementById('shareWhatsApp').onclick = () => {
-                const text = `*سند ${b.bondType}*\nرقم: ${b.bondNumber}\nالمبلغ: ${formatMoney(b.amount)}\nالتاريخ: ${b.bondDate}\nالحالة: ${b.status}\n\nرابط السند: ${qrUrl}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
-            };
-
-            document.getElementById('shareQR').onclick = () => {
-                navigator.clipboard.writeText(qrUrl);
-                showSuccess('تم نسخ رابط السند');
-            };
-        };
-
-        // 9. تصدير Excel
-        document.getElementById('exportExcel').onclick = () => {
-            const ws = XLSX.utils.json_to_sheet(window.allBonds.map(b => ({
-                'رقم السند': b.bondNumber,
-                'المبلغ': b.amount,
-                'نوع السند': b.bondType,
-                'العميل': b.clientName,
-                'التاريخ': b.bondDate,
-                'الحالة': b.status
-            })));
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'السندات');
-            XLSX.writeFile(wb, 'السندات.xlsx');
-        };
-
-        // 10. تصدير PDF
-        document.getElementById('exportPDF').onclick = () => {
-            const element = document.getElementById('bondsTableContainer');
-            html2pdf().from(element).save('السندات.pdf');
-        };
-
-        // فلاتر
-        ['filterLimit', 'filterDateFrom', 'filterDateTo', 'filterSearch'].forEach(id => {
-            document.getElementById(id).onchange = loadBonds;
-        });
-        document.getElementById('filterSearch').oninput = loadBonds;
-
-        loadStats();
-    </script>
+    <script type="module" src="delegate.js"></script>
 </body>
 </html>
