@@ -18,3 +18,5 @@ const appConfig = {
 
 window.firebaseConfig = firebaseConfig;
 window.appConfig = appConfig;
+
+
