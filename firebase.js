@@ -4,12 +4,12 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-aut
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// Your web app's Firebase configuration - قيم مشروعك الحقيقية
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6Mca0MufvGqr2fY",
+  apiKey: "AIzaSyBvEU1CmtI1X4h0xaCd6McaOMufvGqr2fY",
   authDomain: "sanadat-pro.firebaseapp.com",
   projectId: "sanadat-pro",
-  storageBucket: "sanadat-pro.firebasestorage.app",
+  storageBucket: "sanadat-pro.appspot.com",
   messagingSenderId: "1039476751095",
   appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
 };
