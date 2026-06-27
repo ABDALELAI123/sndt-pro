@@ -6,7 +6,7 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBvEU1CmtI1X4h0xaCd6McaOMufvGqr2fY",
+  apiKey: "AIzaSyBvEU1Cmt1IX4h0xaCd6McaOMufvGqr2fY",
   authDomain: "sanadat-pro.firebaseapp.com",
   projectId: "sanadat-pro",
   storageBucket: "sanadat-pro.appspot.com",
