@@ -9,7 +9,6 @@ const firebaseConfig = {
   appId: "1:1039476751095:web:f2a7744d6469385e7771f2"
 };
 
-// اعدادات اضافية للموقع
 const appConfig = {
   baseUrl: "https://abdalelai123.github.io/sndt-pro",
   رمز_المشرف_الافتراضي: "001122334455",
@@ -17,6 +16,5 @@ const appConfig = {
   هاتف_الدعم: "0597087767"
 };
 
-// تصدير للاستخدام في باقي الملفات
 window.firebaseConfig = firebaseConfig;
 window.appConfig = appConfig;
