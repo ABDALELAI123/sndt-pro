@@ -89,9 +89,9 @@
     </div>
 
     <script type="module">
-        import { auth } from './firebase.js';
-        import { login, getCurrentUserData } from './auth.js';
-        import { showError } from './core.js';
+        import { auth } from './firebase.js?v=999999';
+        import { login, getCurrentUserData } from './auth.js?v=999999'; // هذا السطر المهم
+        import { showError } from './core.js?v=999999';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         // 1. لو المستخدم مسجل دخول، وجهه للصفحة المناسبة
@@ -123,8 +123,10 @@
             const phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
 
+            console.log('بيانات الفورم:', { projectCode, phone }); 
+
             // تحقق سريع
-            if (!projectCode ||!phone ||!password) {
+            if (!projectCode || !phone || !password) {
                 showError('الرجاء تعبئة جميع الحقول');
                 return;
             }
