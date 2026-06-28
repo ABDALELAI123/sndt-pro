@@ -1,4 +1,18 @@
-// auth.js - نظام الدخول بالكود + جوال + باسورد - نسخة نهائية
+**لقيت السبب! الإيميل مقلوب** 😱
+
+شوف السطر في الكونسول:
+```
+محاولة دخول بالإيميل: 0597087767-001122334455@sanadat.pro
+```
+
+**المفروض يكون:**
+```
+001122334455-0597087767@sanadat.pro
+```
+
+**الغلط:** عكست بين الجوال والكود في دالة `generateEmail`
+
+// auth.js - نسخة مصححة نهائياً
 import { auth, db } from './firebase.js';
 import { 
     signInWithEmailAndPassword, 
@@ -15,7 +29,7 @@ const SUPER_ADMIN = {
     password: '500600'
 };
 
-// 1. تحويل كود+جوال لايميل وهمي
+// 1. تحويل كود+جوال لايميل وهمي - الترتيب الصح: كود-جوال
 function generateEmail(projectCode, phone) {
     return `${projectCode.toLowerCase()}-${phone}@sanadat.pro`;
 }
@@ -26,11 +40,11 @@ export async function login(projectCode, phone, password) {
         const email = generateEmail(projectCode, phone);
         console.log('محاولة دخول بالإيميل:', email);
         
-        // تشييك السوبر ادمن بالكود الثابت
+        // تشييك السوبر ادمن
         if (projectCode === SUPER_ADMIN.code && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log('تم دخول السوبر ادمن موجود مسبقاً');
+                console.log('تم دخول السوبر ادمن');
                 return { role: 'superadmin', projectCode: SUPER_ADMIN.code };
             } catch (error) {
                 // لو أول مرة، ننشئ حساب السوبر
@@ -45,10 +59,9 @@ export async function login(projectCode, phone, password) {
             }
         }
 
-        // تسجيل دخول عادي للمدراء والمناديب
+        // تسجيل دخول عادي
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
-        // جيب بياناته من Firestore عشان نعرف صلاحيته
         const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
         if (!userDoc.exists()) {
             await signOut(auth);
@@ -57,7 +70,6 @@ export async function login(projectCode, phone, password) {
         
         const userData = userDoc.data();
         
-        // تشييك ان كود المشروع صح + الحساب نشط
         if (userData.projectCode !== projectCode) {
             await signOut(auth);
             throw new Error('كود المشروع غير صحيح');
@@ -72,7 +84,7 @@ export async function login(projectCode, phone, password) {
 
     } catch (error) {
         console.error('خطأ في login:', error);
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
             throw new Error('بيانات الدخول غير صحيحة');
         }
         throw new Error(error.message);
@@ -96,7 +108,7 @@ async function createSuperAdmin() {
     console.log('تم إنشاء السوبر ادمن بنجاح');
 }
 
-// 4. إنشاء مشروع جديد - يستخدمها السوبر ادمن فقط
+// 4. إنشاء مشروع جديد
 export async function createProject(projectName) {
     const projectCode = Math.random().toString(36).substring(2, 10).toUpperCase();
     
@@ -111,10 +123,9 @@ export async function createProject(projectName) {
     return { success: true, projectCode: projectCode };
 }
 
-// 5. إنشاء حساب مدير أو مندوب - يستخدمها السوبر ادمن
+// 5. إنشاء حساب مدير أو مندوب
 export async function createUser(projectCode, phone, password, role, name) {
     try {
-        // تأكد ان المشروع موجود
         const projectsRef = collection(db, 'projects');
         const qProject = query(projectsRef, where('code', '==', projectCode), where('active', '==', true));
         const projectSnap = await getDocs(qProject);
@@ -122,7 +133,6 @@ export async function createUser(projectCode, phone, password, role, name) {
             throw new Error('كود المشروع غير موجود أو غير نشط');
         }
 
-        // تشييك هل الجوال مسجل بنفس المشروع قبل
         const usersRef = collection(db, 'users');
         const qUser = query(usersRef, where('projectCode', '==', projectCode), where('phone', '==', phone));
         const userSnap = await getDocs(qUser);
