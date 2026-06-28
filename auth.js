@@ -1,4 +1,4 @@
-// auth.js - نظام الدخول بالكود + جوال + باسورد
+// auth.js - نظام الدخول بالكود + جوال + باسورد - نسخة نهائية
 import { auth, db } from './firebase.js';
 import { 
     signInWithEmailAndPassword, 
@@ -7,40 +7,42 @@ import {
     onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { showError, showSuccess } from './core.js';
-import { t } from './lang.js';
 
-// بيانات السوبر ادمن الثابتة - هذا الكود ما يتغير
+// بيانات السوبر ادمن الثابتة
 const SUPER_ADMIN = {
     code: '001122334455',
     phone: '0597087767',
     password: '500600'
 };
 
-// 1. تحويل كود+جوال لايميل وهمي - تم تصحيح الدومين
+// 1. تحويل كود+جوال لايميل وهمي
 function generateEmail(projectCode, phone) {
-    return `${projectCode.toLowerCase()}-${phone}@sanadat.pro`; // ✅ sanadat
+    return `${projectCode.toLowerCase()}-${phone}@sanadat.pro`;
 }
 
 // 2. تسجيل الدخول
 export async function login(projectCode, phone, password) {
     try {
         const email = generateEmail(projectCode, phone);
+        console.log('محاولة دخول بالإيميل:', email);
         
         // تشييك السوبر ادمن بالكود الثابت
         if (projectCode === SUPER_ADMIN.code && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('تم دخول السوبر ادمن موجود مسبقاً');
+                return { role: 'superadmin', projectCode: SUPER_ADMIN.code };
             } catch (error) {
                 // لو أول مرة، ننشئ حساب السوبر
                 if (error.code === 'auth/user-not-found') {
+                    console.log('إنشاء حساب السوبر ادمن لأول مرة');
                     await createSuperAdmin();
                     await signInWithEmailAndPassword(auth, email, password);
+                    return { role: 'superadmin', projectCode: SUPER_ADMIN.code };
                 } else {
                     throw error;
                 }
             }
-            return { role: 'superadmin', projectCode: SUPER_ADMIN.code };
         }
 
         // تسجيل دخول عادي للمدراء والمناديب
@@ -66,18 +68,18 @@ export async function login(projectCode, phone, password) {
             throw new Error('تم إيقاف حسابك');
         }
 
-        return userData; // { role: 'manager' أو 'delegate', projectCode, phone, ... }
+        return userData;
 
     } catch (error) {
-        console.error(error);
-        if (error.code === 'auth/invalid-credential') {
+        console.error('خطأ في login:', error);
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
             throw new Error('بيانات الدخول غير صحيحة');
         }
         throw new Error(error.message);
     }
 }
 
-// 3. إنشاء حساب السوبر ادمن أول مرة - يشتغل تلقائي
+// 3. إنشاء حساب السوبر ادمن أول مرة
 async function createSuperAdmin() {
     const email = generateEmail(SUPER_ADMIN.code, SUPER_ADMIN.phone);
     const userCredential = await createUserWithEmailAndPassword(auth, email, SUPER_ADMIN.password);
@@ -91,11 +93,11 @@ async function createSuperAdmin() {
         active: true,
         createdAt: new Date()
     });
+    console.log('تم إنشاء السوبر ادمن بنجاح');
 }
 
 // 4. إنشاء مشروع جديد - يستخدمها السوبر ادمن فقط
 export async function createProject(projectName) {
-    // توليد كود مشروع عشوائي 8 خانات
     const projectCode = Math.random().toString(36).substring(2, 10).toUpperCase();
     
     await addDoc(collection(db, 'projects'), {
@@ -129,13 +131,11 @@ export async function createUser(projectCode, phone, password, role, name) {
             throw new Error('رقم الجوال مسجل مسبقاً في هذا المشروع');
         }
 
-        // إنشاء الحساب في Firebase Auth
         const email = generateEmail(projectCode, phone);
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
-        // حفظ البيانات في Firestore
         await setDoc(doc(db, 'users', userCredential.user.uid), {
-            role: role, // 'manager' أو 'delegate'
+            role: role,
             phone: phone,
             projectCode: projectCode,
             name: name,
@@ -165,7 +165,7 @@ export async function createUser(projectCode, phone, password, role, name) {
 export async function getCurrentUserData() {
     return new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            unsubscribe(); // نفك المراقبة عشان ما تتكرر
+            unsubscribe();
             if (user) {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
