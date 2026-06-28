@@ -32,6 +32,7 @@ export async function login(projectCode, phone, password) {
             console.log('محاولة دخول السوبر ادمن');
             const userCredential = await signInWithEmailAndPassword(auth, SUPER_ADMIN.email, password);
             console.log('تم دخول السوبر ادمن');
+            window.location.href = "admin-panel.html";
             return { role: 'superadmin', projectCode: SUPER_ADMIN.code };
         }
 
@@ -56,6 +57,15 @@ export async function login(projectCode, phone, password) {
         if (userData.active === false) {
             await signOut(auth);
             throw new Error('تم إيقاف حسابك');
+        }
+
+        // تحويل حسب الدور
+        if (userData.role === 'manager') {
+            window.location.href = "admin-panel.html";
+        } else if (userData.role === 'delegate') {
+            window.location.href = "bonds.html";
+        } else {
+            window.location.href = "index.html";
         }
 
         return userData;
