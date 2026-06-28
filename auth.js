@@ -1,5 +1,5 @@
-// auth.js - نسخة مصححة نهائياً
-import { auth, db } from './firebase.js';
+// auth.js - نسخة مصححة نهائياً مع كشف الأخطاء
+import { auth, db } from './firebase.js?v=999999';
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword,
@@ -7,6 +7,7 @@ import {
     onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { showError } from './core.js?v=999999';
 
 // بيانات السوبر ادمن الثابتة
 const SUPER_ADMIN = {
@@ -17,12 +18,16 @@ const SUPER_ADMIN = {
 
 // 1. تحويل كود+جوال لايميل وهمي - الترتيب الصح: كود-جوال
 function generateEmail(projectCode, phone) {
-    return `${projectCode.toLowerCase()}-${phone}@sanadat.pro`;
+    const email = `${projectCode.toLowerCase()}-${phone}@sanadat.pro`;
+    console.log('generateEmail استقبل:', { projectCode, phone });
+    console.log('generateEmail أنتج:', email);
+    return email;
 }
 
 // 2. تسجيل الدخول
 export async function login(projectCode, phone, password) {
     try {
+        console.log('login استقبل:', { projectCode, phone, password: '***' });
         const email = generateEmail(projectCode, phone);
         console.log('محاولة دخول بالإيميل:', email);
         
