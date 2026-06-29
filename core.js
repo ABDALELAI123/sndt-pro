@@ -131,5 +131,20 @@ export function tafqeet(num) {
     return result + ' ريال سعودي فقط لا غير';
 }
 
-// تصدير كل الدوال
-export { showSuccess, showError, showConfirm, formatDate, formatMoney, tafqeet };
+// نسخ للنص
+export function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showSuccess('تم النسخ للحافظة');
+    });
+}
+
+// التحقق من الجوال السعودي
+export function isValidSaudiPhone(phone) {
+    const cleaned = phone.replace(/[\s-]/g, '');
+    return /^05\d{8}$/.test(cleaned) || /^\+9665\d{8}$/.test(cleaned) || /^009665\d{8}$/.test(cleaned);
+}
+
+// تنظيف رقم الجوال
+export function cleanPhone(phone) {
+    return phone.replace(/[\s-]/g, '').replace(/^00966/, '+966').replace(/^05/, '+9665');
+}
