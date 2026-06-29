@@ -25,6 +25,7 @@
       .status-active { background: #10b981; color: white; }
       .status-expiring { background: #f59e0b; color: white; }
       .status-expired { background: #ef4444; color: white; }
+      .chart-small { max-height: 200px!important; }
     </style>
 
     <script type="module">
@@ -90,12 +91,20 @@
             </div>
         </div>
 
-        <!-- رسم بياني للمشاريع -->
-        <div id="chartContainer" class="hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 mb-6">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-chart-line text-blue-600"></i>حركة السندات - آخر 30 يوم
-            </h2>
-            <canvas id="projectsChart" height="80"></canvas>
+        <!-- الرسوم البيانية -->
+        <div id="chartContainer" class="hidden grid md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-blue-600"></i>حركة السندات - آخر 30 يوم
+                </h2>
+                <canvas id="projectsChart" class="chart-small"></canvas>
+            </div>
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-pie text-purple-600"></i>حالة المشاريع
+                </h2>
+                <canvas id="statusChart" class="chart-small"></canvas>
+            </div>
         </div>
 
         <!-- التبويبات -->
@@ -140,6 +149,7 @@
                         <i class="fas fa-plus ml-2"></i>إنشاء
                     </button>
                 </div>
+            </div>
             <div id="projectsList" class="space-y-3"></div>
         </div>
 
@@ -322,6 +332,7 @@
     let allBonds = [];
     let editingManagerId = null;
     let projectsChart = null;
+    let statusChart = null;
 
     const PERMISSIONS = {
         superadmin: { canCreateProject: true, canViewAllProjects: true, canManageManagers: true, canManageDelegates: true, canManageBonds: true, canEditSettings: true, canDelete: true, maxProjects: -1 },
@@ -375,7 +386,7 @@
         loadAllData();
     });
 
-    // 2. تطبيق الصلاحيات
+    // 2. تطبيق الصلاحيات - مصحح
     function applyPermissions() {
         const perms = PERMISSIONS[currentUser.role];
         const roleNames = { superadmin: 'سوبر ادمن', admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
@@ -384,14 +395,18 @@
         document.getElementById('roleBadge').className = `badge ${badgeColors[currentUser.role]}`;
         document.getElementById('roleBadge').textContent = roleNames[currentUser.role];
 
+        // 🔥 السوبر ادمن يشوف كل شي
+        if (currentUser.role === 'superadmin') {
+            document.getElementById('superStats').classList.remove('hidden');
+            document.getElementById('chartContainer').classList.remove('hidden');
+            return; // لا تخفي شي
+        }
+
         if (!perms.canViewAllProjects) {
             document.getElementById('tab-projects').classList.add('hidden');
             document.getElementById('projectsTab').classList.add('hidden');
             document.getElementById('superStats').classList.add('hidden');
             document.getElementById('chartContainer').classList.add('hidden');
-        } else {
-            document.getElementById('superStats').classList.remove('hidden');
-            document.getElementById('chartContainer').classList.remove('hidden');
         }
 
         if (!perms.canCreateProject) document.getElementById('createProjectForm').classList.add('hidden');
@@ -441,7 +456,7 @@
             renderProjects();
             renderProjectOptions();
             updateStats();
-            renderChart();
+            renderCharts();
         });
 
         let usersQuery = collection(db, 'users');
@@ -465,7 +480,7 @@
             allBonds = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
             renderBonds();
             updateStats();
-            renderChart();
+            renderCharts();
         });
     }
 
@@ -488,10 +503,11 @@
         document.getElementById('statBondsAmount').textContent = formatMoney(totalAmount);
     }
 
-    // 7. رسم بياني
-    function renderChart() {
-        const ctx = document.getElementById('projectsChart');
-        if (!ctx) return;
+    // 7. رسوم بيانية - مصغر + دائري
+    function renderCharts() {
+        // رسم الخط - حركة السندات
+        const ctx1 = document.getElementById('projectsChart');
+        if (!ctx1) return;
 
         const last30Days = {};
         const today = new Date();
@@ -508,7 +524,7 @@
         });
 
         if (projectsChart) projectsChart.destroy();
-        projectsChart = new Chart(ctx, {
+        projectsChart = new Chart(ctx1, {
             type: 'line',
             data: {
                 labels: Object.keys(last30Days).map(d => d.split('-')[2] + '/' + d.split('-')[1]),
@@ -523,8 +539,46 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
                 plugins: { legend: { display: false } },
                 scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // رسم دائري - حالة المشاريع
+        const ctx2 = document.getElementById('statusChart');
+        if (!ctx2) return;
+
+        let active = 0, suspended = 0, expired = 0;
+        const now = new Date();
+        allProjects.forEach(p => {
+            if (p.active === false) {
+                suspended++;
+            } else if (!p.isLifetime && p.expiryDate && new Date(p.expiryDate) < now) {
+                expired++;
+            } else {
+                active++;
+            }
+        });
+
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['نشط', 'موقوف', 'منتهي'],
+                datasets: [{
+                    data: [active, suspended, expired],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15, font: { size: 12 } } }
+                }
             }
         });
     }
@@ -537,7 +591,7 @@
 
     document.getElementById('projectLifetimeEdit').onchange = (e) => {
         document.getElementById('projectExpiryEdit').disabled = e.target.checked;
-        if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
+             if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
     };
 
     // 9. إنشاء مشروع
@@ -584,7 +638,7 @@
     // 10. تجديد المشروع
     window.renewProject = async (projectId, years = 1) => {
         const result = await Swal.fire({
-                      title: 'تجديد المشروع',
+            title: 'تجديد المشروع',
             html: `تجديد لمدة <input id="renewYears" type="number" value="${years}" min="1" max="10" class="swal2-input" style="width:100px"> سنة`,
             showCancelButton: true,
             confirmButtonText: 'تجديد',
