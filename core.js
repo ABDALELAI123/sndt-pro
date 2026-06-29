@@ -1,72 +1,135 @@
-// core.js - الدوال الأساسية للنظام
-import { t } from './lang.js';
-import { auth } from './firebase.js';
-import { signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+// core.js - الدوال الأساسية لسندات برو
+// v2.0.0 - 2026/06/29
 
-// 1. تسجيل الخروج
-export async function logout() {
-    await signOut(auth);
-    localStorage.clear();
-    window.location.href = 'index.html';
-}
+import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
 
-// 2. تنسيق التاريخ ميلادي: 27/06/2026
-export function formatDate(timestamp) {
-    if (!timestamp) return '';
-    const date = timestamp.toDate? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
-}
-
-// 3. تنسيق الفلوس: 1,500.00 ر.س
-export function formatMoney(amount) {
-    const num = parseFloat(amount) || 0;
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency');
-}
-
-// 4. رسالة نجاح
+// رسائل التنبيه
 export function showSuccess(msg) {
-    Swal.fire({
-        icon: 'success',
-        title: t('done'),
-        text: msg,
-        timer: 2000,
-        showConfirmButton: false
-    });
+    return Swal.fire({ icon: 'success', title: 'تم', text: msg, timer: 2000, showConfirmButton: false });
 }
 
-// 5. رسالة خطأ
 export function showError(msg) {
-    Swal.fire({
-        icon: 'error',
-        title: t('error'),
-        text: msg
-    });
+    return Swal.fire({ icon: 'error', title: 'خطأ', text: msg });
 }
 
-// 6. رسالة تأكيد
-export async function showConfirm(msg) {
-    const result = await Swal.fire({
-        icon: 'question',
-        title: t('alert'),
-        text: msg,
+export function showConfirm(title, text) {
+    return Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: t('save'),
-        cancelButtonText: t('cancel')
+        confirmButtonText: 'نعم',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#dc2626'
     });
-    return result.isConfirmed;
 }
 
-// 7. تشييك صلاحية المستخدم
-export function hasPermission(userData, permission) {
-    if (!userData ||!userData.permissions) return false;
-    return userData.permissions[permission] === true;
+// تنسيق التاريخ
+export function formatDate(timestamp) {
+    if (!timestamp) return '-';
+    const date = timestamp.toDate? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleString('ar-SA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
-// 8. منع دخول الصفحة لو المستخدم مو مسجل
-export function requireAuth() {
-    auth.onAuthStateChanged((user) => {
-        if (!user) {
-            window.location.href = 'index.html';
+// تنسيق المبلغ
+export function formatMoney(amount) {
+    if (!amount && amount!== 0) return '0 ر.س';
+    return new Intl.NumberFormat('ar-SA', {
+        style: 'currency',
+        currency: 'SAR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
+
+// تحويل الرقم إلى نص - تفقيط المبالغ
+export function tafqeet(num) {
+    if (num === null || num === undefined || isNaN(num)) return '';
+    if (num === 0) return 'صفر ريال سعودي فقط لا غير';
+
+    const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+    const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+    const hundreds = ['', 'مائة', 'مئتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+
+    function convertThreeDigits(n) {
+        let result = '';
+        const h = Math.floor(n / 100);
+        const t = n % 100;
+
+        if (h > 0) {
+            result += hundreds[h];
+            if (t > 0) result += ' و ';
         }
-    });
+
+        if (t >= 20) {
+            const ten = Math.floor(t / 10);
+            const one = t % 10;
+            if (one > 0) result += ones[one] + ' و ';
+            result += tens[ten];
+        } else if (t >= 11) {
+            const special = ['أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر'];
+            result += special[t - 11];
+        } else if (t === 10) {
+            result += 'عشرة';
+        } else if (t > 0) {
+            result += ones[t];
+        }
+
+        return result;
+    }
+
+    let integerPart = Math.floor(Math.abs(num));
+    const decimalPart = Math.round((Math.abs(num) - integerPart) * 100);
+
+    let result = '';
+
+    if (integerPart >= 1000000000) {
+        const b = Math.floor(integerPart / 1000000000);
+        if (b === 1) result += 'مليار ';
+        else if (b === 2) result += 'ملياران ';
+        else if (b <= 10) result += convertThreeDigits(b) + ' مليارات ';
+        else result += convertThreeDigits(b) + ' مليار ';
+        integerPart %= 1000000000;
+    }
+
+    if (integerPart >= 1000000) {
+        const m = Math.floor(integerPart / 1000000);
+        if (m === 1) result += 'مليون ';
+        else if (m === 2) result += 'مليونان ';
+        else if (m <= 10) result += convertThreeDigits(m) + ' ملايين ';
+        else result += convertThreeDigits(m) + ' مليون ';
+        integerPart %= 1000000;
+    }
+
+    if (integerPart >= 1000) {
+        const th = Math.floor(integerPart / 1000);
+        if (th === 1) result += 'ألف ';
+        else if (th === 2) result += 'ألفان ';
+        else if (th <= 10) result += convertThreeDigits(th) + ' آلاف ';
+        else result += convertThreeDigits(th) + ' ألف ';
+        integerPart %= 1000;
+    }
+
+    if (integerPart > 0) {
+        result += convertThreeDigits(integerPart);
+    }
+
+    result = result.trim();
+
+    if (decimalPart > 0) {
+        result += ' و ' + convertThreeDigits(decimalPart) + ' هللة';
+    }
+
+    if (num < 0) result = 'سالب ' + result;
+
+    return result + ' ريال سعودي فقط لا غير';
 }
+
+// تصدير كل الدوال
+export { showSuccess, showError, showConfirm, formatDate, formatMoney, tafqeet };
