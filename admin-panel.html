@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="adminPanel">لوحة تحكم سندات برو</title>
+    <title>لوحة تحكم سندات برو</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,35 +11,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-       .hidden { display: none!important; }
-       .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-       .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
+        body { font-family: 'Cairo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .hidden { display: none!important; }
+        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
+        .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
         textarea { resize: none; overflow: hidden; }
-       .card-hover { transition: all 0.3s ease; }
-       .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-       .status-active { background: #10b981; color: white; }
-       .status-expiring { background: #f59e0b; color: white; }
-       .status-expired { background: #ef4444; color: white; }
-       .field-toggle { transition: all 0.2s; }
-       .field-toggle.active { background: #2563eb; color: white; }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .status-active { background: #10b981; color: white; }
+        .status-expiring { background: #f59e0b; color: white; }
+        .status-expired { background: #ef4444; color: white; }
+        .field-toggle.active { background: #2563eb; color: white; }
     </style>
-
     <script type="module">
         import { t, setLanguage, applyLanguage } from './lang.js?v=999999';
-        window.t = t;
-        window.setLanguage = setLanguage;
-        window.applyLanguage = applyLanguage;
-        applyLanguage();
+        window.t = t; window.setLanguage = setLanguage; window.applyLanguage = applyLanguage; applyLanguage();
     </script>
 </head>
 <body class="p-4">
 
-    <!-- شاشة تحميل -->
     <div id="loadingScreen" class="w-full max-w-md mx-auto mt-20">
         <div class="bg-white rounded-2xl shadow-2xl p-8 text-center">
             <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
@@ -47,9 +37,7 @@
         </div>
     </div>
 
-    <!-- لوحة التحكم -->
     <div id="dashboard" class="hidden w-full max-w-7xl mx-auto">
-        <!-- الهيدر -->
         <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-4 mb-6 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -62,15 +50,13 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')"
-                        class="bg-white hover:bg-gray-100 px-4 py-2 rounded-xl font-bold transition text-lg shadow">🌍</button>
+                <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')" class="bg-white hover:bg-gray-100 px-4 py-2 rounded-xl font-bold transition text-lg shadow">🌍</button>
                 <button id="logoutBtn" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-2 rounded-xl font-bold hover:opacity-90 transition">
                     <i class="fas fa-sign-out-alt ml-2"></i> خروج
                 </button>
             </div>
         </div>
 
-        <!-- إحصائيات سريعة للسوبر -->
         <div id="superStats" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
                 <p class="text-gray-500 text-sm">إجمالي المشاريع</p>
@@ -92,7 +78,6 @@
             </div>
         </div>
 
-        <!-- إحصائيات المدير -->
         <div id="managerStats" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
                 <p class="text-gray-500 text-sm">مناديب المشروع</p>
@@ -112,15 +97,13 @@
             </div>
         </div>
 
-        <!-- رسم بياني للمشاريع -->
         <div id="chartContainer" class="hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 mb-6">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                 <i class="fas fa-chart-line text-blue-600"></i><span id="chartTitle">حركة السندات - آخر 30 يوم</span>
             </h2>
-            <canvas id="projectsChart" height="80"></canvas>
+            <canvas id="projectsChart" style="max-height:200px"></canvas>
         </div>
 
-        <!-- التبويبات -->
         <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl mb-6">
             <div class="flex border-b overflow-x-auto" id="tabsContainer">
                 <button data-tab="projects" id="tab-projects" class="tab-btn px-6 py-4 font-bold border-b-4 border-blue-600 text-blue-600 bg-blue-50 active">
@@ -144,22 +127,15 @@
             </div>
         </div>
 
-        <!-- تبويب المشاريع -->
         <div id="projectsTab" class="tab-content bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-building text-blue-600"></i>إدارة المشاريع
-            </h2>
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-building text-blue-600"></i>إدارة المشاريع</h2>
             <div id="createProjectForm" class="grid md:grid-cols-4 gap-3 mb-6">
-                <input id="projectName" autocomplete="off" placeholder="اسم المشروع/الشركة"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="projectCodeInput" autocomplete="off" placeholder="كود المشروع مثل TAQWA01"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none uppercase" dir="ltr">
-                <input id="projectExpiry" type="date"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                <input id="projectName" autocomplete="off" placeholder="اسم المشروع/الشركة" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                <input id="projectCodeInput" autocomplete="off" placeholder="كود المشروع مثل TAQWA01" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none uppercase" dir="ltr">
+                <input id="projectExpiry" type="date" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                 <div class="flex gap-2">
                     <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 flex-1">
-                        <input id="projectLifetime" type="checkbox" class="w-5 h-5">
-                        <span class="text-sm">مدى الحياة</span>
+                        <input id="projectLifetime" type="checkbox" class="w-5 h-5"><span class="text-sm">مدى الحياة</span>
                     </label>
                     <button id="addProjectBtn" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
                         <i class="fas fa-plus ml-2"></i>إنشاء
@@ -169,21 +145,13 @@
             <div id="projectsList" class="space-y-3"></div>
         </div>
 
-        <!-- تبويب المدراء -->
         <div id="managersTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-users-cog text-blue-600"></i>إدارة المدراء
-            </h2>
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-users-cog text-blue-600"></i>إدارة المدراء</h2>
             <div id="addManagerForm" class="grid md:grid-cols-6 gap-3 mb-6">
-                <input id="managerName" autocomplete="off" placeholder="اسم المدير"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="managerPhone" autocomplete="off" placeholder="رقم الجوال"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
-                <select id="managerProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                    <option value="">اختر المشروع</option>
-                </select>
-                <input id="managerPassword" type="password" autocomplete="new-password" placeholder="كلمة المرور"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                <input id="managerName" autocomplete="off" placeholder="اسم المدير" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                <input id="managerPhone" autocomplete="off" placeholder="رقم الجوال" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                <select id="managerProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"><option value="">اختر المشروع</option></select>
+                <input id="managerPassword" type="password" autocomplete="new-password" placeholder="كلمة المرور" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                 <select id="managerRole" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="admin">مدير عام - كل الصلاحيات</option>
                     <option value="manager">مدير - إضافة مناديب وسندات</option>
@@ -196,21 +164,13 @@
             <div id="managersList" class="space-y-3"></div>
         </div>
 
-        <!-- تبويب المناديب -->
         <div id="delegatesTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-user-tie text-blue-600"></i>إدارة المناديب
-            </h2>
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-user-tie text-blue-600"></i>إدارة المناديب</h2>
             <div id="addDelegateForm" class="grid md:grid-cols-5 gap-3 mb-6">
-                <input id="delegateName" autocomplete="off" placeholder="اسم المندوب"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="delegatePhone" autocomplete="off" placeholder="رقم الجوال"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
-                <select id="delegateProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                    <option value="">اختر المشروع</option>
-                </select>
-                <input id="delegatePassword" type="password" autocomplete="new-password" placeholder="كلمة المرور"
-                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                <input id="delegateName" autocomplete="off" placeholder="اسم المندوب" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                <input id="delegatePhone" autocomplete="off" placeholder="رقم الجوال" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                <select id="delegateProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"><option value="">اختر المشروع</option></select>
+                <input id="delegatePassword" type="password" autocomplete="new-password" placeholder="كلمة المرور" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                 <button id="addDelegateBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
                     <i class="fas fa-plus ml-2"></i>إضافة
                 </button>
@@ -218,126 +178,69 @@
             <div id="delegatesList" class="space-y-3"></div>
         </div>
 
-        <!-- تبويب السندات -->
         <div id="bondsTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-extrabold mb-4 flex items-center gap-2">
-                <i class="fas fa-file-invoice-dollar text-blue-600"></i>كل السندات
-            </h2>
+            <h2 class="text-xl font-extrabold mb-4 flex items-center gap-2"><i class="fas fa-file-invoice-dollar text-blue-600"></i>كل السندات</h2>
             <div class="mb-4 flex gap-2">
-                <select id="filterProject" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                    <option value="">كل المشاريع</option>
-                </select>
-                <input id="searchBonds" type="text" placeholder="بحث..."
-                       class="border-2 border-gray-200 p-3 rounded-xl flex-1 focus:border-blue-500 outline-none">
-                <select id="filterType" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                    <option value="">الكل</option>
-                </select>
+                <select id="filterProject" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"><option value="">كل المشاريع</option></select>
+                <input id="searchBonds" type="text" placeholder="بحث..." class="border-2 border-gray-200 p-3 rounded-xl flex-1 focus:border-blue-500 outline-none">
+                <select id="filterType" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"><option value="">الكل</option></select>
             </div>
             <div id="bondsList" class="space-y-3"></div>
         </div>
 
-        <!-- تبويب إعدادات المشروع - للسوبر فقط -->
         <div id="settingsTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2">
-                <i class="fas fa-cog text-blue-600"></i>إعدادات المشروع
-            </h2>
+            <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2"><i class="fas fa-cog text-blue-600"></i>إعدادات المشروع</h2>
             <div class="mb-6">
                 <label class="block text-sm font-bold text-gray-700 mb-2">اختر المشروع للتعديل</label>
-                <select id="settingsProjectCode" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                    <option value="">اختر المشروع</option>
-                </select>
+                <select id="settingsProjectCode" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"><option value="">اختر المشروع</option></select>
             </div>
-
             <div id="projectSettingsForm" class="hidden space-y-5">
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">لوجو المشروع - رابط صورة</label>
-                        <input id="projectLogo" autocomplete="off" placeholder="https://example.com/logo.png"
-                               class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                        <input id="projectLogo" autocomplete="off" placeholder="https://example.com/logo.png" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">تاريخ انتهاء المشروع</label>
                         <div class="flex gap-2">
-                            <input id="projectExpiryEdit" type="date"
-                                   class="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                            <input id="projectExpiryEdit" type="date" class="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                             <label class="flex items-center gap-2 bg-gray-50 px-4 rounded-xl border-2 border-gray-200">
-                                <input id="projectLifetimeEdit" type="checkbox" class="w-5 h-5">
-                                <span class="text-sm">مدى الحياة</span>
+                                <input id="projectLifetimeEdit" type="checkbox" class="w-5 h-5"><span class="text-sm">مدى الحياة</span>
                             </label>
                         </div>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">الشروط والأحكام</label>
-                    <textarea id="projectTerms" rows="6" placeholder="اكتب الشروط والأحكام الخاصة بالمشروع هنا..."
-                           class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"
-                           oninput="this.style.height = '';this.style.height = this.scrollHeight + 'px'"></textarea>
+                    <textarea id="projectTerms" rows="6" placeholder="اكتب الشروط والأحكام الخاصة بالمشروع هنا..." class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" oninput="this.style.height = '';this.style.height = this.scrollHeight + 'px'"></textarea>
                 </div>
-
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">تفعيل الميزات للمناديب</label>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="featureWhatsApp" type="checkbox" checked class="w-5 h-5">
-                            <i class="fab fa-whatsapp text-green-600"></i>
-                            <span>واتساب</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="featureExcel" type="checkbox" checked class="w-5 h-5">
-                            <i class="fas fa-file-excel text-green-700"></i>
-                            <span>اكسل</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="featurePDF" type="checkbox" checked class="w-5 h-5">
-                            <i class="fas fa-file-pdf text-red-600"></i>
-                            <span>PDF</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="featurePrint" type="checkbox" checked class="w-5 h-5">
-                            <i class="fas fa-print text-blue-600"></i>
-                            <span>طباعة</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="featureQR" type="checkbox" checked class="w-5 h-5">
-                            <i class="fas fa-qrcode text-purple-600"></i>
-                            <span>QR</span>
-                        </label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200"><input id="featureWhatsApp" type="checkbox" checked class="w-5 h-5"><i class="fab fa-whatsapp text-green-600"></i><span>واتساب</span></label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200"><input id="featureExcel" type="checkbox" checked class="w-5 h-5"><i class="fas fa-file-excel text-green-700"></i><span>اكسل</span></label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200"><input id="featurePDF" type="checkbox" checked class="w-5 h-5"><i class="fas fa-file-pdf text-red-600"></i><span>PDF</span></label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200"><input id="featurePrint" type="checkbox" checked class="w-5 h-5"><i class="fas fa-print text-blue-600"></i><span>طباعة</span></label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200"><input id="featureQR" type="checkbox" checked class="w-5 h-5"><i class="fas fa-qrcode text-purple-600"></i><span>QR</span></label>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">إعدادات الواجهة</label>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="showCreateBond" type="checkbox" checked class="w-5 h-5">
-                            <span>إظهار زر "إنشاء سند" للمناديب</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="showBondsTab" type="checkbox" checked class="w-5 h-5">
-                            <span>إظهار تبويب "السندات"</span>
-                        </label>
-                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 col-span-2">
-                            <input id="forceTermsAccept" type="checkbox" checked class="w-5 h-5">
-                            <span>إلزام المدير بالموافقة على الشروط عند أول دخول</span>
-                        </label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200"><input id="showCreateBond" type="checkbox" checked class="w-5 h-5"><span>إظهار زر "إنشاء سند" للمناديب</span></label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200"><input id="showBondsTab" type="checkbox" checked class="w-5 h-5"><span>إظهار تبويب "السندات"</span></label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 col-span-2"><input id="forceTermsAccept" type="checkbox" checked class="w-5 h-5"><span>إلزام المدير بالموافقة على الشروط عند أول دخول</span></label>
                     </div>
                 </div>
-
                 <button id="saveSettingsBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
                     <i class="fas fa-save ml-2"></i>حفظ الإعدادات
                 </button>
             </div>
         </div>
 
-        <!-- تبويب إعدادات السندات - للمدير -->
         <div id="bondSettingsTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2">
-                <i class="fas fa-file-signature text-blue-600"></i>إعدادات السندات
-            </h2>
-            
+            <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2"><i class="fas fa-file-signature text-blue-600"></i>إعدادات السندات</h2>
             <div class="space-y-6">
-                <!-- 1. بيانات الشركة -->
                 <div class="border-2 border-blue-100 rounded-xl p-5">
                     <h3 class="text-lg font-bold mb-4 text-blue-700"><i class="fas fa-building ml-2"></i>بيانات الشركة</h3>
                     <div class="grid md:grid-cols-2 gap-4">
@@ -349,55 +252,36 @@
                         <textarea id="companyAddress" placeholder="العنوان" rows="2" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none md:col-span-2"></textarea>
                     </div>
                 </div>
-
-                <!-- 2. أنواع السندات + التسلسل + الأثر المحاسبي -->
                 <div class="border-2 border-green-100 rounded-xl p-5">
                     <h3 class="text-lg font-bold mb-4 text-green-700"><i class="fas fa-list-ol ml-2"></i>أنواع السندات والتسلسل</h3>
                     <div class="space-y-3" id="bondTypesList"></div>
-                    <button id="addBondTypeBtn" class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold">
-                        <i class="fas fa-plus ml-2"></i>إضافة نوع سند
-                    </button>
+                    <button id="addBondTypeBtn" class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold"><i class="fas fa-plus ml-2"></i>إضافة نوع سند</button>
                 </div>
-
-                <!-- 3. طرق الدفع -->
                 <div class="border-2 border-purple-100 rounded-xl p-5">
                     <h3 class="text-lg font-bold mb-4 text-purple-700"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</h3>
                     <div class="flex flex-wrap gap-2 mb-3" id="paymentMethodsList"></div>
                     <div class="flex gap-2">
                         <input id="newPaymentMethod" placeholder="مثال: كاش، شبكة، تحويل" class="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                        <button id="addPaymentBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl font-bold">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                        <button id="addPaymentBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus"></i></button>
                     </div>
-                </div>
-
-                <!-- 4. الصناديق -->
                 <div class="border-2 border-yellow-100 rounded-xl p-5">
                     <h3 class="text-lg font-bold mb-4 text-yellow-700"><i class="fas fa-cash-register ml-2"></i>الصناديق</h3>
                     <div class="space-y-2 mb-3" id="cashboxesList"></div>
                     <div class="grid md:grid-cols-3 gap-2">
                         <input id="newCashboxName" placeholder="اسم الصندوق" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                         <input id="newCashboxBalance" type="number" placeholder="الرصيد الافتتاحي" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                        <button id="addCashboxBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-xl font-bold">
-                            <i class="fas fa-plus ml-2"></i>إضافة
-                        </button>
+                        <button id="addCashboxBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus ml-2"></i>إضافة</button>
                     </div>
                 </div>
-
-                <!-- 5. المحاسبين -->
                 <div class="border-2 border-red-100 rounded-xl p-5">
                     <h3 class="text-lg font-bold mb-4 text-red-700"><i class="fas fa-user-tie ml-2"></i>المحاسبين</h3>
                     <div class="space-y-2 mb-3" id="accountantsList"></div>
                     <div class="grid md:grid-cols-3 gap-2">
                         <input id="newAccountantName" placeholder="اسم المحاسب" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                         <input id="newAccountantPhone" placeholder="رقم الجوال" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
-                        <button id="addAccountantBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold">
-                            <i class="fas fa-plus ml-2"></i>إضافة
-                        </button>
+                        <button id="addAccountantBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold"><i class="fas fa-plus ml-2"></i>إضافة</button>
                     </div>
                 </div>
-
-                <!-- 6. إعدادات الطباعة -->
                 <div class="border-2 border-indigo-100 rounded-xl p-5">
                     <h3 class="text-lg font-bold mb-4 text-indigo-700"><i class="fas fa-print ml-2"></i>إعدادات الطباعة</h3>
                     <div class="grid md:grid-cols-2 gap-4 mb-4">
@@ -420,12 +304,10 @@
                     </div>
                     <div class="mt-4 flex gap-3">
                         <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="enableTafqeet" type="checkbox" checked class="w-5 h-5">
-                            <span>تفعيل التفقيط</span>
+                            <input id="enableTafqeet" type="checkbox" checked class="w-5 h-5"><span>تفعيل التفقيط</span>
                         </label>
                     </div>
                 </div>
-
                 <button id="saveBondSettingsBtn" class="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
                     <i class="fas fa-save ml-2"></i>حفظ إعدادات السندات
                 </button>
@@ -468,45 +350,26 @@
         { id: 'notes', name: 'ملاحظات', required: false }
     ];
 
-    // 1. تحقق من المستخدم + الشروط
     onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = 'index.html?logout=true';
-            return;
-        }
-
+        if (!user) { window.location.href = 'index.html?logout=true'; return; }
         const SUPER_ADMIN_EMAIL = '001122334455-0597087767@sanadat.pro';
-
         if (user.email === SUPER_ADMIN_EMAIL) {
-                 if (user.email === SUPER_ADMIN_EMAIL) {
             currentUser = { uid: user.uid, email: user.email, role: 'superadmin', name: 'السوبر ادمن', projectCode: '001122334455' };
         } else {
             currentUser = await getCurrentUserData();
         }
-
         if (!currentUser ||!PERMISSIONS[currentUser.role]) {
-            Swal.fire('خطأ', 'غير مصرح لك بالدخول', 'error').then(() => logout());
-            return;
+            Swal.fire('خطأ', 'غير مصرح لك بالدخول', 'error').then(() => logout()); return;
         }
-
-        // تشييك الشروط للمدير
         if (['admin', 'manager'].includes(currentUser.role)) {
             const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
             const userData = userDoc.data();
             if (!userData.termsAccepted || userData.termsAcceptedVersion!== TERMS_VERSION) {
                 const accepted = await showTermsModal();
-                if (!accepted) {
-                    await logout();
-                    return;
-                }
-                await updateDoc(doc(db, 'users', currentUser.uid), {
-                    termsAccepted: true,
-                    termsAcceptedVersion: TERMS_VERSION,
-                    termsAcceptedAt: new Date()
-                });
+                if (!accepted) { await logout(); return; }
+                await updateDoc(doc(db, 'users', currentUser.uid), { termsAccepted: true, termsAcceptedVersion: TERMS_VERSION, termsAcceptedAt: new Date() });
             }
         }
-
         applyPermissions();
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
@@ -514,20 +377,16 @@
         loadAllData();
     });
 
-    // 2. تطبيق الصلاحيات - مصحح للمدير
     function applyPermissions() {
         const perms = PERMISSIONS[currentUser.role];
         const roleNames = { superadmin: 'سوبر ادمن', admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
         const badgeColors = { superadmin: 'bg-red-500 text-white', admin: 'bg-purple-500 text-white', manager: 'bg-blue-500 text-white', viewer: 'bg-gray-500 text-white' };
-
         document.getElementById('roleBadge').className = `badge ${badgeColors[currentUser.role]}`;
         document.getElementById('roleBadge').textContent = roleNames[currentUser.role];
-
-        // 🔥 السوبر ادمن يشوف كل شي
         if (currentUser.role === 'superadmin') {
             document.getElementById('superStats').classList.remove('hidden');
             document.getElementById('chartContainer').classList.remove('hidden');
-            document.getElementById('tab-bondSettings').classList.add('hidden');
+                        document.getElementById('tab-bondSettings').classList.add('hidden');
             return;
         }
 
@@ -1012,6 +871,7 @@
                             <p class="text-sm text-gray-500">${m.phone} - ${m.projectCode}</p>
                             <p class="text-xs text-gray-400">آخر دخول: ${m.lastLogin? formatDate(m.lastLogin) : 'لم يدخل بعد'}</p>
                         </div>
+                    </div>
                     ${perms.canManageManagers? `
                     <div class="flex gap-2">
                         <button onclick="editManager('${m.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition" title="تعديل">
@@ -1065,19 +925,31 @@
             return matchSearch && matchType && matchProject;
         });
 
+        // تحديث فلتر الأنواع للمدير
+        if (currentUser.role!== 'superadmin' && currentProjectSettings?.bondSettings?.types) {
+            const types = currentProjectSettings.bondSettings.types;
+            document.getElementById('filterType').innerHTML = '<option value="">الكل</option>' +
+                types.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+        }
+
         document.getElementById('bondsList').innerHTML = filtered.map(b => {
             const delegate = allDelegates.find(d => d.id === b.delegateId);
             const date = b.createdAt?.toDate? b.createdAt.toDate().toLocaleString('ar-SA') : '-';
             const perms = PERMISSIONS[currentUser.role];
+            const bondType = currentProjectSettings?.bondSettings?.types?.find(t => t.id === b.bondTypeId);
+            const typeName = bondType?.name || b.type;
+            const typeColor = bondType?.accountingEffect === 'expense' || b.type === 'صرف'? 'bg-red-100' : 'bg-green-100';
+            const typeIcon = bondType?.accountingEffect === 'expense' || b.type === 'صرف'? 'fa-arrow-up text-red-600' : 'fa-arrow-down text-green-600';
+
             return `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 ${b.type === 'قبض'? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center">
-                            <i class="fas ${b.type === 'قبض'? 'fa-arrow-down text-green-600' : 'fa-arrow-up text-red-600'} text-xl"></i>
+                        <div class="w-12 h-12 ${typeColor} rounded-lg flex items-center justify-center">
+                            <i class="fas ${typeIcon} text-xl"></i>
                         </div>
                         <div>
-                            <b class="text-lg">سند ${b.type} - ${formatMoney(b.amount)}</b>
+                            <b class="text-lg">${typeName} - ${formatMoney(b.amount)}</b>
                             <p class="text-sm text-gray-500">${date} | ${b.projectCode || '-'}</p>
                         </div>
                     </div>
@@ -1139,7 +1011,7 @@
         const name = document.getElementById('managerName').value.trim();
         const phone = document.getElementById('managerPhone').value.trim();
         const projectCode = currentUser.role === 'superadmin'
-         ? document.getElementById('managerProjectCode').value
+        ? document.getElementById('managerProjectCode').value
             : currentUser.projectCode;
         const password = document.getElementById('managerPassword').value;
         const role = document.getElementById('managerRole').value;
@@ -1150,7 +1022,7 @@
 
         try {
             if (editingManagerId) {
-                            const updateData = { name, phone, projectCode, role, active: true };
+                const updateData = { name, phone, projectCode, role, active: true };
                 if (password) updateData.password = password;
                 await updateDoc(doc(db, 'users', editingManagerId), updateData);
                 Swal.fire('تم', 'تم تحديث المدير بنجاح', 'success');
@@ -1181,7 +1053,7 @@
         document.getElementById('managerPassword').value = '';
         document.getElementById('managerPassword').placeholder = 'اتركه فاضي لو ما تبي تغير الباسورد';
         document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-save ml-2"></i>حفظ التعديل';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     window.toggleUserStatus = async (id, currentStatus) => {
@@ -1248,7 +1120,7 @@
         const name = document.getElementById('delegateName').value.trim();
         const phone = document.getElementById('delegatePhone').value.trim();
         const projectCode = currentUser.role === 'superadmin'
-         ? document.getElementById('delegateProjectCode').value
+       ? document.getElementById('delegateProjectCode').value
             : currentUser.projectCode;
         const password = document.getElementById('delegatePassword').value;
 
