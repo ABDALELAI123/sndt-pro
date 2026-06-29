@@ -16,16 +16,17 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
-      .hidden { display: none!important; }
-      .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-      .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
+       .hidden { display: none!important; }
+       .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
+       .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
         textarea { resize: none; overflow: hidden; }
-      .card-hover { transition: all 0.3s ease; }
-      .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-      .status-active { background: #10b981; color: white; }
-      .status-expiring { background: #f59e0b; color: white; }
-      .status-expired { background: #ef4444; color: white; }
-      .chart-small { max-height: 200px!important; }
+       .card-hover { transition: all 0.3s ease; }
+       .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+       .status-active { background: #10b981; color: white; }
+       .status-expiring { background: #f59e0b; color: white; }
+       .status-expired { background: #ef4444; color: white; }
+       .field-toggle { transition: all 0.2s; }
+       .field-toggle.active { background: #2563eb; color: white; }
     </style>
 
     <script type="module">
@@ -91,20 +92,32 @@
             </div>
         </div>
 
-        <!-- الرسوم البيانية -->
-        <div id="chartContainer" class="hidden grid md:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <i class="fas fa-chart-line text-blue-600"></i>حركة السندات - آخر 30 يوم
-                </h2>
-                <canvas id="projectsChart" class="chart-small"></canvas>
+        <!-- إحصائيات المدير -->
+        <div id="managerStats" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">مناديب المشروع</p>
+                <p id="statManagerDelegates" class="text-3xl font-extrabold text-purple-600">0</p>
             </div>
-            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                    <i class="fas fa-chart-pie text-purple-600"></i>حالة المشاريع
-                </h2>
-                <canvas id="statusChart" class="chart-small"></canvas>
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">سندات المشروع</p>
+                <p id="statManagerBonds" class="text-3xl font-extrabold text-blue-600">0</p>
             </div>
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">إجمالي القبض</p>
+                <p id="statManagerIncome" class="text-3xl font-extrabold text-green-600">0</p>
+            </div>
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">إجمالي الصرف</p>
+                <p id="statManagerExpense" class="text-3xl font-extrabold text-red-600">0</p>
+            </div>
+        </div>
+
+        <!-- رسم بياني للمشاريع -->
+        <div id="chartContainer" class="hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-line text-blue-600"></i><span id="chartTitle">حركة السندات - آخر 30 يوم</span>
+            </h2>
+            <canvas id="projectsChart" height="80"></canvas>
         </div>
 
         <!-- التبويبات -->
@@ -124,6 +137,9 @@
                 </button>
                 <button data-tab="settings" id="tab-settings" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-cog ml-2"></i>إعدادات المشروع
+                </button>
+                <button data-tab="bondSettings" id="tab-bondSettings" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-file-signature ml-2"></i>إعدادات السندات
                 </button>
             </div>
         </div>
@@ -215,14 +231,12 @@
                        class="border-2 border-gray-200 p-3 rounded-xl flex-1 focus:border-blue-500 outline-none">
                 <select id="filterType" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="">الكل</option>
-                    <option value="قبض">سند قبض</option>
-                    <option value="صرف">سند صرف</option>
                 </select>
             </div>
             <div id="bondsList" class="space-y-3"></div>
         </div>
 
-        <!-- تبويب إعدادات المشروع -->
+        <!-- تبويب إعدادات المشروع - للسوبر فقط -->
         <div id="settingsTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
             <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2">
                 <i class="fas fa-cog text-blue-600"></i>إعدادات المشروع
@@ -315,12 +329,114 @@
                 </button>
             </div>
         </div>
+
+        <!-- تبويب إعدادات السندات - للمدير -->
+        <div id="bondSettingsTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
+            <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2">
+                <i class="fas fa-file-signature text-blue-600"></i>إعدادات السندات
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- 1. بيانات الشركة -->
+                <div class="border-2 border-blue-100 rounded-xl p-5">
+                    <h3 class="text-lg font-bold mb-4 text-blue-700"><i class="fas fa-building ml-2"></i>بيانات الشركة</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <input id="companyName" placeholder="اسم الشركة" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                        <input id="companyPhone" placeholder="رقم الجوال" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                        <input id="companyTax" placeholder="الرقم الضريبي" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                        <input id="companyCR" placeholder="السجل التجاري" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                        <input id="companyLogo" placeholder="رابط الشعار" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none md:col-span-2" dir="ltr">
+                        <textarea id="companyAddress" placeholder="العنوان" rows="2" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none md:col-span-2"></textarea>
+                    </div>
+                </div>
+
+                <!-- 2. أنواع السندات + التسلسل + الأثر المحاسبي -->
+                <div class="border-2 border-green-100 rounded-xl p-5">
+                    <h3 class="text-lg font-bold mb-4 text-green-700"><i class="fas fa-list-ol ml-2"></i>أنواع السندات والتسلسل</h3>
+                    <div class="space-y-3" id="bondTypesList"></div>
+                    <button id="addBondTypeBtn" class="mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold">
+                        <i class="fas fa-plus ml-2"></i>إضافة نوع سند
+                    </button>
+                </div>
+
+                <!-- 3. طرق الدفع -->
+                <div class="border-2 border-purple-100 rounded-xl p-5">
+                    <h3 class="text-lg font-bold mb-4 text-purple-700"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</h3>
+                    <div class="flex flex-wrap gap-2 mb-3" id="paymentMethodsList"></div>
+                    <div class="flex gap-2">
+                        <input id="newPaymentMethod" placeholder="مثال: كاش، شبكة، تحويل" class="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                        <button id="addPaymentBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl font-bold">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. الصناديق -->
+                <div class="border-2 border-yellow-100 rounded-xl p-5">
+                    <h3 class="text-lg font-bold mb-4 text-yellow-700"><i class="fas fa-cash-register ml-2"></i>الصناديق</h3>
+                    <div class="space-y-2 mb-3" id="cashboxesList"></div>
+                    <div class="grid md:grid-cols-3 gap-2">
+                        <input id="newCashboxName" placeholder="اسم الصندوق" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                        <input id="newCashboxBalance" type="number" placeholder="الرصيد الافتتاحي" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                        <button id="addCashboxBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-xl font-bold">
+                            <i class="fas fa-plus ml-2"></i>إضافة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 5. المحاسبين -->
+                <div class="border-2 border-red-100 rounded-xl p-5">
+                    <h3 class="text-lg font-bold mb-4 text-red-700"><i class="fas fa-user-tie ml-2"></i>المحاسبين</h3>
+                    <div class="space-y-2 mb-3" id="accountantsList"></div>
+                    <div class="grid md:grid-cols-3 gap-2">
+                        <input id="newAccountantName" placeholder="اسم المحاسب" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                        <input id="newAccountantPhone" placeholder="رقم الجوال" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                        <button id="addAccountantBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold">
+                            <i class="fas fa-plus ml-2"></i>إضافة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 6. إعدادات الطباعة -->
+                <div class="border-2 border-indigo-100 rounded-xl p-5">
+                    <h3 class="text-lg font-bold mb-4 text-indigo-700"><i class="fas fa-print ml-2"></i>إعدادات الطباعة</h3>
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">نموذج الطباعة</label>
+                            <select id="printTemplate" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                                <option value="classic">كلاسيكي</option>
+                                <option value="modern">حديث</option>
+                                <option value="minimal">بسيط</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">عبارة تذييل السند</label>
+                            <input id="bondFooter" placeholder="مثال: شكراً لتعاملكم معنا" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">الحقول التي تظهر للمندوب</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2" id="bondFieldsToggle"></div>
+                    </div>
+                    <div class="mt-4 flex gap-3">
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
+                            <input id="enableTafqeet" type="checkbox" checked class="w-5 h-5">
+                            <span>تفعيل التفقيط</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="saveBondSettingsBtn" class="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
+                    <i class="fas fa-save ml-2"></i>حفظ إعدادات السندات
+                </button>
+            </div>
+        </div>
     </div>
 
 <script type="module">
     import { auth, db } from './firebase.js?v=999999';
     import { getCurrentUserData, logout, createUser } from './auth.js?v=999999';
-    import { showSuccess, showError, showConfirm, formatDate, formatMoney } from './core.js?v=999999';
+    import { showSuccess, showError, showConfirm, formatDate, formatMoney, tafqeet } from './core.js?v=999999';
     import { TERMS_VERSION, showTermsModal, hasAcceptedLatestTerms } from './terms.js?v=999999';
     import { collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, updateDoc, query, where, getDocs, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -332,7 +448,7 @@
     let allBonds = [];
     let editingManagerId = null;
     let projectsChart = null;
-    let statusChart = null;
+    let currentProjectSettings = null;
 
     const PERMISSIONS = {
         superadmin: { canCreateProject: true, canViewAllProjects: true, canManageManagers: true, canManageDelegates: true, canManageBonds: true, canEditSettings: true, canDelete: true, maxProjects: -1 },
@@ -340,6 +456,17 @@
         manager: { canCreateProject: false, canViewAllProjects: false, canManageManagers: false, canManageDelegates: true, canManageBonds: true, canEditSettings: false, canDelete: false, maxProjects: 0 },
         viewer: { canCreateProject: false, canViewAllProjects: false, canManageManagers: false, canManageDelegates: false, canManageBonds: false, canEditSettings: false, canDelete: false, maxProjects: 0 }
     };
+
+    const DEFAULT_BOND_FIELDS = [
+        { id: 'amount', name: 'المبلغ', required: true },
+        { id: 'from', name: 'من', required: true },
+        { id: 'to', name: 'إلى', required: true },
+        { id: 'reason', name: 'مقابل', required: false },
+        { id: 'paymentMethod', name: 'طريقة الدفع', required: true },
+        { id: 'cashbox', name: 'الصندوق', required: false },
+        { id: 'date', name: 'التاريخ', required: true },
+        { id: 'notes', name: 'ملاحظات', required: false }
+    ];
 
     // 1. تحقق من المستخدم + الشروط
     onAuthStateChanged(auth, async (user) => {
@@ -351,6 +478,7 @@
         const SUPER_ADMIN_EMAIL = '001122334455-0597087767@sanadat.pro';
 
         if (user.email === SUPER_ADMIN_EMAIL) {
+                 if (user.email === SUPER_ADMIN_EMAIL) {
             currentUser = { uid: user.uid, email: user.email, role: 'superadmin', name: 'السوبر ادمن', projectCode: '001122334455' };
         } else {
             currentUser = await getCurrentUserData();
@@ -386,7 +514,7 @@
         loadAllData();
     });
 
-    // 2. تطبيق الصلاحيات - مصحح
+    // 2. تطبيق الصلاحيات - مصحح للمدير
     function applyPermissions() {
         const perms = PERMISSIONS[currentUser.role];
         const roleNames = { superadmin: 'سوبر ادمن', admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
@@ -399,27 +527,29 @@
         if (currentUser.role === 'superadmin') {
             document.getElementById('superStats').classList.remove('hidden');
             document.getElementById('chartContainer').classList.remove('hidden');
-            return; // لا تخفي شي
+            document.getElementById('tab-bondSettings').classList.add('hidden');
+            return;
         }
 
-        if (!perms.canViewAllProjects) {
+        // 🔥 المدير: يشوف إحصائياته + تبويب إعدادات السندات
+        if (['admin', 'manager'].includes(currentUser.role)) {
+            document.getElementById('managerStats').classList.remove('hidden');
+            document.getElementById('chartContainer').classList.remove('hidden');
+            document.getElementById('tab-settings').classList.add('hidden');
+            document.getElementById('settingsTab').classList.add('hidden');
             document.getElementById('tab-projects').classList.add('hidden');
             document.getElementById('projectsTab').classList.add('hidden');
+            document.getElementById('tab-managers').classList.add('hidden');
+            document.getElementById('managersTab').classList.add('hidden');
             document.getElementById('superStats').classList.add('hidden');
-            document.getElementById('chartContainer').classList.add('hidden');
+            document.getElementById('chartTitle').textContent = 'حركة القبض والصرف - أنواع السندات';
         }
 
         if (!perms.canCreateProject) document.getElementById('createProjectForm').classList.add('hidden');
         if (!perms.canManageManagers) {
-            document.getElementById('tab-managers').classList.add('hidden');
-            document.getElementById('managersTab').classList.add('hidden');
             document.getElementById('addManagerForm').classList.add('hidden');
         }
         if (!perms.canManageDelegates) document.getElementById('addDelegateForm').classList.add('hidden');
-        if (!perms.canEditSettings) {
-            document.getElementById('tab-settings').classList.add('hidden');
-            document.getElementById('settingsTab').classList.add('hidden');
-        }
 
         const firstVisibleTab = document.querySelector('.tab-btn:not(.hidden)');
         if (firstVisibleTab) firstVisibleTab.click();
@@ -440,6 +570,8 @@
             document.getElementById(tab + 'Tab').classList.remove('hidden');
             btn.classList.add('active', 'border-blue-600', 'bg-blue-50', 'text-blue-600');
             btn.classList.remove('text-gray-600');
+
+            if (tab === 'bondSettings') loadBondSettings();
         };
     });
 
@@ -453,8 +585,12 @@
         }
         onSnapshot(projectsQuery, (snapshot) => {
             allProjects = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
-            renderProjects();
-            renderProjectOptions();
+            if (currentUser.role === 'superadmin') {
+                renderProjects();
+                renderProjectOptions();
+            } else {
+                currentProjectSettings = allProjects[0];
+            }
             updateStats();
             renderCharts();
         });
@@ -486,101 +622,102 @@
 
     // 6. إحصائيات
     function updateStats() {
-        document.getElementById('statProjects').textContent = allProjects.length;
-        const activeProjects = allProjects.filter(p => {
-            if (p.active === false) return false;
-            if (p.isLifetime) return true;
-            if (!p.expiryDate) return true;
-            return new Date(p.expiryDate) >= new Date();
-        }).length;
-        document.getElementById('statProjectsActive').textContent = `${activeProjects} نشط`;
-
-        document.getElementById('statManagers').textContent = allManagers.length;
-        document.getElementById('statDelegates').textContent = allDelegates.length;
-        document.getElementById('statBonds').textContent = allBonds.length;
-
-        const totalAmount = allBonds.reduce((sum, b) => sum + (b.amount || 0), 0);
-        document.getElementById('statBondsAmount').textContent = formatMoney(totalAmount);
+        if (currentUser.role === 'superadmin') {
+            document.getElementById('statProjects').textContent = allProjects.length;
+            const activeProjects = allProjects.filter(p => {
+                if (p.active === false) return false;
+                if (p.isLifetime) return true;
+                if (!p.expiryDate) return true;
+                return new Date(p.expiryDate) >= new Date();
+            }).length;
+            document.getElementById('statProjectsActive').textContent = `${activeProjects} نشط`;
+            document.getElementById('statManagers').textContent = allManagers.length;
+            document.getElementById('statDelegates').textContent = allDelegates.length;
+            document.getElementById('statBonds').textContent = allBonds.length;
+            const totalAmount = allBonds.reduce((sum, b) => sum + (b.amount || 0), 0);
+            document.getElementById('statBondsAmount').textContent = formatMoney(totalAmount);
+        } else {
+            // إحصائيات المدير
+            document.getElementById('statManagerDelegates').textContent = allDelegates.length;
+            document.getElementById('statManagerBonds').textContent = allBonds.length;
+            const income = allBonds.filter(b => b.accountingEffect === 'income' || b.type === 'قبض').reduce((sum, b) => sum + (b.amount || 0), 0);
+            const expense = allBonds.filter(b => b.accountingEffect === 'expense' || b.type === 'صرف').reduce((sum, b) => sum + (b.amount || 0), 0);
+            document.getElementById('statManagerIncome').textContent = formatMoney(income);
+            document.getElementById('statManagerExpense').textContent = formatMoney(expense);
+        }
     }
 
     // 7. رسوم بيانية - مصغر + دائري
     function renderCharts() {
-        // رسم الخط - حركة السندات
         const ctx1 = document.getElementById('projectsChart');
         if (!ctx1) return;
 
-        const last30Days = {};
-        const today = new Date();
-        for (let i = 29; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(d.getDate() - i);
-            const key = d.toISOString().split('T')[0];
-            last30Days[key] = 0;
-        }
-
-        allBonds.forEach(b => {
-            const date = b.createdAt?.toDate? b.createdAt.toDate().toISOString().split('T')[0] : b.bondDate;
-            if (last30Days.hasOwnProperty(date)) last30Days[date]++;
-        });
-
-        if (projectsChart) projectsChart.destroy();
-        projectsChart = new Chart(ctx1, {
-            type: 'line',
-            data: {
-                labels: Object.keys(last30Days).map(d => d.split('-')[2] + '/' + d.split('-')[1]),
-                datasets: [{
-                    label: 'عدد السندات',
-                    data: Object.values(last30Days),
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        if (currentUser.role === 'superadmin') {
+            // رسم السوبر: آخر 30 يوم
+            const last30Days = {};
+            const today = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().split('T')[0];
+                last30Days[key] = 0;
             }
-        });
 
-        // رسم دائري - حالة المشاريع
-        const ctx2 = document.getElementById('statusChart');
-        if (!ctx2) return;
+            allBonds.forEach(b => {
+                const date = b.createdAt?.toDate? b.createdAt.toDate().toISOString().split('T')[0] : b.bondDate;
+                if (last30Days.hasOwnProperty(date)) last30Days[date]++;
+            });
 
-        let active = 0, suspended = 0, expired = 0;
-        const now = new Date();
-        allProjects.forEach(p => {
-            if (p.active === false) {
-                suspended++;
-            } else if (!p.isLifetime && p.expiryDate && new Date(p.expiryDate) < now) {
-                expired++;
-            } else {
-                active++;
-            }
-        });
-
-        if (statusChart) statusChart.destroy();
-        statusChart = new Chart(ctx2, {
-            type: 'doughnut',
-            data: {
-                labels: ['نشط', 'موقوف', 'منتهي'],
-                datasets: [{
-                    data: [active, suspended, expired],
-                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { position: 'bottom', labels: { padding: 15, font: { size: 12 } } }
+            if (projectsChart) projectsChart.destroy();
+            projectsChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(last30Days).map(d => d.split('-')[2] + '/' + d.split('-')[1]),
+                    datasets: [{
+                        label: 'عدد السندات',
+                        data: Object.values(last30Days),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
                 }
-            }
-        });
+            });
+        } else {
+            // رسم المدير: قبض وصرف بأنواع السندات المخصصة
+            const bondTypes = currentProjectSettings?.bondSettings?.types || [];
+            const data = bondTypes.map(type => {
+                return allBonds.filter(b => b.bondTypeId === type.id).length;
+            });
+            const labels = bondTypes.map(t => t.name);
+            const colors = bondTypes.map(t => t.accountingEffect === 'income'? '#10b981' : '#ef4444');
+
+            if (projectsChart) projectsChart.destroy();
+            projectsChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels.length? labels : ['لا توجد أنواع'],
+                    datasets: [{
+                        label: 'عدد السندات',
+                        data: data.length? data : [0],
+                        backgroundColor: colors.length? colors : ['#6b7280'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
     }
 
     // 8. مدى الحياة يلغي التاريخ
@@ -591,7 +728,7 @@
 
     document.getElementById('projectLifetimeEdit').onchange = (e) => {
         document.getElementById('projectExpiryEdit').disabled = e.target.checked;
-             if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
+        if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
     };
 
     // 9. إنشاء مشروع
@@ -623,6 +760,20 @@
                     showBondsTab: true,
                     features: { whatsapp: true, excel: true, pdf: true, print: true, qr: true },
                     forceTermsAccept: true
+                },
+                bondSettings: {
+                    types: [
+                        { id: 'rec1', name: 'سند قبض', accountingEffect: 'income', startNumber: 1 },
+                        { id: 'pay1', name: 'سند صرف', accountingEffect: 'expense', startNumber: 1 }
+                    ],
+                    company: { name: name, logo: '', phone: '', tax: '', cr: '', address: '' },
+                    paymentMethods: ['كاش', 'شبكة', 'تحويل بنكي'],
+                    cashboxes: [{ id: 'main', name: 'الصندوق الرئيسي', balance: 0 }],
+                    accountants: [],
+                    printTemplate: 'classic',
+                    bondFooter: '',
+                    enableTafqeet: true,
+                    visibleFields: DEFAULT_BOND_FIELDS.map(f => f.id)
                 }
             });
             document.getElementById('projectName').value = '';
@@ -652,7 +803,7 @@
             const newYears = parseInt(result.value);
             const project = allProjects.find(p => p.id === projectId);
             let newExpiry = new Date();
-            
+
             if (project.expiryDate) {
                 newExpiry = new Date(project.expiryDate);
             }
@@ -678,11 +829,11 @@
         if (project.active === false) return { text: 'موقوف', class: 'bg-red-100 text-red-700', icon: 'fa-ban' };
         if (project.isLifetime) return { text: 'نشط - مدى الحياة', class: 'status-active', icon: 'fa-infinity' };
         if (!project.expiryDate) return { text: 'نشط', class: 'status-active', icon: 'fa-check' };
-        
+
         const today = new Date();
         const expiry = new Date(project.expiryDate);
         const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays < 0) return { text: 'منتهي', class: 'status-expired', icon: 'fa-ban' };
         if (diffDays <= 30) return { text: `ينتهي خلال ${diffDays} يوم`, class: 'status-expiring', icon: 'fa-exclamation-triangle' };
         return { text: 'نشط', class: 'status-active', icon: 'fa-check' };
@@ -697,7 +848,7 @@
             const totalAmount = allBonds.filter(b => b.projectCode === p.code).reduce((sum, b) => sum + (b.amount || 0), 0);
             const lastActivity = allBonds.filter(b => b.projectCode === p.code).sort((a,b) => b.createdAt - a.createdAt)[0];
             const isActive = p.active!== false;
-            
+
             return `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover ${!isActive? 'opacity-60 bg-red-50' : ''}">
                 <div class="flex justify-between items-start mb-3">
@@ -751,8 +902,8 @@
         const action = currentStatus? 'إيقاف' : 'تنشيط';
         const result = await Swal.fire({
             title: `${action} المشروع؟`,
-            html: currentStatus? 
-                '<b class="text-red-600">تحذير:</b> سيتم إيقاف كل المدراء والمناديب التابعين لهذا المشروع ولن يتمكنوا من الدخول' : 
+            html: currentStatus?
+                '<b class="text-red-600">تحذير:</b> سيتم إيقاف كل المدراء والمناديب التابعين لهذا المشروع ولن يتمكنوا من الدخول' :
                 'سيتم السماح لكل المستخدمين بالدخول مرة أخرى',
             icon: 'warning',
             showCancelButton: true,
@@ -772,8 +923,8 @@
                 const project = allProjects.find(p => p.id === projectId);
                 const usersQuery = query(collection(db, 'users'), where('projectCode', '==', project.code));
                 const usersSnap = await getDocs(usersQuery);
-                
-                const promises = usersSnap.docs.map(userDoc => 
+
+                const promises = usersSnap.docs.map(userDoc =>
                     updateDoc(userDoc.ref, { active:!currentStatus, updatedAt: serverTimestamp() })
                 );
                 await Promise.all(promises);
@@ -802,18 +953,18 @@
         msg += `• الحالة: ${project.active === false? '🔴 موقوف' : '🟢 نشط'}\n`;
         msg += `• الانتهاء: ${project.isLifetime? 'مدى الحياة ♾️' : project.expiryDate || 'غير محدد'}\n`;
         msg += `• تاريخ الإنشاء: ${project.createdAt?.toDate? formatDate(project.createdAt) : 'غير محدد'}\n\n`;
-        
+
         msg += `*👥 المستخدمين:*\n`;
         msg += `• عدد المدراء: ${managers.length}\n`;
         managers.forEach(m => {
             msg += ` - ${m.name} (${m.phone}) - ${m.role === 'admin'? 'مدير عام' : m.role === 'manager'? 'مدير' : 'مشاهد'}\n`;
         });
         msg += `• عدد المناديب: ${delegates.length}\n\n`;
-        
+
         msg += `*💰 الإحصائيات:*\n`;
         msg += `• عدد السندات: ${bondsCount}\n`;
         msg += `• المبلغ الكلي: ${formatMoney(totalAmount)}\n\n`;
-        
+
         msg += `*⚙️ الإعدادات المفعلة:*\n`;
         const features = project.settings?.features || {};
         msg += `• واتساب: ${features.whatsapp!== false? '✅' : '❌'}\n`;
@@ -821,7 +972,7 @@
         msg += `• PDF: ${features.pdf!== false? '✅' : '❌'}\n`;
         msg += `• طباعة: ${features.print!== false? '✅' : '❌'}\n`;
         msg += `• QR: ${features.qr!== false? '✅' : '❌'}\n\n`;
-        
+
         msg += `━━━━━━━━━━━━━━━━━━\n`;
         msg += `_تم الإرسال من لوحة تحكم سندات برو_\n`;
         msg += `_التاريخ: ${new Date().toLocaleString('ar-SA')}_`;
@@ -844,7 +995,7 @@
         const perms = PERMISSIONS[currentUser.role];
         const roleLabels = { admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
         const roleColors = { admin: 'bg-purple-100 text-purple-700', manager: 'bg-blue-100 text-blue-700', viewer: 'bg-gray-100 text-gray-700' };
-        
+
         document.getElementById('managersList').innerHTML = allManagers.map(m => `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-center">
@@ -861,7 +1012,6 @@
                             <p class="text-sm text-gray-500">${m.phone} - ${m.projectCode}</p>
                             <p class="text-xs text-gray-400">آخر دخول: ${m.lastLogin? formatDate(m.lastLogin) : 'لم يدخل بعد'}</p>
                         </div>
-                    </div>
                     ${perms.canManageManagers? `
                     <div class="flex gap-2">
                         <button onclick="editManager('${m.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition" title="تعديل">
@@ -907,7 +1057,7 @@
         const searchTerm = document.getElementById('searchBonds').value.toLowerCase();
         const filterType = document.getElementById('filterType').value;
         const filterProject = document.getElementById('filterProject').value;
-        
+
         let filtered = allBonds.filter(b => {
             const matchSearch =!searchTerm || b.from?.toLowerCase().includes(searchTerm) || b.to?.toLowerCase().includes(searchTerm) || b.reason?.toLowerCase().includes(searchTerm);
             const matchType =!filterType || b.type === filterType;
@@ -989,7 +1139,7 @@
         const name = document.getElementById('managerName').value.trim();
         const phone = document.getElementById('managerPhone').value.trim();
         const projectCode = currentUser.role === 'superadmin'
-          ? document.getElementById('managerProjectCode').value
+         ? document.getElementById('managerProjectCode').value
             : currentUser.projectCode;
         const password = document.getElementById('managerPassword').value;
         const role = document.getElementById('managerRole').value;
@@ -1000,7 +1150,7 @@
 
         try {
             if (editingManagerId) {
-                const updateData = { name, phone, projectCode, role, active: true };
+                            const updateData = { name, phone, projectCode, role, active: true };
                 if (password) updateData.password = password;
                 await updateDoc(doc(db, 'users', editingManagerId), updateData);
                 Swal.fire('تم', 'تم تحديث المدير بنجاح', 'success');
@@ -1098,7 +1248,7 @@
         const name = document.getElementById('delegateName').value.trim();
         const phone = document.getElementById('delegatePhone').value.trim();
         const projectCode = currentUser.role === 'superadmin'
-          ? document.getElementById('delegateProjectCode').value
+         ? document.getElementById('delegateProjectCode').value
             : currentUser.projectCode;
         const password = document.getElementById('delegatePassword').value;
 
@@ -1117,7 +1267,7 @@
         }
     };
 
-    // 21. حفظ إعدادات المشروع
+    // 21. حفظ إعدادات المشروع - للسوبر
     document.getElementById('projectLifetimeEdit').onchange = (e) => {
         document.getElementById('projectExpiryEdit').disabled = e.target.checked;
         if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
@@ -1187,12 +1337,11 @@
             document.getElementById('featurePrint').checked = project.settings.features?.print!== false;
             document.getElementById('featureQR').checked = project.settings.features?.qr!== false;
             document.getElementById('forceTermsAccept').checked = project.settings.forceTermsAccept!== false;
-            
-            // تكبير textarea تلقائي
+
             const termsTextarea = document.getElementById('projectTerms');
             termsTextarea.style.height = '';
             termsTextarea.style.height = termsTextarea.scrollHeight + 'px';
-            
+
             form.classList.remove('hidden');
         }
     };
@@ -1232,6 +1381,243 @@
     document.getElementById('searchBonds').oninput = renderBonds;
     document.getElementById('filterType').onchange = renderBonds;
     document.getElementById('filterProject').onchange = renderBonds;
+
+    // ===== إعدادات السندات للمدير =====
+
+    // تحميل إعدادات السندات
+    function loadBondSettings() {
+        if (!currentProjectSettings) return;
+        const bs = currentProjectSettings.bondSettings || {};
+
+        // بيانات الشركة
+        document.getElementById('companyName').value = bs.company?.name || currentProjectSettings.name;
+        document.getElementById('companyPhone').value = bs.company?.phone || '';
+        document.getElementById('companyTax').value = bs.company?.tax || '';
+        document.getElementById('companyCR').value = bs.company?.cr || '';
+        document.getElementById('companyLogo').value = bs.company?.logo || currentProjectSettings.settings?.logo || '';
+        document.getElementById('companyAddress').value = bs.company?.address || '';
+
+        // أنواع السندات
+        renderBondTypes(bs.types || []);
+
+        // طرق الدفع
+        renderPaymentMethods(bs.paymentMethods || ['كاش', 'شبكة', 'تحويل بنكي']);
+
+        // الصناديق
+        renderCashboxes(bs.cashboxes || [{ id: 'main', name: 'الصندوق الرئيسي', balance: 0 }]);
+
+        // المحاسبين
+        renderAccountants(bs.accountants || []);
+
+        // إعدادات الطباعة
+        document.getElementById('printTemplate').value = bs.printTemplate || 'classic';
+        document.getElementById('bondFooter').value = bs.bondFooter || '';
+        document.getElementById('enableTafqeet').checked = bs.enableTafqeet!== false;
+
+        // الحقول الظاهرة
+        renderBondFieldsToggle(bs.visibleFields || DEFAULT_BOND_FIELDS.map(f => f.id));
+    }
+
+    // أنواع السندات
+    function renderBondTypes(types) {
+        document.getElementById('bondTypesList').innerHTML = types.map((t, idx) => `
+            <div class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl">
+                <input value="${t.name}" data-idx="${idx}" data-field="name" placeholder="اسم النوع" class="flex-1 border p-2 rounded-lg bond-type-input">
+                <select data-idx="${idx}" data-field="accountingEffect" class="border p-2 rounded-lg bond-type-input">
+                    <option value="income" ${t.accountingEffect === 'income'? 'selected' : ''}>قبض - يزيد الصندوق</option>
+                    <option value="expense" ${t.accountingEffect === 'expense'? 'selected' : ''}>صرف - ينقص الصندوق</option>
+                </select>
+                <input type="number" value="${t.startNumber || 1}" data-idx="${idx}" data-field="startNumber" placeholder="بداية التسلسل" class="w-32 border p-2 rounded-lg bond-type-input">
+                <button onclick="removeBondType(${idx})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('addBondTypeBtn').onclick = () => {
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.types = bs.types || [];
+        bs.types.push({ id: 'type' + Date.now(), name: 'نوع جديد', accountingEffect: 'income', startNumber: 1 });
+        renderBondTypes(bs.types);
+    };
+
+    window.removeBondType = (idx) => {
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.types.splice(idx, 1);
+        renderBondTypes(bs.types);
+    };
+
+    // طرق الدفع
+    function renderPaymentMethods(methods) {
+        document.getElementById('paymentMethodsList').innerHTML = methods.map((m, idx) => `
+            <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg flex items-center gap-2">
+                ${m}
+                <button onclick="removePaymentMethod(${idx})" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </span>
+        `).join('');
+    }
+
+    document.getElementById('addPaymentBtn').onclick = () => {
+        const val = document.getElementById('newPaymentMethod').value.trim();
+        if (!val) return;
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.paymentMethods = bs.paymentMethods || [];
+        bs.paymentMethods.push(val);
+        document.getElementById('newPaymentMethod').value = '';
+        renderPaymentMethods(bs.paymentMethods);
+    };
+
+    window.removePaymentMethod = (idx) => {
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.paymentMethods.splice(idx, 1);
+        renderPaymentMethods(bs.paymentMethods);
+    };
+
+    // الصناديق
+    function renderCashboxes(boxes) {
+        document.getElementById('cashboxesList').innerHTML = boxes.map((b, idx) => `
+            <div class="flex items-center gap-2 bg-yellow-50 p-3 rounded-xl">
+                <input value="${b.name}" data-idx="${idx}" data-field="name" class="flex-1 border p-2 rounded-lg cashbox-input">
+                <input type="number" value="${b.balance}" data-idx="${idx}" data-field="balance" class="w-32 border p-2 rounded-lg cashbox-input" placeholder="الرصيد">
+                <button onclick="removeCashbox(${idx})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('addCashboxBtn').onclick = () => {
+        const name = document.getElementById('newCashboxName').value.trim();
+        const balance = parseFloat(document.getElementById('newCashboxBalance').value) || 0;
+        if (!name) return Swal.fire('تنبيه', 'ادخل اسم الصندوق', 'warning');
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.cashboxes = bs.cashboxes || [];
+        bs.cashboxes.push({ id: 'box' + Date.now(), name, balance });
+        document.getElementById('newCashboxName').value = '';
+        document.getElementById('newCashboxBalance').value = '';
+        renderCashboxes(bs.cashboxes);
+    };
+
+    window.removeCashbox = (idx) => {
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.cashboxes.splice(idx, 1);
+        renderCashboxes(bs.cashboxes);
+    };
+
+    // المحاسبين
+    function renderAccountants(accs) {
+        document.getElementById('accountantsList').innerHTML = accs.map((a, idx) => `
+            <div class="flex items-center gap-2 bg-red-50 p-3 rounded-xl">
+                <input value="${a.name}" data-idx="${idx}" data-field="name" placeholder="الاسم" class="flex-1 border p-2 rounded-lg accountant-input">
+                <input value="${a.phone}" data-idx="${idx}" data-field="phone" placeholder="الجوال" class="flex-1 border p-2 rounded-lg accountant-input" dir="ltr">
+                <button onclick="removeAccountant(${idx})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('addAccountantBtn').onclick = () => {
+        const name = document.getElementById('newAccountantName').value.trim();
+        const phone = document.getElementById('newAccountantPhone').value.trim();
+        if (!name ||!phone) return Swal.fire('تنبيه', 'املأ الاسم والجوال', 'warning');
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.accountants = bs.accountants || [];
+        bs.accountants.push({ id: 'acc' + Date.now(), name, phone });
+        document.getElementById('newAccountantName').value = '';
+        document.getElementById('newAccountantPhone').value = '';
+        renderAccountants(bs.accountants);
+    };
+
+    window.removeAccountant = (idx) => {
+        const bs = currentProjectSettings.bondSettings || {};
+        bs.accountants.splice(idx, 1);
+        renderAccountants(bs.accountants);
+    };
+
+    // الحقول الظاهرة
+    function renderBondFieldsToggle(visibleFields) {
+        document.getElementById('bondFieldsToggle').innerHTML = DEFAULT_BOND_FIELDS.map(f => `
+            <button data-field="${f.id}" class="field-toggle p-3 rounded-xl border-2 border-gray-200 text-sm ${visibleFields.includes(f.id)? 'active' : ''}">
+                <i class="fas fa-${visibleFields.includes(f.id)? 'check' : 'times'} ml-1"></i>${f.name}
+            </button>
+        `).join('');
+
+        document.querySelectorAll('.field-toggle').forEach(btn => {
+            btn.onclick = () => {
+                btn.classList.toggle('active');
+                const icon = btn.querySelector('i');
+                icon.className = btn.classList.contains('active')? 'fas fa-check ml-1' : 'fas fa-times ml-1';
+            };
+        });
+    }
+
+    // حفظ إعدادات السندات
+    document.getElementById('saveBondSettingsBtn').onclick = async () => {
+        if (!currentProjectSettings) return;
+
+        // جمع البيانات
+        const bs = currentProjectSettings.bondSettings || {};
+
+        // بيانات الشركة
+        bs.company = {
+            name: document.getElementById('companyName').value.trim(),
+            phone: document.getElementById('companyPhone').value.trim(),
+            tax: document.getElementById('companyTax').value.trim(),
+            cr: document.getElementById('companyCR').value.trim(),
+            logo: document.getElementById('companyLogo').value.trim(),
+            address: document.getElementById('companyAddress').value.trim()
+        };
+
+        // أنواع السندات
+        document.querySelectorAll('.bond-type-input').forEach(input => {
+            const idx = parseInt(input.dataset.idx);
+            const field = input.dataset.field;
+            if (!bs.types[idx]) bs.types[idx] = {};
+            bs.types[idx][field] = field === 'startNumber'? parseInt(input.value) : input.value;
+        });
+
+        // الصناديق
+        document.querySelectorAll('.cashbox-input').forEach(input => {
+            const idx = parseInt(input.dataset.idx);
+            const field = input.dataset.field;
+            if (!bs.cashboxes[idx]) bs.cashboxes[idx] = {};
+            bs.cashboxes[idx][field] = field === 'balance'? parseFloat(input.value) : input.value;
+        });
+
+        // المحاسبين
+        document.querySelectorAll('.accountant-input').forEach(input => {
+            const idx = parseInt(input.dataset.idx);
+            const field = input.dataset.field;
+            if (!bs.accountants[idx]) bs.accountants[idx] = {};
+            bs.accountants[idx][field] = input.value;
+        });
+
+        // إعدادات الطباعة
+        bs.printTemplate = document.getElementById('printTemplate').value;
+        bs.bondFooter = document.getElementById('bondFooter').value.trim();
+        bs.enableTafqeet = document.getElementById('enableTafqeet').checked;
+
+        // الحقول الظاهرة
+        bs.visibleFields = [];
+        document.querySelectorAll('.field-toggle.active').forEach(btn => {
+            bs.visibleFields.push(btn.dataset.field);
+        });
+
+        try {
+            await updateDoc(doc(db, 'projects', currentProjectSettings.id), {
+                bondSettings: bs,
+                updatedAt: serverTimestamp()
+            });
+            showSuccess('تم حفظ إعدادات السندات بنجاح');
+        } catch (error) {
+            showError(error.message);
+        }
+    };
+
 </script>
 
 </body>
