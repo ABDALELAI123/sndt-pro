@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -139,7 +140,6 @@
                         <i class="fas fa-plus ml-2"></i>إنشاء
                     </button>
                 </div>
-            </div>
             <div id="projectsList" class="space-y-3"></div>
         </div>
 
@@ -473,6 +473,7 @@
     function updateStats() {
         document.getElementById('statProjects').textContent = allProjects.length;
         const activeProjects = allProjects.filter(p => {
+            if (p.active === false) return false;
             if (p.isLifetime) return true;
             if (!p.expiryDate) return true;
             return new Date(p.expiryDate) >= new Date();
@@ -523,7 +524,7 @@
             options: {
                 responsive: true,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }
             }
         });
     }
@@ -574,13 +575,13 @@
             document.getElementById('projectCodeInput').value = '';
             document.getElementById('projectExpiry').value = '';
             document.getElementById('projectLifetime').checked = false;
-                        Swal.fire('تم', 'تم إنشاء المشروع بنجاح', 'success');
+            Swal.fire('تم', 'تم إنشاء المشروع بنجاح', 'success');
         } catch (error) {
             Swal.fire('خطأ', error.message, 'error');
         }
     };
 
-    // 10. تجديد المشروع + تحديد الحالة
+    // 10. تجديد المشروع
     window.renewProject = async (projectId, years = 1) => {
         const result = await Swal.fire({
             title: 'تجديد المشروع',
@@ -604,9 +605,10 @@
             newExpiry.setFullYear(newExpiry.getFullYear() + newYears);
 
             try {
-                await updateDoc(doc(db, 'projects', projectId), {
+                                await updateDoc(doc(db, 'projects', projectId), {
                     expiryDate: newExpiry.toISOString().split('T')[0],
                     isLifetime: false,
+                    active: true,
                     renewedAt: serverTimestamp(),
                     renewedBy: currentUser.uid
                 });
@@ -619,19 +621,20 @@
 
     // 11. حساب حالة المشروع
     function getProjectStatus(project) {
+        if (project.active === false) return { text: 'موقوف', class: 'bg-red-100 text-red-700', icon: 'fa-ban' };
         if (project.isLifetime) return { text: 'نشط - مدى الحياة', class: 'status-active', icon: 'fa-infinity' };
         if (!project.expiryDate) return { text: 'نشط', class: 'status-active', icon: 'fa-check' };
-        
+
         const today = new Date();
         const expiry = new Date(project.expiryDate);
         const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays < 0) return { text: 'منتهي', class: 'status-expired', icon: 'fa-ban' };
         if (diffDays <= 30) return { text: `ينتهي خلال ${diffDays} يوم`, class: 'status-expiring', icon: 'fa-exclamation-triangle' };
         return { text: 'نشط', class: 'status-active', icon: 'fa-check' };
     }
 
-    // 12. عرض المشاريع
+    // 12. عرض المشاريع + زر إيقاف/تنشيط + واتساب
     function renderProjects() {
         const perms = PERMISSIONS[currentUser.role];
         document.getElementById('projectsList').innerHTML = allProjects.map(p => {
@@ -639,32 +642,37 @@
             const bondsCount = allBonds.filter(b => b.projectCode === p.code).length;
             const totalAmount = allBonds.filter(b => b.projectCode === p.code).reduce((sum, b) => sum + (b.amount || 0), 0);
             const lastActivity = allBonds.filter(b => b.projectCode === p.code).sort((a,b) => b.createdAt - a.createdAt)[0];
-            
+            const isActive = p.active!== false;
+
             return `
-            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
+            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover ${!isActive? 'opacity-60 bg-red-50' : ''}">
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                             <i class="fas fa-building text-purple-600 text-xl"></i>
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <b class="text-lg">${p.name}</b>
                                 <span class="badge ${status.class}"><i class="fas ${status.icon} ml-1"></i>${status.text}</span>
                             </div>
-                            <p class="text-sm text-gray-500">الكود: ${p.code} | ${p.isLifetime ? 'مدى الحياة' : p.expiryDate || 'بدون تاريخ'}</p>
+                            <p class="text-sm text-gray-500">الكود: ${p.code} | ${p.isLifetime? 'مدى الحياة' : p.expiryDate || 'بدون تاريخ'}</p>
                         </div>
+                    </div>
                     <div class="flex gap-2">
-                        ${status.class === 'status-expired' && perms.canEditSettings ? `
-                        <button onclick="renewProject('${p.id}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm">
-                            <i class="fas fa-redo"></i> تجديد
+                        ${perms.canEditSettings? `
+                        <button onclick="sendProjectWhatsApp('${p.id}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm" title="إرسال معلومات المشروع واتساب">
+                            <i class="fab fa-whatsapp"></i>
                         </button>` : ''}
-                        ${perms.canDelete ? `
+                        ${perms.canEditSettings? `
+                        <button onclick="toggleProjectStatus('${p.id}', ${isActive})" class="bg-${isActive? 'yellow' : 'green'}-500 hover:bg-${isActive? 'yellow' : 'green'}-600 text-white px-4 py-2 rounded-lg transition text-sm" title="${isActive? 'إيقاف المشروع' : 'تنشيط المشروع'}">
+                            <i class="fas fa-${isActive? 'pause' : 'play'}"></i>
+                        </button>` : ''}
+                        ${perms.canDelete? `
                         <button onclick="deleteItem('projects', '${p.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
                             <i class="fas fa-trash"></i>
                         </button>` : ''}
                     </div>
-                </div>
                 <div class="grid grid-cols-3 gap-3 text-sm">
                     <div class="bg-blue-50 p-2 rounded-lg">
                         <p class="text-gray-600">السندات</p>
@@ -676,12 +684,97 @@
                     </div>
                     <div class="bg-purple-50 p-2 rounded-lg">
                         <p class="text-gray-600">آخر نشاط</p>
-                        <p class="font-bold text-purple-600 text-xs">${lastActivity ? formatDate(lastActivity.createdAt) : 'لا يوجد'}</p>
+                        <p class="font-bold text-purple-600 text-xs">${lastActivity? formatDate(lastActivity.createdAt) : 'لا يوجد'}</p>
                     </div>
                 </div>
             </div>
         `}).join('') || `<p class="text-gray-400 text-center py-8">لا توجد مشاريع</p>`;
     }
+
+    // 13. إيقاف/تنشيط المشروع + كل المستخدمين
+    window.toggleProjectStatus = async (projectId, currentStatus) => {
+        const action = currentStatus? 'إيقاف' : 'تنشيط';
+        const result = await Swal.fire({
+            title: `${action} المشروع؟`,
+            html: currentStatus?
+                '<b class="text-red-600">تحذير:</b> سيتم إيقاف كل المدراء والمناديب التابعين لهذا المشروع ولن يتمكنوا من الدخول' :
+                'سيتم السماح لكل المستخدمين بالدخول مرة أخرى',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: `نعم، ${action}`,
+            cancelButtonText: 'إلغاء'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await updateDoc(doc(db, 'projects', projectId), {
+                    active:!currentStatus,
+                    updatedAt: serverTimestamp(),
+                    updatedBy: currentUser.uid
+                });
+
+                // إيقاف كل المستخدمين التابعين للمشروع
+                const project = allProjects.find(p => p.id === projectId);
+                const usersQuery = query(collection(db, 'users'), where('projectCode', '==', project.code));
+                const usersSnap = await getDocs(usersQuery);
+
+                const promises = usersSnap.docs.map(userDoc =>
+                    updateDoc(userDoc.ref, { active:!currentStatus, updatedAt: serverTimestamp() })
+                );
+                await Promise.all(promises);
+
+                showSuccess(`تم ${action} المشروع و ${usersSnap.size} مستخدم تابع له`);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+    };
+
+    // 14. إرسال معلومات المشروع واتساب للسوبر ادمن
+    window.sendProjectWhatsApp = async (projectId) => {
+        const project = allProjects.find(p => p.id === projectId);
+        if (!project) return;
+
+        const managers = allManagers.filter(m => m.projectCode === project.code);
+        const delegates = allDelegates.filter(d => d.projectCode === project.code);
+        const bondsCount = allBonds.filter(b => b.projectCode === project.code).length;
+        const totalAmount = allBonds.filter(b => b.projectCode === project.code).reduce((sum, b) => sum + (b.amount || 0), 0);
+
+        let msg = `*📊 تقرير مشروع: ${project.name}*\n`;
+        msg += `━━━━━━━━━━━━━━━━━━\n\n`;
+        msg += `*🏢 معلومات المشروع:*\n`;
+        msg += `• الكود: ${project.code}\n`;
+        msg += `• الحالة: ${project.active === false? '🔴 موقوف' : '🟢 نشط'}\n`;
+        msg += `• الانتهاء: ${project.isLifetime? 'مدى الحياة ♾️' : project.expiryDate || 'غير محدد'}\n`;
+        msg += `• تاريخ الإنشاء: ${project.createdAt?.toDate? formatDate(project.createdAt) : 'غير محدد'}\n\n`;
+
+        msg += `*👥 المستخدمين:*\n`;
+        msg += `• عدد المدراء: ${managers.length}\n`;
+        managers.forEach(m => {
+            msg += ` - ${m.name} (${m.phone}) - ${m.role === 'admin'? 'مدير عام' : m.role === 'manager'? 'مدير' : 'مشاهد'}\n`;
+        });
+        msg += `• عدد المناديب: ${delegates.length}\n\n`;
+
+        msg += `*💰 الإحصائيات:*\n`;
+        msg += `• عدد السندات: ${bondsCount}\n`;
+        msg += `• المبلغ الكلي: ${formatMoney(totalAmount)}\n\n`;
+
+        msg += `*⚙️ الإعدادات المفعلة:*\n`;
+        const features = project.settings?.features || {};
+        msg += `• واتساب: ${features.whatsapp!== false? '✅' : '❌'}\n`;
+        msg += `• اكسل: ${features.excel!== false? '✅' : '❌'}\n`;
+        msg += `• PDF: ${features.pdf!== false? '✅' : '❌'}\n`;
+        msg += `• طباعة: ${features.print!== false? '✅' : '❌'}\n`;
+        msg += `• QR: ${features.qr!== false? '✅' : '❌'}\n\n`;
+
+        msg += `━━━━━━━━━━━━━━━━━━\n`;
+        msg += `_تم الإرسال من لوحة تحكم سندات برو_\n`;
+        msg += `_التاريخ: ${new Date().toLocaleString('ar-SA')}_`;
+
+        const phone = '0597087767'; // رقم السوبر ادمن
+        const url = `https://wa.me/966${phone.substring(1)}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    };
 
     function renderProjectOptions() {
         const options = allProjects.map(p => `<option value="${p.code}">${p.name} - ${p.code}</option>`).join('');
@@ -691,12 +784,12 @@
         document.getElementById('filterProject').innerHTML = `<option value="">كل المشاريع</option>` + options;
     }
 
-    // 13. عرض المدراء
+    // 15. عرض المدراء
     function renderManagers() {
         const perms = PERMISSIONS[currentUser.role];
         const roleLabels = { admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
         const roleColors = { admin: 'bg-purple-100 text-purple-700', manager: 'bg-blue-100 text-blue-700', viewer: 'bg-gray-100 text-gray-700' };
-        
+
         document.getElementById('managersList').innerHTML = allManagers.map(m => `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-center">
@@ -708,19 +801,19 @@
                             <div class="flex items-center gap-2">
                                 <b class="text-lg">${m.name}</b>
                                 <span class="badge ${roleColors[m.role]}">${roleLabels[m.role]}</span>
-                                ${m.active === false ? '<span class="badge bg-red-100 text-red-700">موقوف</span>' : '<span class="badge bg-green-100 text-green-700">نشط</span>'}
+                                ${m.active === false? '<span class="badge bg-red-100 text-red-700">موقوف</span>' : '<span class="badge bg-green-100 text-green-700">نشط</span>'}
                             </div>
                             <p class="text-sm text-gray-500">${m.phone} - ${m.projectCode}</p>
-                            <p class="text-xs text-gray-400">آخر دخول: ${m.lastLogin ? formatDate(m.lastLogin) : 'لم يدخل بعد'}</p>
+                            <p class="text-xs text-gray-400">آخر دخول: ${m.lastLogin? formatDate(m.lastLogin) : 'لم يدخل بعد'}</p>
                         </div>
                     </div>
-                    ${perms.canManageManagers ? `
+                    ${perms.canManageManagers? `
                     <div class="flex gap-2">
                         <button onclick="editManager('${m.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition" title="تعديل">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="toggleUserStatus('${m.id}', ${m.active !== false})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition" title="${m.active !== false ? 'إيقاف' : 'تنشيط'}">
-                            <i class="fas fa-${m.active !== false ? 'ban' : 'check'}"></i>
+                        <button onclick="toggleUserStatus('${m.id}', ${m.active!== false})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition" title="${m.active!== false? 'إيقاف' : 'تنشيط'}">
+                            <i class="fas fa-${m.active!== false? 'ban' : 'check'}"></i>
                         </button>
                         <button onclick="deleteUser('${m.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition" title="حذف نهائي">
                             <i class="fas fa-trash"></i>
@@ -731,7 +824,7 @@
         `).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مدراء</p>`;
     }
 
-    // 14. عرض المناديب
+    // 16. عرض المناديب
     function renderDelegates() {
         const perms = PERMISSIONS[currentUser.role];
         document.getElementById('delegatesList').innerHTML = allDelegates.map(d => `
@@ -743,10 +836,10 @@
                     <div>
                         <b class="text-lg">${d.name}</b>
                         <p class="text-sm text-gray-500">${d.phone} - ${d.projectCode}</p>
-                        <p class="text-xs text-gray-400">آخر دخول: ${d.lastLogin ? formatDate(d.lastLogin) : 'لم يدخل بعد'}</p>
+                        <p class="text-xs text-gray-400">آخر دخول: ${d.lastLogin? formatDate(d.lastLogin) : 'لم يدخل بعد'}</p>
                     </div>
                 </div>
-                ${perms.canManageDelegates ? `
+                ${perms.canManageDelegates? `
                 <button onclick="deleteUser('${d.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
                     <i class="fas fa-trash"></i>
                 </button>` : ''}
@@ -754,39 +847,44 @@
         `).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مناديب</p>`;
     }
 
-    // 15. عرض السندات
+    // 17. عرض السندات + QR
     function renderBonds() {
         const searchTerm = document.getElementById('searchBonds').value.toLowerCase();
         const filterType = document.getElementById('filterType').value;
         const filterProject = document.getElementById('filterProject').value;
-        
+
         let filtered = allBonds.filter(b => {
-            const matchSearch = !searchTerm || b.from?.toLowerCase().includes(searchTerm) || b.to?.toLowerCase().includes(searchTerm) || b.reason?.toLowerCase().includes(searchTerm);
-            const matchType = !filterType || b.type === filterType;
-            const matchProject = !filterProject || b.projectCode === filterProject;
+            const matchSearch =!searchTerm || b.from?.toLowerCase().includes(searchTerm) || b.to?.toLowerCase().includes(searchTerm) || b.reason?.toLowerCase().includes(searchTerm);
+            const matchType =!filterType || b.type === filterType;
+            const matchProject =!filterProject || b.projectCode === filterProject;
             return matchSearch && matchType && matchProject;
         });
 
         document.getElementById('bondsList').innerHTML = filtered.map(b => {
             const delegate = allDelegates.find(d => d.id === b.delegateId);
-            const date = b.createdAt?.toDate ? b.createdAt.toDate().toLocaleString('ar-SA') : '-';
+            const date = b.createdAt?.toDate? b.createdAt.toDate().toLocaleString('ar-SA') : '-';
             const perms = PERMISSIONS[currentUser.role];
             return `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 ${b.type === 'قبض' ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center">
-                            <i class="fas ${b.type === 'قبض' ? 'fa-arrow-down text-green-600' : 'fa-arrow-up text-red-600'} text-xl"></i>
+                        <div class="w-12 h-12 ${b.type === 'قبض'? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center">
+                            <i class="fas ${b.type === 'قبض'? 'fa-arrow-down text-green-600' : 'fa-arrow-up text-red-600'} text-xl"></i>
                         </div>
                         <div>
                             <b class="text-lg">سند ${b.type} - ${formatMoney(b.amount)}</b>
                             <p class="text-sm text-gray-500">${date} | ${b.projectCode || '-'}</p>
                         </div>
                     </div>
-                    ${perms.canDelete ? `
-                    <button onclick="deleteItem('bonds', '${b.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition">
-                        <i class="fas fa-trash"></i>
-                    </button>` : ''}
+                    <div class="flex gap-2">
+                        <button onclick="showBondQR('${b.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg transition" title="QR Code">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                        ${perms.canDelete? `
+                        <button onclick="deleteItem('bonds', '${b.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition">
+                            <i class="fas fa-trash"></i>
+                        </button>` : ''}
+                    </div>
                 </div>
                 <div class="text-sm text-gray-600 mr-15">
                     <p><b>من:</b> ${b.from} | <b>إلى:</b> ${b.to}</p>
@@ -796,7 +894,38 @@
         `}).join('') || `<p class="text-gray-400 text-center py-8">لا توجد سندات</p>`;
     }
 
-    // 16. إضافة/تعديل مدير
+    // 18. QR Code للسند
+    window.showBondQR = (bondId) => {
+        const bond = allBonds.find(b => b.id === bondId);
+        const qrData = JSON.stringify({
+            id: bond.id,
+            type: bond.type,
+            amount: bond.amount,
+            from: bond.from,
+            to: bond.to,
+            date: formatDate(bond.createdAt),
+            project: bond.projectCode,
+            url: `${window.location.origin}/bond.html?id=${bond.id}`
+        });
+
+        Swal.fire({
+            title: 'QR Code للسند',
+            html: '<div id="qrcode" class="flex justify-center"></div><p class="text-sm text-gray-500 mt-3">امسح الكود لعرض تفاصيل السند</p>',
+            width: 400,
+            didOpen: () => {
+                new QRCode(document.getElementById("qrcode"), {
+                    text: qrData,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        });
+    };
+
+    // 19. إضافة/تعديل مدير
     document.getElementById('addManagerBtn').onclick = async () => {
         if (!PERMISSIONS[currentUser.role].canManageManagers) {
             return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المدراء', 'error');
@@ -805,7 +934,7 @@
         const name = document.getElementById('managerName').value.trim();
         const phone = document.getElementById('managerPhone').value.trim();
         const projectCode = currentUser.role === 'superadmin'
-           ? document.getElementById('managerProjectCode').value
+          ? document.getElementById('managerProjectCode').value
             : currentUser.projectCode;
         const password = document.getElementById('managerPassword').value;
         const role = document.getElementById('managerRole').value;
@@ -856,10 +985,10 @@
             return Swal.fire('مرفوض', 'ليس لديك صلاحية إيقاف/تنشيط المستخدمين', 'error');
         }
 
-        const action = currentStatus ? 'إيقاف' : 'تنشيط';
+        const action = currentStatus? 'إيقاف' : 'تنشيط';
         const result = await Swal.fire({
             title: `${action} المستخدم؟`,
-            text: currentStatus ? 'سيتم منع المستخدم من الدخول' : 'سيتم السماح للمستخدم بالدخول',
+            text: currentStatus? 'سيتم منع المستخدم من الدخول' : 'سيتم السماح للمستخدم بالدخول',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: `نعم، ${action}`,
@@ -869,7 +998,7 @@
         if (result.isConfirmed) {
             try {
                 await updateDoc(doc(db, 'users', id), {
-                    active: !currentStatus,
+                    active:!currentStatus,
                     updatedAt: serverTimestamp()
                 });
                 Swal.fire('تم', `تم ${action} المستخدم بنجاح`, 'success');
@@ -905,7 +1034,7 @@
         }
     };
 
-    // 17. إضافة مندوب
+    // 20. إضافة مندوب
     document.getElementById('addDelegateBtn').onclick = async () => {
         if (!PERMISSIONS[currentUser.role].canManageDelegates) {
             return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المناديب', 'error');
@@ -914,7 +1043,7 @@
         const name = document.getElementById('delegateName').value.trim();
         const phone = document.getElementById('delegatePhone').value.trim();
         const projectCode = currentUser.role === 'superadmin'
-           ? document.getElementById('delegateProjectCode').value
+          ? document.getElementById('delegateProjectCode').value
             : currentUser.projectCode;
         const password = document.getElementById('delegatePassword').value;
 
@@ -933,7 +1062,7 @@
         }
     };
 
-    // 18. حفظ إعدادات المشروع
+    // 21. حفظ إعدادات المشروع
     document.getElementById('projectLifetimeEdit').onchange = (e) => {
         document.getElementById('projectExpiryEdit').disabled = e.target.checked;
         if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
@@ -1003,17 +1132,17 @@
             document.getElementById('featurePrint').checked = project.settings.features?.print!== false;
             document.getElementById('featureQR').checked = project.settings.features?.qr!== false;
             document.getElementById('forceTermsAccept').checked = project.settings.forceTermsAccept!== false;
-            
+
             // تكبير textarea تلقائي
             const termsTextarea = document.getElementById('projectTerms');
             termsTextarea.style.height = '';
             termsTextarea.style.height = termsTextarea.scrollHeight + 'px';
-            
+
             form.classList.remove('hidden');
         }
     };
 
-    // 19. حذف عام
+    // 22. حذف عام
     window.deleteItem = async (type, id) => {
         const perms = PERMISSIONS[currentUser.role];
         if (!perms.canDelete) {
@@ -1039,12 +1168,12 @@
         }
     };
 
-    // 20. تنظيف كود المشروع
+    // 23. تنظيف كود المشروع
     document.getElementById('projectCodeInput').oninput = (e) => {
         e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     };
 
-    // 21. فلترة السندات
+    // 24. فلترة السندات
     document.getElementById('searchBonds').oninput = renderBonds;
     document.getElementById('filterType').onchange = renderBonds;
     document.getElementById('filterProject').onchange = renderBonds;
