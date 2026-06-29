@@ -92,16 +92,36 @@
         import { auth } from './firebase.js?v=999999';
         import { login, getCurrentUserData } from './auth.js?v=999999';
         import { showError } from './core.js?v=999999';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        // 🔥 الحل الجذري: فلاق يمنع اللوب
+        let authChecked = false;
 
         // 1. لو المستخدم مسجل دخول، وجهه للصفحة المناسبة
         onAuthStateChanged(auth, async (user) => {
+            if (authChecked) return; // لو شيكنا قبل، لا تعيد
+            
+            // لو جاي من تسجيل خروج، لا تحول
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('logout') === 'true') {
+                authChecked = true;
+                return;
+            }
+
             if (user) {
                 const userData = await getCurrentUserData();
-                // لا تحول لو أنت في صفحة الدخول أصلاً
-                if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
-                    redirectUser(userData);
+                authChecked = true; // علمنا اننا شيكنا
+                
+                if (!userData) {
+                    console.error('بيانات المستخدم فاضية - بسجل خروج');
+                    await signOut(auth);
+                    return;
                 }
+
+                console.log('تسجيل دخول تلقائي - الدور:', userData.role);
+                redirectUser(userData);
+            } else {
+                authChecked = true;
             }
         });
 
@@ -109,13 +129,15 @@
         function redirectUser(userData) {
             if (!userData) return;
             
-            if (userData.role === 'superadmin' || userData.role === 'manager' || userData.role === 'admin') {
+            console.log('تحويل حسب الدور:', userData.role);
+            
+            if (['superadmin', 'admin', 'manager', 'viewer'].includes(userData.role)) {
                 window.location.href = 'admin-panel.html';
             } else if (userData.role === 'delegate') {
-                window.location.href = 'bonds.html';
+                window.location.href = 'delegate.html'; // 🔥 مصلح: كان bonds.html
             } else {
-                // لو دور غريب خليه في index
-                console.log('دور غير معروف:', userData.role);
+                console.error('دور غير معروف:', userData.role);
+                showError('دور المستخدم غير صحيح');
             }
         }
 
