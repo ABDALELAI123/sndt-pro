@@ -1,10 +1,12 @@
-// auth.js - الإصدار 2.0 - نظام صلاحيات محترف
+// auth.js - الإصدار 2.1 - حل مشكلة تسجيل الخروج التلقائي
 import { auth, db } from './firebase.js?v=999999';
 import { 
     signInWithEmailAndPassword, 
     signOut,
     onAuthStateChanged,
-    createUserWithEmailAndPassword
+    createUserWithEmailAndPassword,
+    initializeApp,
+    deleteApp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { showError } from './core.js?v=999999';
@@ -19,27 +21,21 @@ const SUPER_ADMIN = {
 
 // 1. تحويل كود+جوال لايميل وهمي
 function generateEmail(projectCode, phone) {
-    const email = `${projectCode.toLowerCase()}-${phone}@sanadat.pro`;
-    return email;
+    return `${projectCode.toLowerCase()}-${phone}@sanadat.pro`;
 }
 
 // 2. تسجيل الدخول
 export async function login(projectCode, phone, password) {
     try {
-        console.log('login استقبل:', { projectCode, phone, password: '***' });
-        
         // تشييك السوبر ادمن أول
         if (projectCode === SUPER_ADMIN.code && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
-            console.log('محاولة دخول السوبر ادمن');
             const userCredential = await signInWithEmailAndPassword(auth, SUPER_ADMIN.email, password);
-            console.log('تم دخول السوبر ادمن');
             window.location.href = "admin-panel.html";
             return { role: 'superadmin', projectCode: SUPER_ADMIN.code };
         }
 
         // تسجيل دخول عادي
         const email = generateEmail(projectCode, phone);
-        console.log('محاولة دخول عادي بالإيميل:', email);
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
         const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
@@ -55,13 +51,12 @@ export async function login(projectCode, phone, password) {
             throw new Error('كود المشروع غير صحيح');
         }
         
-        // تشييك الإيقاف
         if (userData.active === false) {
             await signOut(auth);
             throw new Error('تم إيقاف حسابك. تواصل مع الإدارة');
         }
 
-        // تحويل حسب الدور - كل الأدوار الإدارية تروح admin-panel
+        // تحويل حسب الدور
         if (['admin', 'manager', 'viewer'].includes(userData.role)) {
             window.location.href = "admin-panel.html";
         } else if (userData.role === 'delegate') {
@@ -102,9 +97,11 @@ export async function createProject(projectName) {
     return { success: true, projectCode: projectCode };
 }
 
-// 4. إنشاء حساب مدير أو مندوب أو مشاهد
+// 4. إنشاء حساب مدير أو مندوب - الحل الجذري هنا
 export async function createUser(projectCode, phone, password, role, name) {
+    let secondaryApp;
     try {
+        // تشييك المشروع
         const projectsRef = collection(db, 'projects');
         const qProject = query(projectsRef, where('code', '==', projectCode), where('active', '==', true));
         const projectSnap = await getDocs(qProject);
@@ -112,43 +109,34 @@ export async function createUser(projectCode, phone, password, role, name) {
             throw new Error('كود المشروع غير موجود أو غير نشط');
         }
 
+        // تشييك تكرار الجوال
         const usersRef = collection(db, 'users');
         const qUser = query(usersRef, where('projectCode', '==', projectCode), where('phone', '==', phone));
         const userSnap = await getDocs(qUser);
-        
         if (!userSnap.empty) {
             throw new Error('رقم الجوال مسجل مسبقاً في هذا المشروع');
         }
 
         const email = generateEmail(projectCode, phone);
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // الحل: ننشئ App ثانوي مؤقت عشان ما يطرد السوبر ادمن
+        const secondaryAppConfig = auth.app.options;
+        secondaryApp = initializeApp(secondaryAppConfig, `secondary-${Date.now()}`);
+        const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+        const secondaryAuth = getAuth(secondaryApp);
+        
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
         
         // صلاحيات حسب الدور
         let permissions = {};
         if (role === 'admin') {
-            permissions = {
-                manage_managers: true,
-                manage_delegates: true,
-                manage_bonds: true,
-                edit_settings: true,
-                delete_items: true
-            };
+            permissions = { manage_managers: true, manage_delegates: true, manage_bonds: true, edit_settings: true, delete_items: true };
         } else if (role === 'manager') {
-            permissions = {
-                manage_delegates: true,
-                manage_bonds: true,
-                add_delegate: true,
-                view_reports: true
-            };
+            permissions = { manage_delegates: true, manage_bonds: true, add_delegate: true, view_reports: true };
         } else if (role === 'viewer') {
-            permissions = {
-                view_bonds: true
-            };
+            permissions = { view_bonds: true };
         } else if (role === 'delegate') {
-            permissions = {
-                add_bond: true,
-                view_own_bonds: true
-            };
+            permissions = { add_bond: true, view_own_bonds: true };
         }
         
         await setDoc(doc(db, 'users', userCredential.user.uid), {
@@ -157,20 +145,28 @@ export async function createUser(projectCode, phone, password, role, name) {
             projectCode: projectCode,
             name: name,
             email: email,
-            active: true, // نشط افتراضياً
+            active: true,
             permissions: permissions,
             createdAt: new Date()
         });
 
+        // نحذف الـ App الثانوي ونرجع للرئيسي
+        await signOut(secondaryAuth);
+        await deleteApp(secondaryApp);
+
         return { success: true, uid: userCredential.user.uid };
 
     } catch (error) {
+        // تنظيف لو صار خطأ
+        if (secondaryApp) {
+            try { await deleteApp(secondaryApp); } catch(e) {}
+        }
         console.error(error);
         throw new Error('فشل إنشاء المستخدم: ' + error.message);
     }
 }
 
-// 5. تحديث بيانات مستخدم - للتعديل
+// 5. تحديث بيانات مستخدم
 export async function updateUser(userId, data) {
     try {
         await updateDoc(doc(db, 'users', userId), {
