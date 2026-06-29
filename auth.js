@@ -1,14 +1,14 @@
-// auth.js - الإصدار 2.1 - حل مشكلة تسجيل الخروج التلقائي
+// auth.js - الإصدار 2.2 - منع دخول المشروع الموقوف + تحديث lastLogin
 import { auth, db } from './firebase.js?v=999999';
-import { 
-    signInWithEmailAndPassword, 
+import {
+    signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
     createUserWithEmailAndPassword,
     getAuth
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { doc, getDoc, setDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { showError } from './core.js?v=999999';
 
 // بيانات السوبر ادمن الثابتة
@@ -29,7 +29,7 @@ function generateEmail(projectCode, phone) {
 export async function login(projectCode, phone, password) {
     try {
         console.log('login استقبل:', { projectCode, phone, password: '***' });
-        
+
         // تشييك السوبر ادمن أول
         if (projectCode === SUPER_ADMIN.code && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
             console.log('محاولة دخول السوبر ادمن');
@@ -43,25 +43,58 @@ export async function login(projectCode, phone, password) {
         const email = generateEmail(projectCode, phone);
         console.log('محاولة دخول عادي بالإيميل:', email);
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        
+
         const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
         if (!userDoc.exists()) {
             await signOut(auth);
             throw new Error('بيانات المستخدم غير موجودة');
         }
-        
+
         const userData = userDoc.data();
-        
-        if (userData.projectCode !== projectCode) {
+
+        if (userData.projectCode!== projectCode) {
             await signOut(auth);
             throw new Error('كود المشروع غير صحيح');
         }
-        
-        // تشييك الإيقاف
+
+        // 🔥 تشييك إيقاف المستخدم
         if (userData.active === false) {
             await signOut(auth);
             throw new Error('تم إيقاف حسابك. تواصل مع الإدارة');
         }
+
+        // 🔥 تشييك إيقاف المشروع كامل
+        const projectsRef = collection(db, 'projects');
+        const qProject = query(projectsRef, where('code', '==', userData.projectCode));
+        const projectSnap = await getDocs(qProject);
+
+        if (!projectSnap.empty) {
+            const projectData = projectSnap.docs[0].data();
+
+            // المشروع موقوف
+            if (projectData.active === false) {
+                await signOut(auth);
+                throw new Error('المشروع موقوف حالياً. تواصل مع الإدارة');
+            }
+
+            // المشروع منتهي
+            if (!projectData.isLifetime && projectData.expiryDate) {
+                const today = new Date();
+                const expiry = new Date(projectData.expiryDate);
+                if (expiry < today) {
+                    await signOut(auth);
+                    throw new Error('انتهت صلاحية المشروع. تواصل مع الإدارة للتجديد');
+                }
+            }
+        } else {
+            await signOut(auth);
+            throw new Error('المشروع غير موجود');
+        }
+
+        // 🔥 تحديث آخر دخول
+        await updateDoc(doc(db, 'users', userCredential.user.uid), {
+            lastLogin: serverTimestamp()
+        });
 
         // تحويل حسب الدور
         if (['admin', 'manager', 'viewer'].includes(userData.role)) {
@@ -86,7 +119,7 @@ export async function login(projectCode, phone, password) {
 // 3. إنشاء مشروع جديد - للسوبر ادمن فقط
 export async function createProject(projectName) {
     const projectCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-    
+
     await addDoc(collection(db, 'projects'), {
         code: projectCode,
         name: projectName,
@@ -117,7 +150,7 @@ export async function createUser(projectCode, phone, password, role, name) {
         const usersRef = collection(db, 'users');
         const qUser = query(usersRef, where('projectCode', '==', projectCode), where('phone', '==', phone));
         const userSnap = await getDocs(qUser);
-        
+
         if (!userSnap.empty) {
             throw new Error('رقم الجوال مسجل مسبقاً في هذا المشروع');
         }
@@ -129,7 +162,7 @@ export async function createUser(projectCode, phone, password, role, name) {
 
         const email = generateEmail(projectCode, phone);
         const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        
+
         // صلاحيات حسب الدور
         let permissions = {};
         if (role === 'admin') {
@@ -157,7 +190,7 @@ export async function createUser(projectCode, phone, password, role, name) {
                 view_own_bonds: true
             };
         }
-        
+
         await setDoc(doc(db, 'users', userCredential.user.uid), {
             role: role,
             phone: phone,
@@ -166,7 +199,8 @@ export async function createUser(projectCode, phone, password, role, name) {
             email: email,
             active: true,
             permissions: permissions,
-            createdAt: new Date()
+            createdAt: new Date(),
+            lastLogin: null
         });
 
         // نسجل خروج من الـ Secondary App عشان ما يأثر
@@ -184,7 +218,7 @@ export async function createUser(projectCode, phone, password, role, name) {
 export async function updateUser(userId, data) {
     try {
         await updateDoc(doc(db, 'users', userId), {
-            ...data,
+           ...data,
             updatedAt: new Date()
         });
         return { success: true };
@@ -214,20 +248,20 @@ export async function getCurrentUserData() {
             if (user) {
                 // تشييك السوبر ادمن
                 if (user.email === SUPER_ADMIN.email) {
-                    resolve({ 
-                        uid: user.uid, 
+                    resolve({
+                        uid: user.uid,
                         email: user.email,
-                        role: 'superadmin', 
+                        role: 'superadmin',
                         name: 'السوبر ادمن',
                         projectCode: SUPER_ADMIN.code,
                         active: true
                     });
                     return;
                 }
-                
+
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
-                    resolve({ uid: user.uid, ...userDoc.data() });
+                    resolve({ uid: user.uid,...userDoc.data() });
                 } else {
                     resolve(null);
                 }
