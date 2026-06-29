@@ -6,21 +6,28 @@
     <title data-i18n="adminPanel">لوحة تحكم سندات برو</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { 
-            font-family: 'Cairo', sans-serif; 
+        body {
+            font-family: 'Cairo', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
-        .hidden { display: none!important; }
-        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
-        .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
+       .hidden { display: none!important; }
+       .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
+       .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
+        textarea { resize: none; overflow: hidden; }
+       .card-hover { transition: all 0.3s ease; }
+       .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+       .status-active { background: #10b981; color: white; }
+       .status-expiring { background: #f59e0b; color: white; }
+       .status-expired { background: #ef4444; color: white; }
     </style>
 
     <script type="module">
-        import { t, setLanguage, applyLanguage } from './lang.js';
+        import { t, setLanguage, applyLanguage } from './lang.js?v=999999';
         window.t = t;
         window.setLanguage = setLanguage;
         window.applyLanguage = applyLanguage;
@@ -46,17 +53,48 @@
                     <i class="fas fa-user-shield text-white text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-extrabold" data-i18n="dashboard">لوحة التحكم الرئيسية</h1>
+                    <h1 class="text-2xl font-extrabold">لوحة التحكم الرئيسية</h1>
                     <p class="text-sm text-gray-500" id="welcomeMsg">مرحباً بك</p>
                     <span id="roleBadge" class="badge"></span>
                 </div>
+            </div>
             <div class="flex gap-2">
-                <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')" 
+                <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')"
                         class="bg-white hover:bg-gray-100 px-4 py-2 rounded-xl font-bold transition text-lg shadow">🌍</button>
-                <button id="logoutBtn" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-2 rounded-xl font-bold hover:opacity-90 transition" data-i18n="logout">
+                <button id="logoutBtn" class="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-2 rounded-xl font-bold hover:opacity-90 transition">
                     <i class="fas fa-sign-out-alt ml-2"></i> خروج
                 </button>
             </div>
+        </div>
+
+        <!-- إحصائيات سريعة للسوبر -->
+        <div id="superStats" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">إجمالي المشاريع</p>
+                <p id="statProjects" class="text-3xl font-extrabold text-blue-600">0</p>
+                <p id="statProjectsActive" class="text-xs text-green-600 mt-1"></p>
+            </div>
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">إجمالي المدراء</p>
+                <p id="statManagers" class="text-3xl font-extrabold text-green-600">0</p>
+            </div>
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">إجمالي المناديب</p>
+                <p id="statDelegates" class="text-3xl font-extrabold text-purple-600">0</p>
+            </div>
+            <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
+                <p class="text-gray-500 text-sm">إجمالي السندات</p>
+                <p id="statBonds" class="text-3xl font-extrabold text-orange-600">0</p>
+                <p id="statBondsAmount" class="text-xs text-gray-600 mt-1"></p>
+            </div>
+        </div>
+
+        <!-- رسم بياني للمشاريع -->
+        <div id="chartContainer" class="hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-line text-blue-600"></i>حركة السندات - آخر 30 يوم
+            </h2>
+            <canvas id="projectsChart" height="80"></canvas>
         </div>
 
         <!-- التبويبات -->
@@ -66,13 +104,13 @@
                     <i class="fas fa-building ml-2"></i>المشاريع
                 </button>
                 <button data-tab="managers" id="tab-managers" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
-                    <i class="fas fa-users-cog ml-2"></i><span data-i18n="managers">المدراء</span>
+                    <i class="fas fa-users-cog ml-2"></i>المدراء
                 </button>
                 <button data-tab="delegates" id="tab-delegates" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
-                    <i class="fas fa-user-tie ml-2"></i><span data-i18n="delegates">المناديب</span>
+                    <i class="fas fa-user-tie ml-2"></i>المناديب
                 </button>
                 <button data-tab="bonds" id="tab-bonds" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
-                    <i class="fas fa-file-invoice-dollar ml-2"></i><span data-i18n="bonds">السندات</span>
+                    <i class="fas fa-file-invoice-dollar ml-2"></i>السندات
                 </button>
                 <button data-tab="settings" id="tab-settings" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-cog ml-2"></i>إعدادات المشروع
@@ -85,14 +123,22 @@
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <i class="fas fa-building text-blue-600"></i>إدارة المشاريع
             </h2>
-            <div id="createProjectForm" class="grid md:grid-cols-3 gap-3 mb-6">
-                <input id="projectName" autocomplete="off" placeholder="اسم المشروع/الشركة" 
+            <div id="createProjectForm" class="grid md:grid-cols-4 gap-3 mb-6">
+                <input id="projectName" autocomplete="off" placeholder="اسم المشروع/الشركة"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="projectCodeInput" autocomplete="off" placeholder="كود المشروع مثل TAQWA01" 
+                <input id="projectCodeInput" autocomplete="off" placeholder="كود المشروع مثل TAQWA01"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none uppercase" dir="ltr">
-                <button id="addProjectBtn" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
-                    <i class="fas fa-plus ml-2"></i>إنشاء مشروع
-                </button>
+                <input id="projectExpiry" type="date"
+                       class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                <div class="flex gap-2">
+                    <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 flex-1">
+                        <input id="projectLifetime" type="checkbox" class="w-5 h-5">
+                        <span class="text-sm">مدى الحياة</span>
+                    </label>
+                    <button id="addProjectBtn" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
+                        <i class="fas fa-plus ml-2"></i>إنشاء
+                    </button>
+                </div>
             </div>
             <div id="projectsList" class="space-y-3"></div>
         </div>
@@ -100,17 +146,17 @@
         <!-- تبويب المدراء -->
         <div id="managersTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-users-cog text-blue-600"></i><span data-i18n="managersManagement">إدارة المدراء</span>
+                <i class="fas fa-users-cog text-blue-600"></i>إدارة المدراء
             </h2>
             <div id="addManagerForm" class="grid md:grid-cols-6 gap-3 mb-6">
-                <input id="managerName" autocomplete="off" placeholder="اسم المدير" 
+                <input id="managerName" autocomplete="off" placeholder="اسم المدير"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="managerPhone" autocomplete="off" placeholder="رقم الجوال" 
+                <input id="managerPhone" autocomplete="off" placeholder="رقم الجوال"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
                 <select id="managerProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="">اختر المشروع</option>
                 </select>
-                <input id="managerPassword" type="password" autocomplete="new-password" placeholder="كلمة المرور" 
+                <input id="managerPassword" type="password" autocomplete="new-password" placeholder="كلمة المرور"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                 <select id="managerRole" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="admin">مدير عام - كل الصلاحيات</option>
@@ -118,7 +164,7 @@
                     <option value="viewer">مشاهد - عرض فقط</option>
                 </select>
                 <button id="addManagerBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
-                    <i class="fas fa-plus ml-2"></i><span data-i18n="add">إضافة</span>
+                    <i class="fas fa-plus ml-2"></i>إضافة
                 </button>
             </div>
             <div id="managersList" class="space-y-3"></div>
@@ -127,20 +173,20 @@
         <!-- تبويب المناديب -->
         <div id="delegatesTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-user-tie text-blue-600"></i><span data-i18n="delegatesManagement">إدارة المناديب</span>
+                <i class="fas fa-user-tie text-blue-600"></i>إدارة المناديب
             </h2>
             <div id="addDelegateForm" class="grid md:grid-cols-5 gap-3 mb-6">
-                <input id="delegateName" autocomplete="off" placeholder="اسم المندوب" 
+                <input id="delegateName" autocomplete="off" placeholder="اسم المندوب"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="delegatePhone" autocomplete="off" placeholder="رقم الجوال" 
+                <input id="delegatePhone" autocomplete="off" placeholder="رقم الجوال"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
                 <select id="delegateProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="">اختر المشروع</option>
                 </select>
-                <input id="delegatePassword" type="password" autocomplete="new-password" placeholder="كلمة المرور" 
+                <input id="delegatePassword" type="password" autocomplete="new-password" placeholder="كلمة المرور"
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                 <button id="addDelegateBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
-                    <i class="fas fa-plus ml-2"></i><span data-i18n="add">إضافة</span>
+                    <i class="fas fa-plus ml-2"></i>إضافة
                 </button>
             </div>
             <div id="delegatesList" class="space-y-3"></div>
@@ -148,7 +194,7 @@
 
         <!-- تبويب السندات -->
         <div id="bondsTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
-            <h2 class="text-xl font-extrabold mb-4 flex items-center gap-2" data-i18n="allBonds">
+            <h2 class="text-xl font-extrabold mb-4 flex items-center gap-2">
                 <i class="fas fa-file-invoice-dollar text-blue-600"></i>كل السندات
             </h2>
             <div class="mb-4 flex gap-2">
@@ -177,31 +223,83 @@
                     <option value="">اختر المشروع</option>
                 </select>
             </div>
-            
-            <div id="projectSettingsForm" class="hidden space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">لوجو المشروع - رابط صورة</label>
-                    <input id="projectLogo" autocomplete="off" placeholder="https://example.com/logo.png"
-                           class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+
+            <div id="projectSettingsForm" class="hidden space-y-5">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">لوجو المشروع - رابط صورة</label>
+                        <input id="projectLogo" autocomplete="off" placeholder="https://example.com/logo.png"
+                               class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">تاريخ انتهاء المشروع</label>
+                        <div class="flex gap-2">
+                            <input id="projectExpiryEdit" type="date"
+                                   class="flex-1 border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
+                            <label class="flex items-center gap-2 bg-gray-50 px-4 rounded-xl border-2 border-gray-200">
+                                <input id="projectLifetimeEdit" type="checkbox" class="w-5 h-5">
+                                <span class="text-sm">مدى الحياة</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
+
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">الشروط والأحكام</label>
                     <textarea id="projectTerms" rows="6" placeholder="اكتب الشروط والأحكام الخاصة بالمشروع هنا..."
-                           class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"></textarea>
+                           class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none"
+                           oninput="this.style.height = '';this.style.height = this.scrollHeight + 'px'"></textarea>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">تفعيل الميزات للمناديب</label>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
+                            <input id="featureWhatsApp" type="checkbox" checked class="w-5 h-5">
+                            <i class="fab fa-whatsapp text-green-600"></i>
+                            <span>واتساب</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
+                            <input id="featureExcel" type="checkbox" checked class="w-5 h-5">
+                            <i class="fas fa-file-excel text-green-700"></i>
+                            <span>اكسل</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
+                            <input id="featurePDF" type="checkbox" checked class="w-5 h-5">
+                            <i class="fas fa-file-pdf text-red-600"></i>
+                            <span>PDF</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
+                            <input id="featurePrint" type="checkbox" checked class="w-5 h-5">
+                            <i class="fas fa-print text-blue-600"></i>
+                            <span>طباعة</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
+                            <input id="featureQR" type="checkbox" checked class="w-5 h-5">
+                            <i class="fas fa-qrcode text-purple-600"></i>
+                            <span>QR</span>
+                        </label>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">إعدادات الواجهة</label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="showCreateBond" type="checkbox" checked class="w-5 h-5"> 
+                            <input id="showCreateBond" type="checkbox" checked class="w-5 h-5">
                             <span>إظهار زر "إنشاء سند" للمناديب</span>
                         </label>
                         <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200">
-                            <input id="showBondsTab" type="checkbox" checked class="w-5 h-5"> 
+                            <input id="showBondsTab" type="checkbox" checked class="w-5 h-5">
                             <span>إظهار تبويب "السندات"</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border-2 border-gray-200 col-span-2">
+                            <input id="forceTermsAccept" type="checkbox" checked class="w-5 h-5">
+                            <span>إلزام المدير بالموافقة على الشروط عند أول دخول</span>
                         </label>
                     </div>
                 </div>
+
                 <button id="saveSettingsBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition">
                     <i class="fas fa-save ml-2"></i>حفظ الإعدادات
                 </button>
@@ -211,8 +309,10 @@
 
 <script type="module">
     import { auth, db } from './firebase.js?v=999999';
-    import { getCurrentUserData, logout, createUser, createProject } from './auth.js?v=999999';
-    import { collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, updateDoc, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { getCurrentUserData, logout, createUser } from './auth.js?v=999999';
+    import { showSuccess, showError, showConfirm, formatDate, formatMoney } from './core.js?v=999999';
+    import { TERMS_VERSION, showTermsModal, hasAcceptedLatestTerms } from './terms.js?v=999999';
+    import { collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, updateDoc, query, where, getDocs, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     let currentUser = null;
@@ -221,75 +321,51 @@
     let allDelegates = [];
     let allBonds = [];
     let editingManagerId = null;
+    let projectsChart = null;
 
-    // نظام الصلاحيات الجديد RBAC
     const PERMISSIONS = {
-        superadmin: { 
-            canCreateProject: true, 
-            canViewAllProjects: true,
-            canManageManagers: true, 
-            canManageDelegates: true, 
-            canManageBonds: true,
-            canEditSettings: true,
-            canDelete: true,
-            maxProjects: -1 // غير محدود
-        },
-        admin: { 
-            canCreateProject: false, // الباقة العالية تسمح لاحقاً
-            canViewAllProjects: false,
-            canManageManagers: true, 
-            canManageDelegates: true, 
-            canManageBonds: true,
-            canEditSettings: true,
-            canDelete: true,
-            maxProjects: 0 
-        },
-        manager: { 
-            canCreateProject: false, 
-            canViewAllProjects: false,
-            canManageManagers: false, 
-            canManageDelegates: true, 
-            canManageBonds: true,
-            canEditSettings: false,
-            canDelete: false,
-            maxProjects: 0
-        },
-        viewer: { 
-            canCreateProject: false, 
-            canViewAllProjects: false,
-            canManageManagers: false, 
-            canManageDelegates: false, 
-            canManageBonds: false,
-            canEditSettings: false,
-            canDelete: false,
-            maxProjects: 0
-        }
+        superadmin: { canCreateProject: true, canViewAllProjects: true, canManageManagers: true, canManageDelegates: true, canManageBonds: true, canEditSettings: true, canDelete: true, maxProjects: -1 },
+        admin: { canCreateProject: false, canViewAllProjects: false, canManageManagers: true, canManageDelegates: true, canManageBonds: true, canEditSettings: true, canDelete: true, maxProjects: 0 },
+        manager: { canCreateProject: false, canViewAllProjects: false, canManageManagers: false, canManageDelegates: true, canManageBonds: true, canEditSettings: false, canDelete: false, maxProjects: 0 },
+        viewer: { canCreateProject: false, canViewAllProjects: false, canManageManagers: false, canManageDelegates: false, canManageBonds: false, canEditSettings: false, canDelete: false, maxProjects: 0 }
     };
 
-    // 1. تحقق من المستخدم
+    // 1. تحقق من المستخدم + الشروط
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            window.location.href = 'index.html';
+            window.location.href = 'index.html?logout=true';
             return;
         }
 
         const SUPER_ADMIN_EMAIL = '001122334455-0597087767@sanadat.pro';
-        
+
         if (user.email === SUPER_ADMIN_EMAIL) {
-            currentUser = { 
-                uid: user.uid, 
-                email: user.email,
-                role: 'superadmin', 
-                name: 'السوبر ادمن',
-                projectCode: '001122334455'
-            };
+            currentUser = { uid: user.uid, email: user.email, role: 'superadmin', name: 'السوبر ادمن', projectCode: '001122334455' };
         } else {
             currentUser = await getCurrentUserData();
         }
 
-        if (!currentUser || !PERMISSIONS[currentUser.role]) {
+        if (!currentUser ||!PERMISSIONS[currentUser.role]) {
             Swal.fire('خطأ', 'غير مصرح لك بالدخول', 'error').then(() => logout());
             return;
+        }
+
+        // تشييك الشروط للمدير
+        if (['admin', 'manager'].includes(currentUser.role)) {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            const userData = userDoc.data();
+            if (!userData.termsAccepted || userData.termsAcceptedVersion!== TERMS_VERSION) {
+                const accepted = await showTermsModal();
+                if (!accepted) {
+                    await logout();
+                    return;
+                }
+                await updateDoc(doc(db, 'users', currentUser.uid), {
+                    termsAccepted: true,
+                    termsAcceptedVersion: TERMS_VERSION,
+                    termsAcceptedAt: new Date()
+                });
+            }
         }
 
         applyPermissions();
@@ -299,56 +375,37 @@
         loadAllData();
     });
 
-    // 2. تطبيق الصلاحيات على الواجهة
+    // 2. تطبيق الصلاحيات
     function applyPermissions() {
         const perms = PERMISSIONS[currentUser.role];
-        const roleNames = {
-            superadmin: 'سوبر ادمن',
-            admin: 'مدير عام',
-            manager: 'مدير',
-            viewer: 'مشاهد'
-        };
-        
-        // بادج الدور
-        const badgeColors = {
-            superadmin: 'bg-red-500 text-white',
-            admin: 'bg-purple-500 text-white',
-            manager: 'bg-blue-500 text-white',
-            viewer: 'bg-gray-500 text-white'
-        };
+        const roleNames = { superadmin: 'سوبر ادمن', admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
+        const badgeColors = { superadmin: 'bg-red-500 text-white', admin: 'bg-purple-500 text-white', manager: 'bg-blue-500 text-white', viewer: 'bg-gray-500 text-white' };
+
         document.getElementById('roleBadge').className = `badge ${badgeColors[currentUser.role]}`;
         document.getElementById('roleBadge').textContent = roleNames[currentUser.role];
-        
-        // إخفاء تبويب المشاريع
+
         if (!perms.canViewAllProjects) {
             document.getElementById('tab-projects').classList.add('hidden');
             document.getElementById('projectsTab').classList.add('hidden');
-        }
-        
-        // إخفاء فورم إنشاء مشروع
-        if (!perms.canCreateProject) {
-            document.getElementById('createProjectForm').classList.add('hidden');
+            document.getElementById('superStats').classList.add('hidden');
+            document.getElementById('chartContainer').classList.add('hidden');
+        } else {
+            document.getElementById('superStats').classList.remove('hidden');
+            document.getElementById('chartContainer').classList.remove('hidden');
         }
 
-        // إخفاء إدارة المدراء
+        if (!perms.canCreateProject) document.getElementById('createProjectForm').classList.add('hidden');
         if (!perms.canManageManagers) {
             document.getElementById('tab-managers').classList.add('hidden');
             document.getElementById('managersTab').classList.add('hidden');
             document.getElementById('addManagerForm').classList.add('hidden');
         }
-
-        // إخفاء إدارة المناديب
-        if (!perms.canManageDelegates) {
-            document.getElementById('addDelegateForm').classList.add('hidden');
-        }
-
-        // إخفاء الإعدادات
+        if (!perms.canManageDelegates) document.getElementById('addDelegateForm').classList.add('hidden');
         if (!perms.canEditSettings) {
             document.getElementById('tab-settings').classList.add('hidden');
             document.getElementById('settingsTab').classList.add('hidden');
         }
 
-        // تفعيل أول تبويب متاح
         const firstVisibleTab = document.querySelector('.tab-btn:not(.hidden)');
         if (firstVisibleTab) firstVisibleTab.click();
     }
@@ -374,200 +431,256 @@
     // 5. تحميل البيانات
     function loadAllData() {
         const perms = PERMISSIONS[currentUser.role];
-        
-        // المشاريع
+
         let projectsQuery = collection(db, 'projects');
-        if (currentUser.role !== 'superadmin') {
+        if (currentUser.role!== 'superadmin') {
             projectsQuery = query(collection(db, 'projects'), where('code', '==', currentUser.projectCode));
         }
         onSnapshot(projectsQuery, (snapshot) => {
-            allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allProjects = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
             renderProjects();
             renderProjectOptions();
+            updateStats();
+            renderChart();
         });
 
-        // المستخدمين
         let usersQuery = collection(db, 'users');
-        if (currentUser.role !== 'superadmin') {
+        if (currentUser.role!== 'superadmin') {
             usersQuery = query(collection(db, 'users'), where('projectCode', '==', currentUser.projectCode));
         }
         onSnapshot(usersQuery, (snapshot) => {
-            const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const users = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
             allManagers = users.filter(u => ['admin', 'manager', 'viewer'].includes(u.role));
             allDelegates = users.filter(u => u.role === 'delegate');
             renderManagers();
             renderDelegates();
+            updateStats();
         });
 
-        // السندات
         let bondsQuery = collection(db, 'bonds');
-        if (currentUser.role !== 'superadmin') {
+        if (currentUser.role!== 'superadmin') {
             bondsQuery = query(collection(db, 'bonds'), where('projectCode', '==', currentUser.projectCode));
         }
         onSnapshot(bondsQuery, (snapshot) => {
-            allBonds = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allBonds = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
             renderBonds();
+            updateStats();
+            renderChart();
         });
     }
 
-    // 6. إنشاء مشروع - مع تشيك الصلاحية
+    // 6. إحصائيات
+    function updateStats() {
+        document.getElementById('statProjects').textContent = allProjects.length;
+        const activeProjects = allProjects.filter(p => {
+            if (p.isLifetime) return true;
+            if (!p.expiryDate) return true;
+            return new Date(p.expiryDate) >= new Date();
+        }).length;
+        document.getElementById('statProjectsActive').textContent = `${activeProjects} نشط`;
+
+        document.getElementById('statManagers').textContent = allManagers.length;
+        document.getElementById('statDelegates').textContent = allDelegates.length;
+        document.getElementById('statBonds').textContent = allBonds.length;
+
+        const totalAmount = allBonds.reduce((sum, b) => sum + (b.amount || 0), 0);
+        document.getElementById('statBondsAmount').textContent = formatMoney(totalAmount);
+    }
+
+    // 7. رسم بياني
+    function renderChart() {
+        const ctx = document.getElementById('projectsChart');
+        if (!ctx) return;
+
+        const last30Days = {};
+        const today = new Date();
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().split('T')[0];
+            last30Days[key] = 0;
+        }
+
+        allBonds.forEach(b => {
+            const date = b.createdAt?.toDate? b.createdAt.toDate().toISOString().split('T')[0] : b.bondDate;
+            if (last30Days.hasOwnProperty(date)) last30Days[date]++;
+        });
+
+        if (projectsChart) projectsChart.destroy();
+        projectsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Object.keys(last30Days).map(d => d.split('-')[2] + '/' + d.split('-')[1]),
+                datasets: [{
+                    label: 'عدد السندات',
+                    data: Object.values(last30Days),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+
+    // 8. مدى الحياة يلغي التاريخ
+    document.getElementById('projectLifetime').onchange = (e) => {
+        document.getElementById('projectExpiry').disabled = e.target.checked;
+        if (e.target.checked) document.getElementById('projectExpiry').value = '';
+    };
+
+    document.getElementById('projectLifetimeEdit').onchange = (e) => {
+        document.getElementById('projectExpiryEdit').disabled = e.target.checked;
+        if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
+    };
+
+    // 9. إنشاء مشروع
     document.getElementById('addProjectBtn').onclick = async () => {
         if (!PERMISSIONS[currentUser.role].canCreateProject) {
             return Swal.fire('مرفوض', 'ليس لديك صلاحية إنشاء مشاريع', 'error');
         }
-        
+
         const name = document.getElementById('projectName').value.trim();
         const code = document.getElementById('projectCodeInput').value.trim().toUpperCase();
-        if (!name || !code) return Swal.fire('تنبيه', 'املأ اسم وكود المشروع', 'warning');
+        const expiry = document.getElementById('projectExpiry').value;
+        const lifetime = document.getElementById('projectLifetime').checked;
+
+        if (!name ||!code) return Swal.fire('تنبيه', 'املأ اسم وكود المشروع', 'warning');
+        if (!lifetime &&!expiry) return Swal.fire('تنبيه', 'حدد تاريخ الانتهاء أو اختر مدى الحياة', 'warning');
 
         try {
             await addDoc(collection(db, 'projects'), {
                 code, name,
+                expiryDate: lifetime? null : expiry,
+                isLifetime: lifetime,
                 createdBy: currentUser.uid,
                 createdAt: serverTimestamp(),
                 active: true,
-                settings: { logo: '', terms: '', showCreateBond: true, showBondsTab: true }
+                settings: {
+                    logo: '',
+                    terms: '',
+                    showCreateBond: true,
+                    showBondsTab: true,
+                    features: { whatsapp: true, excel: true, pdf: true, print: true, qr: true },
+                    forceTermsAccept: true
+                }
             });
             document.getElementById('projectName').value = '';
             document.getElementById('projectCodeInput').value = '';
-            Swal.fire('تم', 'تم إنشاء المشروع بنجاح', 'success');
+            document.getElementById('projectExpiry').value = '';
+            document.getElementById('projectLifetime').checked = false;
+                        Swal.fire('تم', 'تم إنشاء المشروع بنجاح', 'success');
         } catch (error) {
             Swal.fire('خطأ', error.message, 'error');
         }
     };
 
-    // 7. إضافة/تعديل مدير
-    document.getElementById('addManagerBtn').onclick = async () => {
-        if (!PERMISSIONS[currentUser.role].canManageManagers) {
-            return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المدراء', 'error');
-        }
-
-        const name = document.getElementById('managerName').value.trim();
-        const phone = document.getElementById('managerPhone').value.trim();
-        const projectCode = currentUser.role === 'superadmin' 
-            ? document.getElementById('managerProjectCode').value 
-            : currentUser.projectCode;
-        const password = document.getElementById('managerPassword').value;
-        const role = document.getElementById('managerRole').value;
-        
-        if (!name || !phone || !projectCode || (!password && !editingManagerId)) {
-            return Swal.fire('تنبيه', 'املأ جميع الحقول', 'warning');
-        }
-
-        try {
-            if (editingManagerId) {
-                // تعديل
-                const updateData = { name, phone, projectCode, role, active: true };
-                if (password) updateData.password = password; // لازم Cloud Function تغيره في Auth
-                await updateDoc(doc(db, 'users', editingManagerId), updateData);
-                Swal.fire('تم', 'تم تحديث المدير بنجاح', 'success');
-                editingManagerId = null;
-                document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
-            } else {
-                // إضافة
-                await createUser(projectCode, phone, password, role, name);
-                Swal.fire('تم', 'تم إنشاء حساب المدير بنجاح', 'success');
+    // 10. تجديد المشروع + تحديد الحالة
+    window.renewProject = async (projectId, years = 1) => {
+        const result = await Swal.fire({
+            title: 'تجديد المشروع',
+            html: `تجديد لمدة <input id="renewYears" type="number" value="${years}" min="1" max="10" class="swal2-input" style="width:100px"> سنة`,
+            showCancelButton: true,
+            confirmButtonText: 'تجديد',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                return document.getElementById('renewYears').value;
             }
+        });
+
+        if (result.isConfirmed) {
+            const newYears = parseInt(result.value);
+            const project = allProjects.find(p => p.id === projectId);
+            let newExpiry = new Date();
             
-            document.getElementById('managerName').value = '';
-            document.getElementById('managerPhone').value = '';
-            document.getElementById('managerPassword').value = '';
-        } catch (error) {
-            Swal.fire('خطأ', error.message, 'error');
+            if (project.expiryDate) {
+                newExpiry = new Date(project.expiryDate);
+            }
+            newExpiry.setFullYear(newExpiry.getFullYear() + newYears);
+
+            try {
+                await updateDoc(doc(db, 'projects', projectId), {
+                    expiryDate: newExpiry.toISOString().split('T')[0],
+                    isLifetime: false,
+                    renewedAt: serverTimestamp(),
+                    renewedBy: currentUser.uid
+                });
+                showSuccess(`تم التجديد حتى ${newExpiry.toLocaleDateString('ar-SA')}`);
+            } catch (error) {
+                showError(error.message);
+            }
         }
     };
 
-    // 8. إضافة مندوب
-    document.getElementById('addDelegateBtn').onclick = async () => {
-        if (!PERMISSIONS[currentUser.role].canManageDelegates) {
-            return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المناديب', 'error');
-        }
-
-        const name = document.getElementById('delegateName').value.trim();
-        const phone = document.getElementById('delegatePhone').value.trim();
-        const projectCode = currentUser.role === 'superadmin' 
-            ? document.getElementById('delegateProjectCode').value 
-            : currentUser.projectCode;
-        const password = document.getElementById('delegatePassword').value;
+    // 11. حساب حالة المشروع
+    function getProjectStatus(project) {
+        if (project.isLifetime) return { text: 'نشط - مدى الحياة', class: 'status-active', icon: 'fa-infinity' };
+        if (!project.expiryDate) return { text: 'نشط', class: 'status-active', icon: 'fa-check' };
         
-        if (!name || !phone || !projectCode || !password) {
-            return Swal.fire('تنبيه', 'املأ جميع الحقول', 'warning');
-        }
+        const today = new Date();
+        const expiry = new Date(project.expiryDate);
+        const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) return { text: 'منتهي', class: 'status-expired', icon: 'fa-ban' };
+        if (diffDays <= 30) return { text: `ينتهي خلال ${diffDays} يوم`, class: 'status-expiring', icon: 'fa-exclamation-triangle' };
+        return { text: 'نشط', class: 'status-active', icon: 'fa-check' };
+    }
 
-        try {
-            await createUser(projectCode, phone, password, 'delegate', name);
-            document.getElementById('delegateName').value = '';
-            document.getElementById('delegatePhone').value = '';
-            document.getElementById('delegatePassword').value = '';
-            Swal.fire('تم', 'تم إنشاء حساب المندوب بنجاح', 'success');
-        } catch (error) {
-            Swal.fire('خطأ', error.message, 'error');
-        }
-    };
-
-    // 9. حفظ إعدادات المشروع
-    document.getElementById('saveSettingsBtn').onclick = async () => {
-        if (!PERMISSIONS[currentUser.role].canEditSettings) {
-            return Swal.fire('مرفوض', 'ليس لديك صلاحية تعديل الإعدادات', 'error');
-        }
-
-        const projectCode = document.getElementById('settingsProjectCode').value;
-        if (!projectCode) return;
-
-        const project = allProjects.find(p => p.code === projectCode);
-        if (!project) return;
-
-        const settings = {
-            logo: document.getElementById('projectLogo').value.trim(),
-            terms: document.getElementById('projectTerms').value.trim(),
-            showCreateBond: document.getElementById('showCreateBond').checked,
-            showBondsTab: document.getElementById('showBondsTab').checked
-        };
-
-        try {
-            await updateDoc(doc(db, 'projects', project.id), { settings });
-            Swal.fire('تم', 'تم حفظ الإعدادات', 'success');
-        } catch (error) {
-            Swal.fire('خطأ', error.message, 'error');
-        }
-    };
-
-    document.getElementById('settingsProjectCode').onchange = (e) => {
-        const projectCode = e.target.value;
-        const form = document.getElementById('projectSettingsForm');
-        if (!projectCode) {
-            form.classList.add('hidden');
-            return;
-        }
-        const project = allProjects.find(p => p.code === projectCode);
-        if (project && project.settings) {
-            document.getElementById('projectLogo').value = project.settings.logo || '';
-            document.getElementById('projectTerms').value = project.settings.terms || '';
-            document.getElementById('showCreateBond').checked = project.settings.showCreateBond !== false;
-            document.getElementById('showBondsTab').checked = project.settings.showBondsTab !== false;
-            form.classList.remove('hidden');
-        }
-    };
-
-    // دوال العرض
+    // 12. عرض المشاريع
     function renderProjects() {
         const perms = PERMISSIONS[currentUser.role];
-        document.getElementById('projectsList').innerHTML = allProjects.map(p => `
-            <div class="border-2 border-gray-100 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-building text-purple-600"></i>
+        document.getElementById('projectsList').innerHTML = allProjects.map(p => {
+            const status = getProjectStatus(p);
+            const bondsCount = allBonds.filter(b => b.projectCode === p.code).length;
+            const totalAmount = allBonds.filter(b => b.projectCode === p.code).reduce((sum, b) => sum + (b.amount || 0), 0);
+            const lastActivity = allBonds.filter(b => b.projectCode === p.code).sort((a,b) => b.createdAt - a.createdAt)[0];
+            
+            return `
+            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-building text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <b class="text-lg">${p.name}</b>
+                                <span class="badge ${status.class}"><i class="fas ${status.icon} ml-1"></i>${status.text}</span>
+                            </div>
+                            <p class="text-sm text-gray-500">الكود: ${p.code} | ${p.isLifetime ? 'مدى الحياة' : p.expiryDate || 'بدون تاريخ'}</p>
+                        </div>
+                    <div class="flex gap-2">
+                        ${status.class === 'status-expired' && perms.canEditSettings ? `
+                        <button onclick="renewProject('${p.id}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm">
+                            <i class="fas fa-redo"></i> تجديد
+                        </button>` : ''}
+                        ${perms.canDelete ? `
+                        <button onclick="deleteItem('projects', '${p.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-trash"></i>
+                        </button>` : ''}
                     </div>
-                    <div>
-                        <b class="text-lg">${p.name}</b>
-                        <p class="text-sm text-gray-500">الكود: ${p.code}</p>
+                </div>
+                <div class="grid grid-cols-3 gap-3 text-sm">
+                    <div class="bg-blue-50 p-2 rounded-lg">
+                        <p class="text-gray-600">السندات</p>
+                        <p class="font-bold text-blue-600">${bondsCount}</p>
                     </div>
-                ${perms.canDelete ? `
-                <button onclick="deleteItem('projects', '${p.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-                    <i class="fas fa-trash"></i>
-                </button>` : ''}
+                    <div class="bg-green-50 p-2 rounded-lg">
+                        <p class="text-gray-600">المبلغ الكلي</p>
+                        <p class="font-bold text-green-600">${formatMoney(totalAmount)}</p>
+                    </div>
+                    <div class="bg-purple-50 p-2 rounded-lg">
+                        <p class="text-gray-600">آخر نشاط</p>
+                        <p class="font-bold text-purple-600 text-xs">${lastActivity ? formatDate(lastActivity.createdAt) : 'لا يوجد'}</p>
+                    </div>
+                </div>
             </div>
-        `).join('') || `<p class="text-gray-400 text-center py-8">لا توجد مشاريع</p>`;
+        `}).join('') || `<p class="text-gray-400 text-center py-8">لا توجد مشاريع</p>`;
     }
 
     function renderProjectOptions() {
@@ -578,13 +691,14 @@
         document.getElementById('filterProject').innerHTML = `<option value="">كل المشاريع</option>` + options;
     }
 
+    // 13. عرض المدراء
     function renderManagers() {
         const perms = PERMISSIONS[currentUser.role];
         const roleLabels = { admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
         const roleColors = { admin: 'bg-purple-100 text-purple-700', manager: 'bg-blue-100 text-blue-700', viewer: 'bg-gray-100 text-gray-700' };
         
         document.getElementById('managersList').innerHTML = allManagers.map(m => `
-            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition">
+            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -597,6 +711,7 @@
                                 ${m.active === false ? '<span class="badge bg-red-100 text-red-700">موقوف</span>' : '<span class="badge bg-green-100 text-green-700">نشط</span>'}
                             </div>
                             <p class="text-sm text-gray-500">${m.phone} - ${m.projectCode}</p>
+                            <p class="text-xs text-gray-400">آخر دخول: ${m.lastLogin ? formatDate(m.lastLogin) : 'لم يدخل بعد'}</p>
                         </div>
                     </div>
                     ${perms.canManageManagers ? `
@@ -616,10 +731,11 @@
         `).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مدراء</p>`;
     }
 
+    // 14. عرض المناديب
     function renderDelegates() {
         const perms = PERMISSIONS[currentUser.role];
         document.getElementById('delegatesList').innerHTML = allDelegates.map(d => `
-            <div class="border-2 border-gray-100 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition">
+            <div class="border-2 border-gray-100 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition card-hover">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                         <i class="fas fa-user-tie text-green-600"></i>
@@ -627,6 +743,7 @@
                     <div>
                         <b class="text-lg">${d.name}</b>
                         <p class="text-sm text-gray-500">${d.phone} - ${d.projectCode}</p>
+                        <p class="text-xs text-gray-400">آخر دخول: ${d.lastLogin ? formatDate(d.lastLogin) : 'لم يدخل بعد'}</p>
                     </div>
                 </div>
                 ${perms.canManageDelegates ? `
@@ -637,6 +754,7 @@
         `).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مناديب</p>`;
     }
 
+    // 15. عرض السندات
     function renderBonds() {
         const searchTerm = document.getElementById('searchBonds').value.toLowerCase();
         const filterType = document.getElementById('filterType').value;
@@ -649,19 +767,19 @@
             return matchSearch && matchType && matchProject;
         });
 
-                    document.getElementById('bondsList').innerHTML = filtered.map(b => {
+        document.getElementById('bondsList').innerHTML = filtered.map(b => {
             const delegate = allDelegates.find(d => d.id === b.delegateId);
             const date = b.createdAt?.toDate ? b.createdAt.toDate().toLocaleString('ar-SA') : '-';
             const perms = PERMISSIONS[currentUser.role];
             return `
-            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition">
+            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 ${b.type === 'قبض' ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center">
                             <i class="fas ${b.type === 'قبض' ? 'fa-arrow-down text-green-600' : 'fa-arrow-up text-red-600'} text-xl"></i>
                         </div>
                         <div>
-                            <b class="text-lg">سند ${b.type} - ${b.amount} ريال</b>
+                            <b class="text-lg">سند ${b.type} - ${formatMoney(b.amount)}</b>
                             <p class="text-sm text-gray-500">${date} | ${b.projectCode || '-'}</p>
                         </div>
                     </div>
@@ -678,24 +796,61 @@
         `}).join('') || `<p class="text-gray-400 text-center py-8">لا توجد سندات</p>`;
     }
 
-    // دوال إدارة المستخدمين الجديدة
-    async function editManager(id) {
+    // 16. إضافة/تعديل مدير
+    document.getElementById('addManagerBtn').onclick = async () => {
+        if (!PERMISSIONS[currentUser.role].canManageManagers) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المدراء', 'error');
+        }
+
+        const name = document.getElementById('managerName').value.trim();
+        const phone = document.getElementById('managerPhone').value.trim();
+        const projectCode = currentUser.role === 'superadmin'
+           ? document.getElementById('managerProjectCode').value
+            : currentUser.projectCode;
+        const password = document.getElementById('managerPassword').value;
+        const role = document.getElementById('managerRole').value;
+
+        if (!name ||!phone ||!projectCode || (!password &&!editingManagerId)) {
+            return Swal.fire('تنبيه', 'املأ جميع الحقول', 'warning');
+        }
+
+        try {
+            if (editingManagerId) {
+                const updateData = { name, phone, projectCode, role, active: true };
+                if (password) updateData.password = password;
+                await updateDoc(doc(db, 'users', editingManagerId), updateData);
+                Swal.fire('تم', 'تم تحديث المدير بنجاح', 'success');
+                editingManagerId = null;
+                document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
+            } else {
+                await createUser(projectCode, phone, password, role, name);
+                Swal.fire('تم', 'تم إنشاء حساب المدير بنجاح', 'success');
+            }
+
+            document.getElementById('managerName').value = '';
+            document.getElementById('managerPhone').value = '';
+            document.getElementById('managerPassword').value = '';
+        } catch (error) {
+            Swal.fire('خطأ', error.message, 'error');
+        }
+    };
+
+    window.editManager = async (id) => {
         const manager = allManagers.find(m => m.id === id);
         if (!manager) return;
-        
+
         editingManagerId = id;
         document.getElementById('managerName').value = manager.name;
         document.getElementById('managerPhone').value = manager.phone;
         document.getElementById('managerProjectCode').value = manager.projectCode;
         document.getElementById('managerRole').value = manager.role;
-        document.getElementById('managerPassword').value = ''; // فاضي للأمان
+        document.getElementById('managerPassword').value = '';
         document.getElementById('managerPassword').placeholder = 'اتركه فاضي لو ما تبي تغير الباسورد';
         document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-save ml-2"></i>حفظ التعديل';
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    window.editManager = editManager;
+    };
 
-    async function toggleUserStatus(id, currentStatus) {
+    window.toggleUserStatus = async (id, currentStatus) => {
         const perms = PERMISSIONS[currentUser.role];
         if (!perms.canManageManagers) {
             return Swal.fire('مرفوض', 'ليس لديك صلاحية إيقاف/تنشيط المستخدمين', 'error');
@@ -713,19 +868,18 @@
 
         if (result.isConfirmed) {
             try {
-                await updateDoc(doc(db, 'users', id), { 
+                await updateDoc(doc(db, 'users', id), {
                     active: !currentStatus,
-                    updatedAt: serverTimestamp() 
+                    updatedAt: serverTimestamp()
                 });
                 Swal.fire('تم', `تم ${action} المستخدم بنجاح`, 'success');
             } catch (error) {
                 Swal.fire('خطأ', error.message, 'error');
             }
         }
-    }
-    window.toggleUserStatus = toggleUserStatus;
+    };
 
-    async function deleteUser(id) {
+    window.deleteUser = async (id) => {
         const perms = PERMISSIONS[currentUser.role];
         if (!perms.canDelete) {
             return Swal.fire('مرفوض', 'ليس لديك صلاحية الحذف النهائي', 'error');
@@ -749,10 +903,118 @@
                 Swal.fire('خطأ', error.message, 'error');
             }
         }
-    }
-    window.deleteUser = deleteUser;
+    };
 
-    async function deleteItem(type, id) {
+    // 17. إضافة مندوب
+    document.getElementById('addDelegateBtn').onclick = async () => {
+        if (!PERMISSIONS[currentUser.role].canManageDelegates) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المناديب', 'error');
+        }
+
+        const name = document.getElementById('delegateName').value.trim();
+        const phone = document.getElementById('delegatePhone').value.trim();
+        const projectCode = currentUser.role === 'superadmin'
+           ? document.getElementById('delegateProjectCode').value
+            : currentUser.projectCode;
+        const password = document.getElementById('delegatePassword').value;
+
+        if (!name ||!phone ||!projectCode ||!password) {
+            return Swal.fire('تنبيه', 'املأ جميع الحقول', 'warning');
+        }
+
+        try {
+            await createUser(projectCode, phone, password, 'delegate', name);
+            document.getElementById('delegateName').value = '';
+            document.getElementById('delegatePhone').value = '';
+            document.getElementById('delegatePassword').value = '';
+            Swal.fire('تم', 'تم إنشاء حساب المندوب بنجاح', 'success');
+        } catch (error) {
+            Swal.fire('خطأ', error.message, 'error');
+        }
+    };
+
+    // 18. حفظ إعدادات المشروع
+    document.getElementById('projectLifetimeEdit').onchange = (e) => {
+        document.getElementById('projectExpiryEdit').disabled = e.target.checked;
+        if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
+    };
+
+    document.getElementById('saveSettingsBtn').onclick = async () => {
+        if (!PERMISSIONS[currentUser.role].canEditSettings) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية تعديل الإعدادات', 'error');
+        }
+
+        const projectCode = document.getElementById('settingsProjectCode').value;
+        if (!projectCode) return;
+
+        const project = allProjects.find(p => p.code === projectCode);
+        if (!project) return;
+
+        const settings = {
+            logo: document.getElementById('projectLogo').value.trim(),
+            terms: document.getElementById('projectTerms').value.trim(),
+            showCreateBond: document.getElementById('showCreateBond').checked,
+            showBondsTab: document.getElementById('showBondsTab').checked,
+            features: {
+                whatsapp: document.getElementById('featureWhatsApp').checked,
+                excel: document.getElementById('featureExcel').checked,
+                pdf: document.getElementById('featurePDF').checked,
+                print: document.getElementById('featurePrint').checked,
+                qr: document.getElementById('featureQR').checked
+            },
+            forceTermsAccept: document.getElementById('forceTermsAccept').checked
+        };
+
+        const expiryDate = document.getElementById('projectExpiryEdit').value;
+        const isLifetime = document.getElementById('projectLifetimeEdit').checked;
+
+        try {
+            await updateDoc(doc(db, 'projects', project.id), {
+                settings,
+                expiryDate: isLifetime? null : expiryDate,
+                isLifetime: isLifetime,
+                updatedAt: serverTimestamp()
+            });
+            showSuccess('تم حفظ الإعدادات');
+        } catch (error) {
+            showError(error.message);
+        }
+    };
+
+    document.getElementById('settingsProjectCode').onchange = (e) => {
+        const projectCode = e.target.value;
+        const form = document.getElementById('projectSettingsForm');
+        if (!projectCode) {
+            form.classList.add('hidden');
+            return;
+        }
+        const project = allProjects.find(p => p.code === projectCode);
+        if (project && project.settings) {
+            document.getElementById('projectLogo').value = project.settings.logo || '';
+            document.getElementById('projectTerms').value = project.settings.terms || '';
+            document.getElementById('projectExpiryEdit').value = project.expiryDate || '';
+            document.getElementById('projectLifetimeEdit').checked = project.isLifetime || false;
+            document.getElementById('projectExpiryEdit').disabled = project.isLifetime || false;
+            document.getElementById('showCreateBond').checked = project.settings.showCreateBond!== false;
+            document.getElementById('showBondsTab').checked = project.settings.showBondsTab!== false;
+            document.getElementById('featureWhatsApp').checked = project.settings.features?.whatsapp!== false;
+            document.getElementById('featureExcel').checked = project.settings.features?.excel!== false;
+            document.getElementById('featurePDF').checked = project.settings.features?.pdf!== false;
+            document.getElementById('featurePrint').checked = project.settings.features?.print!== false;
+            document.getElementById('featureQR').checked = project.settings.features?.qr!== false;
+            document.getElementById('forceTermsAccept').checked = project.settings.forceTermsAccept!== false;
+            
+            // تكبير textarea تلقائي
+            const termsTextarea = document.getElementById('projectTerms');
+            termsTextarea.style.height = '';
+            termsTextarea.style.height = termsTextarea.scrollHeight + 'px';
+            
+            form.classList.remove('hidden');
+        }
+    };
+
+    // 19. حذف عام
+    window.deleteItem = async (type, id) => {
         const perms = PERMISSIONS[currentUser.role];
         if (!perms.canDelete) {
             return Swal.fire('مرفوض', 'ليس لديك صلاحية الحذف', 'error');
@@ -775,15 +1037,14 @@
                 Swal.fire('خطأ', error.message, 'error');
             }
         }
-    }
-    window.deleteItem = deleteItem;
+    };
 
-    // تنظيف كود المشروع
+    // 20. تنظيف كود المشروع
     document.getElementById('projectCodeInput').oninput = (e) => {
         e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     };
 
-    // فلترة السندات
+    // 21. فلترة السندات
     document.getElementById('searchBonds').oninput = renderBonds;
     document.getElementById('filterType').onchange = renderBonds;
     document.getElementById('filterProject').onchange = renderBonds;
