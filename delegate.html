@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Tajawal', sans-serif; }
-       .bond-preview { border: 2px dashed #ccc; }
+        .bond-preview { border: 2px dashed #ccc; }
         @media print {.no-print { display: none; } }
     </style>
 </head>
@@ -168,7 +168,7 @@
 
     <!-- نافذة عرض السند -->
     <div id="bondModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl max-w-2xl w-full max-h- overflow-y-auto">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-screen overflow-y-auto">
             <div id="bondPrintArea" class="p-8"></div>
             <div class="p-4 border-t flex gap-2 no-print">
                 <button id="printBond" class="flex-1 bg-blue-600 text-white p-3 rounded-lg">طباعة PDF</button>
@@ -180,45 +180,66 @@
     </div>
 
     <script type="module">
-        import { auth, db, storage } from './firebase.js';
-        import { getCurrentUserData, logout } from './auth.js';
-        import { formatMoney, formatDate, showSuccess, showError, requireAuth, getTodayDate } from './core.js';
-        import { generateBondNumber, toArabicNumbers } from './utils.js';
+        import { auth, db, storage } from './firebase.js?v=999999';
+        import { getCurrentUserData, logout } from './auth.js?v=999999';
+        import { formatMoney, formatDate, showSuccess, showError, requireAuth, getTodayDate } from './core.js?v=999999';
+        import { generateBondNumber, toArabicNumbers } from './utils.js?v=999999';
         import { collection, addDoc, getDocs, query, where, orderBy, limit, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+        // 🔥 الحل الجذري: فلاق يمنع اللوب + تشييك أدق
+        let authChecked = false;
+        let currentUser = null;
+
         // 1. حماية + بيانات
-        requireAuth();
         const userData = await getCurrentUserData();
-        if (!userData || userData.role!== 'delegate') window.location.href = 'index.html';
+        
+        if (!userData) {
+            console.error('لا توجد بيانات مستخدم');
+            await logout();
+        } else if (userData.role !== 'delegate') {
+            console.error('الدور غير صحيح:', userData.role, '- المفروض delegate');
+            await logout();
+        } else if (userData.active === false) {
+            alert('تم إيقاف حسابك. تواصل مع الإدارة');
+            await logout();
+        } else {
+            currentUser = userData;
+            authChecked = true;
+            
+            const projectDoc = await getDoc(doc(db, 'projects', userData.projectCode));
+            const projectData = projectDoc.exists() ? projectDoc.data() : {};
 
-        const projectDoc = await getDoc(doc(db, 'projects', userData.projectCode));
-        const projectData = projectDoc.exists()? projectDoc.data() : {};
+            document.getElementById('delegateInfo').textContent = `${userData.name} | ${projectData.name || userData.projectCode}`;
+            document.getElementById('bondDate').value = getTodayDate();
+            
+            // GPS تلقائي
+            let currentLocation = null;
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        document.getElementById('locationStatus').textContent = `تم: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                    },
+                    () => document.getElementById('locationStatus').textContent = 'فشل تحديد الموقع'
+                );
+            }
 
-        document.getElementById('delegateInfo').textContent = `${userData.name} | ${projectData.name || userData.projectCode}`;
-        document.getElementById('logoutBtn').onclick = logout;
-        document.getElementById('bondDate').value = getTodayDate();
-
-        // 2. GPS تلقائي
-        let currentLocation = null;
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    document.getElementById('locationStatus').textContent = `تم: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-                },
-                () => document.getElementById('locationStatus').textContent = 'فشل تحديد الموقع'
-            );
+            loadStats();
         }
 
-        // 3. تفقيط المبلغ
+        document.getElementById('logoutBtn').onclick = async () => {
+            await logout();
+        };
+
+        // 2. تفقيط المبلغ
         document.getElementById('amount').oninput = (e) => {
             const num = parseFloat(e.target.value);
             if (!num) return document.getElementById('amountInWords').textContent = '';
             document.getElementById('amountInWords').textContent = `فقط ${toArabicNumbers(num)} ريال سعودي`;
         };
 
-        // 4. التبويبات
+        // 3. التبويبات
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('border-purple-600', 'text-purple-600'));
@@ -229,15 +250,18 @@
             };
         });
 
-        // 5. حفظ السند
+        // 4. حفظ السند
         document.getElementById('bondForm').onsubmit = async (e) => {
             e.preventDefault();
 
-            // تشييك القيود من المدير: عدد يومي + مبلغ كلي
+            // تشييك القيود من المدير: عدد يومي
             const todayBonds = await getDocs(query(collection(db, 'bonds'),
-                where('createdBy', '==', userData.uid),
+                where('createdBy', '==', currentUser.uid),
                 where('bondDate', '==', getTodayDate())
             ));
+
+            const projectDoc = await getDoc(doc(db, 'projects', currentUser.projectCode));
+            const projectData = projectDoc.exists() ? projectDoc.data() : {};
 
             if (projectData.dailyBondLimit && todayBonds.size >= projectData.dailyBondLimit) {
                 showError('تجاوزت الحد اليومي للسندات. راجع المدير');
@@ -246,12 +270,12 @@
 
             // آخر رقم سند
             const lastBondQuery = query(collection(db, 'bonds'),
-                where('projectCode', '==', userData.projectCode),
+                where('projectCode', '==', currentUser.projectCode),
                 orderBy('createdAt', 'desc'),
                 limit(1)
             );
             const lastBondSnap = await getDocs(lastBondQuery);
-            const lastNumber = lastBondSnap.empty? 0 : parseInt(lastBondSnap.docs[0].data().bondNumberRaw) || 0;
+            const lastNumber = lastBondSnap.empty ? 0 : parseInt(lastBondSnap.docs[0].data().bondNumberRaw) || 0;
 
             const bondNumberRaw = lastNumber + 1;
             const bondNumber = generateBondNumber(bondNumberRaw, projectData);
@@ -260,7 +284,7 @@
             let attachmentUrl = '';
             const file = document.getElementById('attachment').files[0];
             if (file) {
-                const storageRef = ref(storage, `bonds/${userData.projectCode}/${Date.now()}_${file.name}`);
+                const storageRef = ref(storage, `bonds/${currentUser.projectCode}/${Date.now()}_${file.name}`);
                 await uploadBytes(storageRef, file);
                 attachmentUrl = await getDownloadURL(storageRef);
             }
@@ -279,13 +303,13 @@
                 notes: document.getElementById('notes').value,
                 bondDate: document.getElementById('bondDate').value,
                 attachmentUrl,
-                location: currentLocation,
-                projectCode: userData.projectCode,
-                createdBy: userData.uid,
-                createdByName: userData.name,
+                location: window.currentLocation || null,
+                projectCode: currentUser.projectCode,
+                createdBy: currentUser.uid,
+                createdByName: currentUser.name,
                 createdAt: new Date(),
-                status: 'غير مورد', // يغيره المدير
-                accountingEffect: document.getElementById('bondType').value === 'قبض'? 'إيجابي' : 'سلبي'
+                status: 'غير مورد',
+                accountingEffect: document.getElementById('bondType').value === 'قبض' ? 'إيجابي' : 'سلبي'
             };
 
             await addDoc(collection(db, 'bonds'), bondData);
@@ -297,9 +321,9 @@
 
         document.getElementById('resetBtn').onclick = () => document.getElementById('bondForm').reset();
 
-        // 6. تحميل الإحصائيات
+        // 5. تحميل الإحصائيات
         async function loadStats() {
-            const q = query(collection(db, 'bonds'), where('createdBy', '==', userData.uid));
+            const q = query(collection(db, 'bonds'), where('createdBy', '==', currentUser.uid));
             const snap = await getDocs(q);
             let totalAmount = 0, todayAmount = 0, todayCount = 0;
             const today = getTodayDate();
@@ -319,18 +343,18 @@
             document.getElementById('todayAmount').textContent = formatMoney(todayAmount);
         }
 
-        // 7. تحميل السندات مع فلاتر
+        // 6. تحميل السندات مع فلاتر
         async function loadBonds() {
             let q = query(collection(db, 'bonds'),
-                where('createdBy', '==', userData.uid),
+                where('createdBy', '==', currentUser.uid),
                 orderBy('createdAt', 'desc')
             );
 
             const limitVal = document.getElementById('filterLimit').value;
-            if (limitVal!== 'all') q = query(q, limit(parseInt(limitVal)));
+            if (limitVal !== 'all') q = query(q, limit(parseInt(limitVal)));
 
             const snap = await getDocs(q);
-            let bonds = snap.docs.map(d => ({ id: d.id,...d.data() }));
+            let bonds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
             // فلترة بالجافاسكربت
             const search = document.getElementById('filterSearch').value.toLowerCase();
@@ -371,7 +395,7 @@
                                 <td class="p-3">${formatMoney(b.amount)}</td>
                                 <td class="p-3">${b.clientName || '-'}</td>
                                 <td class="p-3">${formatDate(b.createdAt)}</td>
-                                <td class="p-3"><span class="px-2 py-1 rounded text-xs ${b.status === 'مورد'? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${b.status}</span></td>
+                                <td class="p-3"><span class="px-2 py-1 rounded text-xs ${b.status === 'مورد' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${b.status}</span></td>
                                 <td class="p-3">
                                     <button onclick="viewBond('${b.id}')" class="text-blue-600 hover:underline text-sm">عرض</button>
                                 </td>
@@ -381,10 +405,10 @@
                 </table>
             `;
 
-            window.allBonds = bonds; // للتصدير
+            window.allBonds = bonds;
         }
 
-        // 8. عرض السند + QR + طباعة + واتساب
+        // 7. عرض السند + QR + طباعة + واتساب
         window.viewBond = async (id) => {
             const bondDoc = await getDoc(doc(db, 'bonds', id));
             const b = bondDoc.data();
@@ -393,7 +417,7 @@
             document.getElementById('bondPrintArea').innerHTML = `
                 <div class="bond-preview p-6">
                     <div class="text-center mb-6">
-                        <h2 class="text-2xl font-bold">${projectData.name}</h2>
+                        <h2 class="text-2xl font-bold">${currentUser.projectCode}</h2>
                         <p class="text-gray-600">سند ${b.bondType}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-6">
@@ -405,8 +429,8 @@
                         <div><strong>الصندوق:</strong> ${b.fundName || '-'}</div>
                     </div>
                     <div class="mb-6"><strong>المبلغ كتابة:</strong> ${toArabicNumbers(b.amount)} ريال سعودي فقط</div>
-                    <div class="mb-6"><strong>الحالة:</strong> <span class="font-bold ${b.status === 'مورد'? 'text-green-600' : 'text-yellow-600'}">${b.status}</span></div>
-                    ${b.notes? `<div class="mb-6"><strong>ملاحظات:</strong> ${b.notes}</div>` : ''}
+                    <div class="mb-6"><strong>الحالة:</strong> <span class="font-bold ${b.status === 'مورد' ? 'text-green-600' : 'text-yellow-600'}">${b.status}</span></div>
+                    ${b.notes ? `<div class="mb-6"><strong>ملاحظات:</strong> ${b.notes}</div>` : ''}
                     <div class="flex justify-between items-center mt-8">
                         <div><strong>المحاسب:</strong> ${b.accountantName || '-'}</div>
                         <div id="qrcode"></div>
@@ -417,7 +441,6 @@
             new QRCode(document.getElementById('qrcode'), { text: qrUrl, width: 100, height: 100 });
             document.getElementById('bondModal').classList.remove('hidden');
 
-            // أزرار
             document.getElementById('printBond').onclick = () => {
                 const element = document.getElementById('bondPrintArea');
                 html2pdf().from(element).save(`سند-${b.bondNumber}.pdf`);
@@ -434,7 +457,7 @@
             };
         };
 
-        // 9. تصدير Excel
+        // 8. تصدير Excel
         document.getElementById('exportExcel').onclick = () => {
             const ws = XLSX.utils.json_to_sheet(window.allBonds.map(b => ({
                 'رقم السند': b.bondNumber,
@@ -449,7 +472,7 @@
             XLSX.writeFile(wb, 'السندات.xlsx');
         };
 
-        // 10. تصدير PDF
+        // 9. تصدير PDF
         document.getElementById('exportPDF').onclick = () => {
             const element = document.getElementById('bondsTableContainer');
             html2pdf().from(element).save('السندات.pdf');
@@ -460,8 +483,6 @@
             document.getElementById(id).onchange = loadBonds;
         });
         document.getElementById('filterSearch').oninput = loadBonds;
-
-        loadStats();
     </script>
 </body>
-</html>  
+</html>
