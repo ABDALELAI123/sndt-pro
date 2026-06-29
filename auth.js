@@ -1,11 +1,12 @@
-// auth.js - نسخة مصححة نهائياً للسوبر ادمن اليدوي
+// auth.js - الإصدار 2.0 - نظام صلاحيات محترف
 import { auth, db } from './firebase.js?v=999999';
 import { 
     signInWithEmailAndPassword, 
     signOut,
-    onAuthStateChanged 
+    onAuthStateChanged,
+    createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { showError } from './core.js?v=999999';
 
 // بيانات السوبر ادمن الثابتة
@@ -27,7 +28,7 @@ export async function login(projectCode, phone, password) {
     try {
         console.log('login استقبل:', { projectCode, phone, password: '***' });
         
-        // تشييك السوبر ادمن أول - ما نحتاج ننشئه لأنه موجود يدوي
+        // تشييك السوبر ادمن أول
         if (projectCode === SUPER_ADMIN.code && phone === SUPER_ADMIN.phone && password === SUPER_ADMIN.password) {
             console.log('محاولة دخول السوبر ادمن');
             const userCredential = await signInWithEmailAndPassword(auth, SUPER_ADMIN.email, password);
@@ -54,16 +55,17 @@ export async function login(projectCode, phone, password) {
             throw new Error('كود المشروع غير صحيح');
         }
         
+        // تشييك الإيقاف
         if (userData.active === false) {
             await signOut(auth);
-            throw new Error('تم إيقاف حسابك');
+            throw new Error('تم إيقاف حسابك. تواصل مع الإدارة');
         }
 
-        // تحويل حسب الدور
-        if (userData.role === 'manager') {
+        // تحويل حسب الدور - كل الأدوار الإدارية تروح admin-panel
+        if (['admin', 'manager', 'viewer'].includes(userData.role)) {
             window.location.href = "admin-panel.html";
         } else if (userData.role === 'delegate') {
-            window.location.href = "bonds.html";
+            window.location.href = "delegate.html";
         } else {
             window.location.href = "index.html";
         }
@@ -79,7 +81,7 @@ export async function login(projectCode, phone, password) {
     }
 }
 
-// 3. إنشاء مشروع جديد
+// 3. إنشاء مشروع جديد - للسوبر ادمن فقط
 export async function createProject(projectName) {
     const projectCode = Math.random().toString(36).substring(2, 10).toUpperCase();
     
@@ -88,13 +90,19 @@ export async function createProject(projectName) {
         name: projectName,
         createdBy: auth.currentUser.uid,
         createdAt: new Date(),
-        active: true
+        active: true,
+        settings: {
+            logo: '',
+            terms: '',
+            showCreateBond: true,
+            showBondsTab: true
+        }
     });
 
     return { success: true, projectCode: projectCode };
 }
 
-// 4. إنشاء حساب مدير أو مندوب
+// 4. إنشاء حساب مدير أو مندوب أو مشاهد
 export async function createUser(projectCode, phone, password, role, name) {
     try {
         const projectsRef = collection(db, 'projects');
@@ -113,9 +121,35 @@ export async function createUser(projectCode, phone, password, role, name) {
         }
 
         const email = generateEmail(projectCode, phone);
-        // استورد createUserWithEmailAndPassword هنا لو احتجته
-        const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // صلاحيات حسب الدور
+        let permissions = {};
+        if (role === 'admin') {
+            permissions = {
+                manage_managers: true,
+                manage_delegates: true,
+                manage_bonds: true,
+                edit_settings: true,
+                delete_items: true
+            };
+        } else if (role === 'manager') {
+            permissions = {
+                manage_delegates: true,
+                manage_bonds: true,
+                add_delegate: true,
+                view_reports: true
+            };
+        } else if (role === 'viewer') {
+            permissions = {
+                view_bonds: true
+            };
+        } else if (role === 'delegate') {
+            permissions = {
+                add_bond: true,
+                view_own_bonds: true
+            };
+        }
         
         await setDoc(doc(db, 'users', userCredential.user.uid), {
             role: role,
@@ -123,16 +157,8 @@ export async function createUser(projectCode, phone, password, role, name) {
             projectCode: projectCode,
             name: name,
             email: email,
-            active: true,
-            permissions: role === 'manager' ? {
-                add_delegate: true,
-                view_reports: true,
-                edit_bonds: true,
-                create_delegate: true
-            } : {
-                add_bond: true,
-                view_own_bonds: true
-            },
+            active: true, // نشط افتراضياً
+            permissions: permissions,
             createdAt: new Date()
         });
 
@@ -144,12 +170,51 @@ export async function createUser(projectCode, phone, password, role, name) {
     }
 }
 
-// 5. جلب بيانات المستخدم الحالي
+// 5. تحديث بيانات مستخدم - للتعديل
+export async function updateUser(userId, data) {
+    try {
+        await updateDoc(doc(db, 'users', userId), {
+            ...data,
+            updatedAt: new Date()
+        });
+        return { success: true };
+    } catch (error) {
+        throw new Error('فشل تحديث المستخدم: ' + error.message);
+    }
+}
+
+// 6. إيقاف/تنشيط مستخدم
+export async function toggleUserStatus(userId, newStatus) {
+    try {
+        await updateDoc(doc(db, 'users', userId), {
+            active: newStatus,
+            updatedAt: new Date()
+        });
+        return { success: true };
+    } catch (error) {
+        throw new Error('فشل تغيير حالة المستخدم: ' + error.message);
+    }
+}
+
+// 7. جلب بيانات المستخدم الحالي
 export async function getCurrentUserData() {
     return new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             unsubscribe();
             if (user) {
+                // تشييك السوبر ادمن
+                if (user.email === SUPER_ADMIN.email) {
+                    resolve({ 
+                        uid: user.uid, 
+                        email: user.email,
+                        role: 'superadmin', 
+                        name: 'السوبر ادمن',
+                        projectCode: SUPER_ADMIN.code,
+                        active: true
+                    });
+                    return;
+                }
+                
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
                     resolve({ uid: user.uid, ...userDoc.data() });
@@ -163,13 +228,13 @@ export async function getCurrentUserData() {
     });
 }
 
-// 6. تشييك هل المستخدم سوبر ادمن
+// 8. تشييك هل المستخدم سوبر ادمن
 export async function isSuperAdmin() {
     const userData = await getCurrentUserData();
     return userData?.role === 'superadmin';
 }
 
-// 7. تسجيل الخروج
+// 9. تسجيل الخروج
 export async function logout() {
     await signOut(auth);
     localStorage.clear();
