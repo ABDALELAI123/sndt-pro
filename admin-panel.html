@@ -16,6 +16,7 @@
         }
         .hidden { display: none!important; }
         .tab-btn.active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 800; background: #eff6ff; }
+        .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
     </style>
 
     <script type="module">
@@ -47,8 +48,8 @@
                 <div>
                     <h1 class="text-2xl font-extrabold" data-i18n="dashboard">لوحة التحكم الرئيسية</h1>
                     <p class="text-sm text-gray-500" id="welcomeMsg">مرحباً بك</p>
+                    <span id="roleBadge" class="badge"></span>
                 </div>
-            </div>
             <div class="flex gap-2">
                 <button onclick="setLanguage(localStorage.getItem('language') === 'ar'? 'en' : 'ar')" 
                         class="bg-white hover:bg-gray-100 px-4 py-2 rounded-xl font-bold transition text-lg shadow">🌍</button>
@@ -60,20 +61,20 @@
 
         <!-- التبويبات -->
         <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl mb-6">
-            <div class="flex border-b overflow-x-auto">
-                <button data-tab="projects" class="tab-btn px-6 py-4 font-bold border-b-4 border-blue-600 text-blue-600 bg-blue-50 active">
+            <div class="flex border-b overflow-x-auto" id="tabsContainer">
+                <button data-tab="projects" id="tab-projects" class="tab-btn px-6 py-4 font-bold border-b-4 border-blue-600 text-blue-600 bg-blue-50 active">
                     <i class="fas fa-building ml-2"></i>المشاريع
                 </button>
-                <button data-tab="managers" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
+                <button data-tab="managers" id="tab-managers" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-users-cog ml-2"></i><span data-i18n="managers">المدراء</span>
                 </button>
-                <button data-tab="delegates" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
+                <button data-tab="delegates" id="tab-delegates" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-user-tie ml-2"></i><span data-i18n="delegates">المناديب</span>
                 </button>
-                <button data-tab="bonds" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
+                <button data-tab="bonds" id="tab-bonds" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-file-invoice-dollar ml-2"></i><span data-i18n="bonds">السندات</span>
                 </button>
-                <button data-tab="settings" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
+                <button data-tab="settings" id="tab-settings" class="tab-btn px-6 py-4 font-bold text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-cog ml-2"></i>إعدادات المشروع
                 </button>
             </div>
@@ -84,10 +85,10 @@
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <i class="fas fa-building text-blue-600"></i>إدارة المشاريع
             </h2>
-            <div class="grid md:grid-cols-3 gap-3 mb-6">
-                <input id="projectName" placeholder="اسم المشروع/الشركة" 
+            <div id="createProjectForm" class="grid md:grid-cols-3 gap-3 mb-6">
+                <input id="projectName" autocomplete="off" placeholder="اسم المشروع/الشركة" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="projectCodeInput" placeholder="كود المشروع مثل TAQWA01" 
+                <input id="projectCodeInput" autocomplete="off" placeholder="كود المشروع مثل TAQWA01" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none uppercase" dir="ltr">
                 <button id="addProjectBtn" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
                     <i class="fas fa-plus ml-2"></i>إنشاء مشروع
@@ -96,20 +97,20 @@
             <div id="projectsList" class="space-y-3"></div>
         </div>
 
-        <!-- تبويب المدراء - معدل -->
+        <!-- تبويب المدراء -->
         <div id="managersTab" class="tab-content hidden bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <i class="fas fa-users-cog text-blue-600"></i><span data-i18n="managersManagement">إدارة المدراء</span>
             </h2>
-            <div class="grid md:grid-cols-6 gap-3 mb-6">
-                <input id="managerName" placeholder="اسم المدير" 
+            <div id="addManagerForm" class="grid md:grid-cols-6 gap-3 mb-6">
+                <input id="managerName" autocomplete="off" placeholder="اسم المدير" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="managerPhone" placeholder="رقم الجوال" 
+                <input id="managerPhone" autocomplete="off" placeholder="رقم الجوال" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
                 <select id="managerProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="">اختر المشروع</option>
                 </select>
-                <input id="managerPassword" type="password" placeholder="كلمة المرور" 
+                <input id="managerPassword" type="password" autocomplete="new-password" placeholder="كلمة المرور" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                 <select id="managerRole" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="admin">مدير عام - كل الصلاحيات</option>
@@ -128,15 +129,15 @@
             <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                 <i class="fas fa-user-tie text-blue-600"></i><span data-i18n="delegatesManagement">إدارة المناديب</span>
             </h2>
-            <div class="grid md:grid-cols-5 gap-3 mb-6">
-                <input id="delegateName" placeholder="اسم المندوب" 
+            <div id="addDelegateForm" class="grid md:grid-cols-5 gap-3 mb-6">
+                <input id="delegateName" autocomplete="off" placeholder="اسم المندوب" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                <input id="delegatePhone" placeholder="رقم الجوال" 
+                <input id="delegatePhone" autocomplete="off" placeholder="رقم الجوال" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
                 <select id="delegateProjectCode" class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                     <option value="">اختر المشروع</option>
                 </select>
-                <input id="delegatePassword" type="password" placeholder="كلمة المرور" 
+                <input id="delegatePassword" type="password" autocomplete="new-password" placeholder="كلمة المرور" 
                        class="border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                 <button id="addDelegateBtn" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition">
                     <i class="fas fa-plus ml-2"></i><span data-i18n="add">إضافة</span>
@@ -180,7 +181,7 @@
             <div id="projectSettingsForm" class="hidden space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">لوجو المشروع - رابط صورة</label>
-                    <input id="projectLogo" placeholder="https://example.com/logo.png"
+                    <input id="projectLogo" autocomplete="off" placeholder="https://example.com/logo.png"
                            class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none" dir="ltr">
                 </div>
                 <div>
@@ -219,6 +220,51 @@
     let allManagers = [];
     let allDelegates = [];
     let allBonds = [];
+    let editingManagerId = null;
+
+    // نظام الصلاحيات الجديد RBAC
+    const PERMISSIONS = {
+        superadmin: { 
+            canCreateProject: true, 
+            canViewAllProjects: true,
+            canManageManagers: true, 
+            canManageDelegates: true, 
+            canManageBonds: true,
+            canEditSettings: true,
+            canDelete: true,
+            maxProjects: -1 // غير محدود
+        },
+        admin: { 
+            canCreateProject: false, // الباقة العالية تسمح لاحقاً
+            canViewAllProjects: false,
+            canManageManagers: true, 
+            canManageDelegates: true, 
+            canManageBonds: true,
+            canEditSettings: true,
+            canDelete: true,
+            maxProjects: 0 
+        },
+        manager: { 
+            canCreateProject: false, 
+            canViewAllProjects: false,
+            canManageManagers: false, 
+            canManageDelegates: true, 
+            canManageBonds: true,
+            canEditSettings: false,
+            canDelete: false,
+            maxProjects: 0
+        },
+        viewer: { 
+            canCreateProject: false, 
+            canViewAllProjects: false,
+            canManageManagers: false, 
+            canManageDelegates: false, 
+            canManageBonds: false,
+            canEditSettings: false,
+            canDelete: false,
+            maxProjects: 0
+        }
+    };
 
     // 1. تحقق من المستخدم
     onAuthStateChanged(auth, async (user) => {
@@ -241,25 +287,76 @@
             currentUser = await getCurrentUserData();
         }
 
-        if (!currentUser || (currentUser.role !== 'superadmin' && currentUser.role !== 'manager' && currentUser.role !== 'admin')) {
-            Swal.fire('خطأ', 'غير مصرح لك بالدخول', 'error').then(() => {
-                logout();
-            });
+        if (!currentUser || !PERMISSIONS[currentUser.role]) {
+            Swal.fire('خطأ', 'غير مصرح لك بالدخول', 'error').then(() => logout());
             return;
         }
 
+        applyPermissions();
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
         document.getElementById('welcomeMsg').textContent = `مرحباً ${currentUser.name}`;
         loadAllData();
     });
 
-    // 2. خروج
-    document.getElementById('logoutBtn').onclick = async () => {
-        await logout();
-    };
+    // 2. تطبيق الصلاحيات على الواجهة
+    function applyPermissions() {
+        const perms = PERMISSIONS[currentUser.role];
+        const roleNames = {
+            superadmin: 'سوبر ادمن',
+            admin: 'مدير عام',
+            manager: 'مدير',
+            viewer: 'مشاهد'
+        };
+        
+        // بادج الدور
+        const badgeColors = {
+            superadmin: 'bg-red-500 text-white',
+            admin: 'bg-purple-500 text-white',
+            manager: 'bg-blue-500 text-white',
+            viewer: 'bg-gray-500 text-white'
+        };
+        document.getElementById('roleBadge').className = `badge ${badgeColors[currentUser.role]}`;
+        document.getElementById('roleBadge').textContent = roleNames[currentUser.role];
+        
+        // إخفاء تبويب المشاريع
+        if (!perms.canViewAllProjects) {
+            document.getElementById('tab-projects').classList.add('hidden');
+            document.getElementById('projectsTab').classList.add('hidden');
+        }
+        
+        // إخفاء فورم إنشاء مشروع
+        if (!perms.canCreateProject) {
+            document.getElementById('createProjectForm').classList.add('hidden');
+        }
 
-    // 3. التبويبات
+        // إخفاء إدارة المدراء
+        if (!perms.canManageManagers) {
+            document.getElementById('tab-managers').classList.add('hidden');
+            document.getElementById('managersTab').classList.add('hidden');
+            document.getElementById('addManagerForm').classList.add('hidden');
+        }
+
+        // إخفاء إدارة المناديب
+        if (!perms.canManageDelegates) {
+            document.getElementById('addDelegateForm').classList.add('hidden');
+        }
+
+        // إخفاء الإعدادات
+        if (!perms.canEditSettings) {
+            document.getElementById('tab-settings').classList.add('hidden');
+            document.getElementById('settingsTab').classList.add('hidden');
+        }
+
+        // تفعيل أول تبويب متاح
+        const firstVisibleTab = document.querySelector('.tab-btn:not(.hidden)');
+        if (firstVisibleTab) firstVisibleTab.click();
+    }
+
+    // 3. خروج
+    document.getElementById('logoutBtn').onclick = async () => { await logout(); };
+
+    // 4. التبويبات
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.onclick = () => {
             const tab = btn.dataset.tab;
@@ -274,30 +371,51 @@
         };
     });
 
-    // 4. تحميل البيانات
+    // 5. تحميل البيانات
     function loadAllData() {
-        onSnapshot(collection(db, 'projects'), (snapshot) => {
+        const perms = PERMISSIONS[currentUser.role];
+        
+        // المشاريع
+        let projectsQuery = collection(db, 'projects');
+        if (currentUser.role !== 'superadmin') {
+            projectsQuery = query(collection(db, 'projects'), where('code', '==', currentUser.projectCode));
+        }
+        onSnapshot(projectsQuery, (snapshot) => {
             allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderProjects();
             renderProjectOptions();
         });
 
-        onSnapshot(collection(db, 'users'), (snapshot) => {
+        // المستخدمين
+        let usersQuery = collection(db, 'users');
+        if (currentUser.role !== 'superadmin') {
+            usersQuery = query(collection(db, 'users'), where('projectCode', '==', currentUser.projectCode));
+        }
+        onSnapshot(usersQuery, (snapshot) => {
             const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            allManagers = users.filter(u => u.role === 'admin' || u.role === 'manager' || u.role === 'viewer');
+            allManagers = users.filter(u => ['admin', 'manager', 'viewer'].includes(u.role));
             allDelegates = users.filter(u => u.role === 'delegate');
             renderManagers();
             renderDelegates();
         });
 
-        onSnapshot(collection(db, 'bonds'), (snapshot) => {
+        // السندات
+        let bondsQuery = collection(db, 'bonds');
+        if (currentUser.role !== 'superadmin') {
+            bondsQuery = query(collection(db, 'bonds'), where('projectCode', '==', currentUser.projectCode));
+        }
+        onSnapshot(bondsQuery, (snapshot) => {
             allBonds = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderBonds();
         });
     }
 
-    // 5. إنشاء مشروع
+    // 6. إنشاء مشروع - مع تشيك الصلاحية
     document.getElementById('addProjectBtn').onclick = async () => {
+        if (!PERMISSIONS[currentUser.role].canCreateProject) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية إنشاء مشاريع', 'error');
+        }
+        
         const name = document.getElementById('projectName').value.trim();
         const code = document.getElementById('projectCodeInput').value.trim().toUpperCase();
         if (!name || !code) return Swal.fire('تنبيه', 'املأ اسم وكود المشروع', 'warning');
@@ -308,12 +426,7 @@
                 createdBy: currentUser.uid,
                 createdAt: serverTimestamp(),
                 active: true,
-                settings: {
-                    logo: '',
-                    terms: '',
-                    showCreateBond: true,
-                    showBondsTab: true
-                }
+                settings: { logo: '', terms: '', showCreateBond: true, showBondsTab: true }
             });
             document.getElementById('projectName').value = '';
             document.getElementById('projectCodeInput').value = '';
@@ -323,34 +436,58 @@
         }
     };
 
-    // 6. إضافة مدير - ينشئ حساب فعلي
+    // 7. إضافة/تعديل مدير
     document.getElementById('addManagerBtn').onclick = async () => {
+        if (!PERMISSIONS[currentUser.role].canManageManagers) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المدراء', 'error');
+        }
+
         const name = document.getElementById('managerName').value.trim();
         const phone = document.getElementById('managerPhone').value.trim();
-        const projectCode = document.getElementById('managerProjectCode').value;
+        const projectCode = currentUser.role === 'superadmin' 
+            ? document.getElementById('managerProjectCode').value 
+            : currentUser.projectCode;
         const password = document.getElementById('managerPassword').value;
         const role = document.getElementById('managerRole').value;
         
-        if (!name || !phone || !projectCode || !password) {
+        if (!name || !phone || !projectCode || (!password && !editingManagerId)) {
             return Swal.fire('تنبيه', 'املأ جميع الحقول', 'warning');
         }
 
         try {
-            await createUser(projectCode, phone, password, role, name);
+            if (editingManagerId) {
+                // تعديل
+                const updateData = { name, phone, projectCode, role, active: true };
+                if (password) updateData.password = password; // لازم Cloud Function تغيره في Auth
+                await updateDoc(doc(db, 'users', editingManagerId), updateData);
+                Swal.fire('تم', 'تم تحديث المدير بنجاح', 'success');
+                editingManagerId = null;
+                document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
+            } else {
+                // إضافة
+                await createUser(projectCode, phone, password, role, name);
+                Swal.fire('تم', 'تم إنشاء حساب المدير بنجاح', 'success');
+            }
+            
             document.getElementById('managerName').value = '';
             document.getElementById('managerPhone').value = '';
             document.getElementById('managerPassword').value = '';
-            Swal.fire('تم', 'تم إنشاء حساب المدير بنجاح', 'success');
         } catch (error) {
             Swal.fire('خطأ', error.message, 'error');
         }
     };
 
-    // 7. إضافة مندوب - ينشئ حساب فعلي
+    // 8. إضافة مندوب
     document.getElementById('addDelegateBtn').onclick = async () => {
+        if (!PERMISSIONS[currentUser.role].canManageDelegates) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية إدارة المناديب', 'error');
+        }
+
         const name = document.getElementById('delegateName').value.trim();
         const phone = document.getElementById('delegatePhone').value.trim();
-        const projectCode = document.getElementById('delegateProjectCode').value;
+        const projectCode = currentUser.role === 'superadmin' 
+            ? document.getElementById('delegateProjectCode').value 
+            : currentUser.projectCode;
         const password = document.getElementById('delegatePassword').value;
         
         if (!name || !phone || !projectCode || !password) {
@@ -368,8 +505,12 @@
         }
     };
 
-    // 8. حفظ إعدادات المشروع
+    // 9. حفظ إعدادات المشروع
     document.getElementById('saveSettingsBtn').onclick = async () => {
+        if (!PERMISSIONS[currentUser.role].canEditSettings) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية تعديل الإعدادات', 'error');
+        }
+
         const projectCode = document.getElementById('settingsProjectCode').value;
         if (!projectCode) return;
 
@@ -391,7 +532,6 @@
         }
     };
 
-    // 9. تحميل إعدادات المشروع عند الاختيار
     document.getElementById('settingsProjectCode').onchange = (e) => {
         const projectCode = e.target.value;
         const form = document.getElementById('projectSettingsForm');
@@ -399,7 +539,6 @@
             form.classList.add('hidden');
             return;
         }
-
         const project = allProjects.find(p => p.code === projectCode);
         if (project && project.settings) {
             document.getElementById('projectLogo').value = project.settings.logo || '';
@@ -412,6 +551,7 @@
 
     // دوال العرض
     function renderProjects() {
+        const perms = PERMISSIONS[currentUser.role];
         document.getElementById('projectsList').innerHTML = allProjects.map(p => `
             <div class="border-2 border-gray-100 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition">
                 <div class="flex items-center gap-3">
@@ -422,10 +562,10 @@
                         <b class="text-lg">${p.name}</b>
                         <p class="text-sm text-gray-500">الكود: ${p.code}</p>
                     </div>
-                </div>
+                ${perms.canDelete ? `
                 <button onclick="deleteItem('projects', '${p.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
                     <i class="fas fa-trash"></i>
-                </button>
+                </button>` : ''}
             </div>
         `).join('') || `<p class="text-gray-400 text-center py-8">لا توجد مشاريع</p>`;
     }
@@ -439,25 +579,45 @@
     }
 
     function renderManagers() {
+        const perms = PERMISSIONS[currentUser.role];
+        const roleLabels = { admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
+        const roleColors = { admin: 'bg-purple-100 text-purple-700', manager: 'bg-blue-100 text-blue-700', viewer: 'bg-gray-100 text-gray-700' };
+        
         document.getElementById('managersList').innerHTML = allManagers.map(m => `
-            <div class="border-2 border-gray-100 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-user-shield text-blue-600"></i>
+            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user-shield text-blue-600"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <b class="text-lg">${m.name}</b>
+                                <span class="badge ${roleColors[m.role]}">${roleLabels[m.role]}</span>
+                                ${m.active === false ? '<span class="badge bg-red-100 text-red-700">موقوف</span>' : '<span class="badge bg-green-100 text-green-700">نشط</span>'}
+                            </div>
+                            <p class="text-sm text-gray-500">${m.phone} - ${m.projectCode}</p>
+                        </div>
                     </div>
-                    <div>
-                        <b class="text-lg">${m.name}</b>
-                        <p class="text-sm text-gray-500">${m.phone} - ${m.projectCode} - ${m.role}</p>
-                    </div>
+                    ${perms.canManageManagers ? `
+                    <div class="flex gap-2">
+                        <button onclick="editManager('${m.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="toggleUserStatus('${m.id}', ${m.active !== false})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition" title="${m.active !== false ? 'إيقاف' : 'تنشيط'}">
+                            <i class="fas fa-${m.active !== false ? 'ban' : 'check'}"></i>
+                        </button>
+                        <button onclick="deleteUser('${m.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition" title="حذف نهائي">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>` : ''}
                 </div>
-                <button onclick="deleteUser('${m.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-                    <i class="fas fa-trash"></i>
-                </button>
             </div>
         `).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مدراء</p>`;
     }
 
     function renderDelegates() {
+        const perms = PERMISSIONS[currentUser.role];
         document.getElementById('delegatesList').innerHTML = allDelegates.map(d => `
             <div class="border-2 border-gray-100 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition">
                 <div class="flex items-center gap-3">
@@ -468,9 +628,11 @@
                         <b class="text-lg">${d.name}</b>
                         <p class="text-sm text-gray-500">${d.phone} - ${d.projectCode}</p>
                     </div>
+                </div>
+                ${perms.canManageDelegates ? `
                 <button onclick="deleteUser('${d.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
                     <i class="fas fa-trash"></i>
-                </button>
+                </button>` : ''}
             </div>
         `).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مناديب</p>`;
     }
@@ -481,18 +643,16 @@
         const filterProject = document.getElementById('filterProject').value;
         
         let filtered = allBonds.filter(b => {
-            const matchSearch = !searchTerm || 
-                b.from?.toLowerCase().includes(searchTerm) || 
-                b.to?.toLowerCase().includes(searchTerm) ||
-                b.reason?.toLowerCase().includes(searchTerm);
+            const matchSearch = !searchTerm || b.from?.toLowerCase().includes(searchTerm) || b.to?.toLowerCase().includes(searchTerm) || b.reason?.toLowerCase().includes(searchTerm);
             const matchType = !filterType || b.type === filterType;
             const matchProject = !filterProject || b.projectCode === filterProject;
             return matchSearch && matchType && matchProject;
         });
 
-        document.getElementById('bondsList').innerHTML = filtered.map(b => {
+                    document.getElementById('bondsList').innerHTML = filtered.map(b => {
             const delegate = allDelegates.find(d => d.id === b.delegateId);
             const date = b.createdAt?.toDate ? b.createdAt.toDate().toLocaleString('ar-SA') : '-';
+            const perms = PERMISSIONS[currentUser.role];
             return `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition">
                 <div class="flex justify-between items-start mb-2">
@@ -505,6 +665,10 @@
                             <p class="text-sm text-gray-500">${date} | ${b.projectCode || '-'}</p>
                         </div>
                     </div>
+                    ${perms.canDelete ? `
+                    <button onclick="deleteItem('bonds', '${b.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition">
+                        <i class="fas fa-trash"></i>
+                    </button>` : ''}
                 </div>
                 <div class="text-sm text-gray-600 mr-15">
                     <p><b>من:</b> ${b.from} | <b>إلى:</b> ${b.to}</p>
@@ -514,20 +678,73 @@
         `}).join('') || `<p class="text-gray-400 text-center py-8">لا توجد سندات</p>`;
     }
 
-    async function deleteUser(id) {
+    // دوال إدارة المستخدمين الجديدة
+    async function editManager(id) {
+        const manager = allManagers.find(m => m.id === id);
+        if (!manager) return;
+        
+        editingManagerId = id;
+        document.getElementById('managerName').value = manager.name;
+        document.getElementById('managerPhone').value = manager.phone;
+        document.getElementById('managerProjectCode').value = manager.projectCode;
+        document.getElementById('managerRole').value = manager.role;
+        document.getElementById('managerPassword').value = ''; // فاضي للأمان
+        document.getElementById('managerPassword').placeholder = 'اتركه فاضي لو ما تبي تغير الباسورد';
+        document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-save ml-2"></i>حفظ التعديل';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.editManager = editManager;
+
+    async function toggleUserStatus(id, currentStatus) {
+        const perms = PERMISSIONS[currentUser.role];
+        if (!perms.canManageManagers) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية إيقاف/تنشيط المستخدمين', 'error');
+        }
+
+        const action = currentStatus ? 'إيقاف' : 'تنشيط';
         const result = await Swal.fire({
-            title: 'تأكيد الحذف',
-            text: 'سيتم حذف المستخدم نهائياً',
+            title: `${action} المستخدم؟`,
+            text: currentStatus ? 'سيتم منع المستخدم من الدخول' : 'سيتم السماح للمستخدم بالدخول',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'نعم احذف',
+            confirmButtonText: `نعم، ${action}`,
             cancelButtonText: 'إلغاء'
         });
 
         if (result.isConfirmed) {
             try {
+                await updateDoc(doc(db, 'users', id), { 
+                    active: !currentStatus,
+                    updatedAt: serverTimestamp() 
+                });
+                Swal.fire('تم', `تم ${action} المستخدم بنجاح`, 'success');
+            } catch (error) {
+                Swal.fire('خطأ', error.message, 'error');
+            }
+        }
+    }
+    window.toggleUserStatus = toggleUserStatus;
+
+    async function deleteUser(id) {
+        const perms = PERMISSIONS[currentUser.role];
+        if (!perms.canDelete) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية الحذف النهائي', 'error');
+        }
+
+        const result = await Swal.fire({
+            title: 'حذف نهائي؟',
+            html: 'سيتم حذف المستخدم من قاعدة البيانات.<br><b class="text-red-600">تحذير: لازم تحذفه يدوي من Firebase Authentication عشان يقبل نفس الرقم مرة ثانية</b>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'نعم احذف من قاعدة البيانات',
+            cancelButtonText: 'إلغاء',
+            confirmButtonColor: '#dc2626'
+        });
+
+        if (result.isConfirmed) {
+            try {
                 await deleteDoc(doc(db, 'users', id));
-                Swal.fire('تم', 'تم الحذف بنجاح', 'success');
+                Swal.fire('تم الحذف', 'تم حذف المستخدم من قاعدة البيانات. لا تنسى تحذفه من Authentication', 'success');
             } catch (error) {
                 Swal.fire('خطأ', error.message, 'error');
             }
@@ -536,6 +753,11 @@
     window.deleteUser = deleteUser;
 
     async function deleteItem(type, id) {
+        const perms = PERMISSIONS[currentUser.role];
+        if (!perms.canDelete) {
+            return Swal.fire('مرفوض', 'ليس لديك صلاحية الحذف', 'error');
+        }
+
         const result = await Swal.fire({
             title: 'تأكيد الحذف',
             text: 'سيتم الحذف نهائياً',
@@ -561,6 +783,7 @@
         e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     };
 
+    // فلترة السندات
     document.getElementById('searchBonds').oninput = renderBonds;
     document.getElementById('filterType').onchange = renderBonds;
     document.getElementById('filterProject').onchange = renderBonds;
