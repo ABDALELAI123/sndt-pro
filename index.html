@@ -6,186 +6,93 @@
     <title>تسجيل الدخول - سندات برو</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { font-family: 'Tajawal', sans-serif; }
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Cairo', sans-serif; background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); min-height: 100vh; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-600 to-blue-800 min-h-screen flex items-center justify-center p-4">
+<body class="p-4 flex items-center justify-center">
 
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        <!-- الشعار -->
-        <div class="text-center mb-8">
-            <div class="bg-blue-600 w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-4">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-800">سندات برو</h1>
-            <p class="text-gray-500 mt-2">نظام إدارة السندات الذكي</p>
-        </div>
-
-        <!-- نموذج الدخول -->
-        <form id="loginForm" class="space-y-5">
-            <div>
-                <label class="block text-gray-700 font-bold mb-2">كود المشروع</label>
-                <input 
-                    type="text" 
-                    id="projectCode" 
-                    class="w-full p-4 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center text-lg tracking-widest uppercase" 
-                    placeholder="ABCD1234"
-                    required
-                    autocomplete="off">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-file-invoice-dollar text-white text-3xl"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold text-gray-800">سندات برو</h1>
+                <p class="text-gray-500 mt-2">نظام إدارة السندات الذكي</p>
             </div>
 
-            <div>
-                <label class="block text-gray-700 font-bold mb-2">رقم الجوال</label>
-                <input 
-                    type="tel" 
-                    id="phone" 
-                    class="w-full p-4 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center text-lg" 
-                    placeholder="05xxxxxxxx"
-                    required
-                    autocomplete="off">
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">كود المشروع</label>
+                    <input id="projectCode" type="text" placeholder="ABCD1234" class="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-blue-500 outline-none text-lg uppercase text-center" dir="ltr" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">رقم الجوال</label>
+                    <input id="phone" type="tel" placeholder="0597087767" class="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-blue-500 outline-none text-lg text-center" dir="ltr" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">كلمة المرور</label>
+                    <input id="password" type="password" placeholder="••••••" class="w-full border-2 border-gray-200 p-4 rounded-xl focus:border-blue-500 outline-none text-lg text-center" required>
+                </div>
+
+                <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl font-bold text-lg hover:opacity-90 transition shadow-lg">
+                    <i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>جميع الحقوق محفوظة © 2026 سندات برو</p>
             </div>
-
-            <div>
-                <label class="block text-gray-700 font-bold mb-2">كلمة المرور</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    class="w-full p-4 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-center text-lg" 
-                    placeholder="••••••"
-                    required
-                    autocomplete="off">
-            </div>
-
-            <button 
-                type="submit" 
-                id="loginBtn"
-                class="w-full bg-blue-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition disabled:bg-gray-400">
-                <span id="btnText">تسجيل الدخول</span>
-                <span id="btnLoader" class="loader hidden"></span>
-            </button>
-        </form>
-
-        <!-- تذييل -->
-        <div class="mt-8 text-center text-sm text-gray-500">
-            <p>جميع الحقوق محفوظة © 2026 سندات برو</p>
         </div>
     </div>
 
-    <script type="module">
-        import { auth } from './firebase.js?v=999999';
-        import { login, getCurrentUserData } from './auth.js?v=999999';
-        import { showError } from './core.js?v=999999';
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+    import { login } from './auth.js?v=999999';
 
-        // 🔥 الحل الجذري: فلاق يمنع اللوب
-        let authChecked = false;
+    // تنظيف كود المشروع
+    document.getElementById('projectCode').oninput = (e) => {
+        e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    };
 
-        // 1. لو المستخدم مسجل دخول، وجهه للصفحة المناسبة
-        onAuthStateChanged(auth, async (user) => {
-            if (authChecked) return; // لو شيكنا قبل، لا تعيد
-            
-            // لو جاي من تسجيل خروج، لا تحول
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('logout') === 'true') {
-                authChecked = true;
-                return;
-            }
+    // منع الإرسال العادي للفورم
+    document.getElementById('loginForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الدخول...';
 
-            if (user) {
-                const userData = await getCurrentUserData();
-                authChecked = true; // علمنا اننا شيكنا
-                
-                if (!userData) {
-                    console.error('بيانات المستخدم فاضية - بسجل خروج');
-                    await signOut(auth);
-                    return;
-                }
+        const projectCode = document.getElementById('projectCode').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const password = document.getElementById('password').value;
 
-                console.log('تسجيل دخول تلقائي - الدور:', userData.role);
-                redirectUser(userData);
-            } else {
-                authChecked = true;
-            }
-        });
-
-        // 2. توجيه المستخدم حسب صلاحيته - مصحح
-        function redirectUser(userData) {
-            if (!userData) return;
-            
-            console.log('تحويل حسب الدور:', userData.role);
-            
-            if (['superadmin', 'admin', 'manager', 'viewer'].includes(userData.role)) {
-                window.location.href = 'admin-panel.html';
-            } else if (userData.role === 'delegate') {
-                window.location.href = 'delegate.html'; // 🔥 مصلح: كان bonds.html
-            } else {
-                console.error('دور غير معروف:', userData.role);
-                showError('دور المستخدم غير صحيح');
-            }
+        if (!projectCode || !phone || !password) {
+            Swal.fire('تنبيه', 'املأ جميع الحقول', 'warning');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول';
+            return;
         }
 
-        // 3. تسجيل الدخول
-        document.getElementById('loginForm').onsubmit = async (e) => {
-            e.preventDefault();
-            
-            const projectCode = document.getElementById('projectCode').value.trim().toUpperCase();
-            const phone = document.getElementById('phone').value.trim();
-            const password = document.getElementById('password').value;
+        try {
+            await login(projectCode, phone, password);
+            // لو نجح، auth.js بيحوله تلقائي
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt ml-2"></i> تسجيل الدخول';
+        }
+    };
 
-            console.log('بيانات الفورم:', { projectCode, phone }); 
+    // لو فيه ?logout=true امسح الكاش
+    if (window.location.search.includes('logout=true')) {
+        localStorage.clear();
+        sessionStorage.clear();
+    }
+</script>
 
-            // تحقق سريع
-            if (!projectCode || !phone || !password) {
-                showError('الرجاء تعبئة جميع الحقول');
-                return;
-            }
-
-            // وضع التحميل
-            const btn = document.getElementById('loginBtn');
-            const btnText = document.getElementById('btnText');
-            const btnLoader = document.getElementById('btnLoader');
-            btn.disabled = true;
-            btnText.classList.add('hidden');
-            btnLoader.classList.remove('hidden');
-
-            try {
-                const userData = await login(projectCode, phone, password);
-                // auth.js الحين يحول تلقائي، بس نخلي هذا احتياط
-                redirectUser(userData);
-            } catch (error) {
-                showError(error.message);
-                btn.disabled = false;
-                btnText.classList.remove('hidden');
-                btnLoader.classList.add('hidden');
-            }
-        };
-
-        // 4. تنظيف كود المشروع تلقائي
-        document.getElementById('projectCode').oninput = (e) => {
-            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        };
-
-        // 5. تنظيف رقم الجوال تلقائي
-        document.getElementById('phone').oninput = (e) => {
-            e.target.value = e.target.value.replace(/[^0-9]/g, '');
-        };
-    </script>
 </body>
 </html>
