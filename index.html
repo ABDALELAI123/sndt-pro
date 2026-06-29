@@ -90,7 +90,7 @@
 
     <script type="module">
         import { auth } from './firebase.js?v=999999';
-        import { login, getCurrentUserData } from './auth.js?v=999999'; // هذا السطر المهم
+        import { login, getCurrentUserData } from './auth.js?v=999999';
         import { showError } from './core.js?v=999999';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -98,20 +98,24 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userData = await getCurrentUserData();
-                redirectUser(userData);
+                // لا تحول لو أنت في صفحة الدخول أصلاً
+                if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
+                    redirectUser(userData);
+                }
             }
         });
 
-        // 2. توجيه المستخدم حسب صلاحيته
+        // 2. توجيه المستخدم حسب صلاحيته - مصحح
         function redirectUser(userData) {
             if (!userData) return;
             
-            if (userData.role === 'superadmin') {
-                window.location.href = 'super-admin.html';
-            } else if (userData.role === 'manager') {
-                window.location.href = 'manager.html';
+            if (userData.role === 'superadmin' || userData.role === 'manager' || userData.role === 'admin') {
+                window.location.href = 'admin-panel.html';
             } else if (userData.role === 'delegate') {
-                window.location.href = 'delegate.html';
+                window.location.href = 'bonds.html';
+            } else {
+                // لو دور غريب خليه في index
+                console.log('دور غير معروف:', userData.role);
             }
         }
 
@@ -141,6 +145,7 @@
 
             try {
                 const userData = await login(projectCode, phone, password);
+                // auth.js الحين يحول تلقائي، بس نخلي هذا احتياط
                 redirectUser(userData);
             } catch (error) {
                 showError(error.message);
