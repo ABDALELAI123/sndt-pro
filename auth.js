@@ -1,9 +1,9 @@
 // auth.js - نظام الدخول الموحد لسندات برو
-// v2.0.0 - 2026/06/29
+// v2.1.0 - 2026/06/30 - إصلاح مشكلة الطرد التلقائي
 
 import { auth, db } from './firebase.js?v=999999';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { doc, setDoc, getDoc, serverTimestamp, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { showError, showSuccess, cleanPhone } from './core.js?v=999999';
 import { appConfig } from './config.js?v=999999';
 
@@ -11,7 +11,7 @@ const SUPER_ADMIN_EMAIL = appConfig.superAdminEmail;
 const SUPER_ADMIN_CODE = appConfig.superAdminCode;
 const SUPER_ADMIN_PHONE = appConfig.superAdminPhone;
 
-// دالة تسجيل الدخول
+// دالة تسجيل الدخول - بدون تحويل تلقائي
 export async function login(projectCode, phone, password) {
     try {
         // 1. حالة السوبر ادمن
@@ -36,25 +36,24 @@ export async function login(projectCode, phone, password) {
                     throw error;
                 }
             }
-            window.location.href = 'admin-panel.html';
-            return;
+            return await getCurrentUserData(); // نرجع البيانات و index.html يحول
         }
 
-        // 2. حالة المدراء والمناديب - نبحث بالإيميل
+        // 2. حالة المدراء والمناديب
         const cleanPhoneNum = cleanPhone(phone);
         const email = `${projectCode}-${cleanPhoneNum.replace('+', '')}@sanadat.pro`;
         
         await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = 'admin-panel.html';
+        return await getCurrentUserData(); // نرجع البيانات و index.html يحول
 
     } catch (error) {
         console.error('Login Error:', error);
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-            showError('كلمة المرور أو بيانات الدخول خاطئة');
+            throw new Error('كلمة المرور أو بيانات الدخول خاطئة');
         } else if (error.code === 'auth/user-not-found') {
-            showError('المستخدم غير موجود. تأكد من كود المشروع ورقم الجوال');
+            throw new Error('المستخدم غير موجود. تأكد من كود المشروع ورقم الجوال');
         } else {
-            showError('فشل تسجيل الدخول: ' + error.message);
+            throw new Error('فشل تسجيل الدخول: ' + error.message);
         }
     }
 }
@@ -87,7 +86,7 @@ export async function createUser(projectCode, phone, password, role, name) {
     }
 }
 
-// جلب بيانات المستخدم الحالي
+// جلب بيانات المستخدم الحالي - بدون تسجيل خروج تلقائي
 export async function getCurrentUserData() {
     const user = auth.currentUser;
     if (!user) return null;
@@ -100,28 +99,23 @@ export async function getCurrentUserData() {
             role: 'superadmin',
             name: 'السوبر ادمن',
             projectCode: SUPER_ADMIN_CODE,
-            phone: SUPER_ADMIN_PHONE
+            phone: SUPER_ADMIN_PHONE,
+            active: true
         };
     }
 
     // باقي المستخدمين
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     if (!userDoc.exists()) {
-        await signOut(auth);
-        return null;
+        return null; // نخلي index.html يتعامل معاه
     }
 
     const data = userDoc.data();
-    if (data.active === false) {
-        await signOut(auth);
-        throw new Error('تم إيقاف حسابك. تواصل مع الإدارة');
-    }
-
     return { uid: user.uid, ...data };
 }
 
 // تسجيل خروج
 export async function logout() {
     await signOut(auth);
-    window.location.href = 'index.html?logout=true';
+    window.location.href = 'index.html';
 }
