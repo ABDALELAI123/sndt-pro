@@ -1691,7 +1691,7 @@
         }
     };
 
-    window.editManager = async (id) => {
+       window.editManager = async (id) => {
         const manager = allUsers.find(m => m.id === id);
         if (!manager) return;
         document.getElementById('managerName').value = manager.name;
@@ -1716,11 +1716,12 @@
             document.getElementById('managerPhone').value = '';
             document.getElementById('managerPassword').value = '';
             document.getElementById('managerPassword').placeholder = 'كلمة المرور';
-       document.getElementById('addManagerBtn').onclick = async () => {
-     }
- };
-        
- }
-        </script>
- </body>
- </html>
+            document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
+            document.getElementById('addManagerBtn').onclick = addManager;
+        }
+    };
+
+}  // يقفل onAuthStateChanged
+</script>
+</body>
+</html>
