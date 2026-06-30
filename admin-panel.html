@@ -473,7 +473,7 @@
             }
 
             // فحص حالة الحساب فقط - بدون signOut
-            if (currentUser.active === false) {
+         if (currentUser.active === false && currentUser.role !== 'superadmin') {
                 showError('تم إيقاف حسابك. تواصل مع الإدارة');
                 await logout();
                 return;
