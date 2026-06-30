@@ -1716,11 +1716,11 @@
             document.getElementById('managerPhone').value = '';
             document.getElementById('managerPassword').value = '';
             document.getElementById('managerPassword').placeholder = 'كلمة المرور';
-                     document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
-                document.getElementById('addManagerBtn').onclick = addManager;
-     }
- };
-}       
+                          document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
+            document.getElementById('addManagerBtn').onclick = addManager;
+     }      ← يقفل onclick = async () => {
+ };          ← يقفل window.editManager = async (id) => {
+
  </script>
 </body>
- </html>
+ </html>      
