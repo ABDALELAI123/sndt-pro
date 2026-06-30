@@ -487,41 +487,37 @@
         }
     });
 
-    async function loadUserProject() {
-        // السوبر ادمن ما له مشروع محدد - نجيب كل المشاريع
-        if (currentUser.role === 'superadmin') {
-            const projectsSnapshot = await getDocs(collection(db, 'projects'));
-            allProjects = projectsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            currentProjectSettings = null; // السوبر ادمن يختار المشروع من القائمة
-            return;
-        }
+   async function loadUserProject() {
+    // السوبر ادمن ما له مشروع محدد - نجيب كل المشاريع ونطلع
+    if (currentUser.role === 'superadmin') {
+        const projectsSnapshot = await getDocs(collection(db, 'projects'));
+        allProjects = projectsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        currentProjectSettings = null;
+        return; // مهم جداً - لا يكمل ويطردك
+    }
 
-        // باقي الرولز لازم يكون عندهم مشروع
-        if (!currentUser.projectCode) {
-            throw new Error('لم يتم تحديد مشروع للمستخدم');
-        }
+    if (!currentUser.projectCode) {
+        throw new Error('لم يتم تحديد مشروع للمستخدم');
+    }
 
-             const projectDoc = await getDoc(doc(db, 'projects', currentUser.projectCode));
-        if (!projectDoc.exists()) {
-            throw new Error('المشروع غير موجود');
-        }
-        
-        currentProjectSettings = { id: projectDoc.id, ...projectDoc.data() };
+    const projectDoc = await getDoc(doc(db, 'projects', currentUser.projectCode));
+    if (!projectDoc.exists()) {
+        throw new Error('المشروع غير موجود');
+    }
+    
+    currentProjectSettings = { id: projectDoc.id, ...projectDoc.data() };
 
-        // تشييك حالة المشروع - بس للمدير والمندوب، السوبر ادمن ما يطرد
-        if (currentUser.role !== 'superadmin') {
-            if (currentProjectSettings.active === false) {
-                throw new Error('المشروع موقوف. تواصل مع الإدارة');
-            }
+    if (currentProjectSettings.active === false) {
+        throw new Error('المشروع موقوف. تواصل مع الإدارة');
+    }
 
-            if (!currentProjectSettings.isLifetime && currentProjectSettings.expiryDate) {
-                const expiry = new Date(currentProjectSettings.expiryDate);
-                if (expiry < new Date()) {
-                    throw new Error('انتهت صلاحية المشروع');
-                }
-            }
+    if (!currentProjectSettings.isLifetime && currentProjectSettings.expiryDate) {
+        const expiry = new Date(currentProjectSettings.expiryDate);
+        if (expiry < new Date()) {
+            throw new Error('انتهت صلاحية المشروع');
         }
     }
+}
 
     async function initializeDashboard() {
         document.getElementById('loadingScreen').classList.add('hidden');
