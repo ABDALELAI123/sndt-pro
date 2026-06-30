@@ -71,8 +71,8 @@
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // ما عاد نستخدم onAuthStateChanged هنا نهائياً عشان ما يطردك
-    // التوجيه يصير يدوي بعد تسجيل الدخول فقط
+    // تم حذف onAuthStateChanged و window.addEventListener('load') نهائياً
+    // التوجيه يصير يدوي بعد الضغط على زر تسجيل الدخول فقط
 
     document.getElementById('loginBtn').onclick = async () => {
         const projectCode = document.getElementById('projectCode').value.trim().toUpperCase();
@@ -129,23 +129,6 @@
     // Enter يسجل دخول
     document.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') document.getElementById('loginBtn').click();
-    });
-
-    // لو فيه يوزر مسجل دخول قديم، حاول تحوله تلقائي
-    window.addEventListener('load', async () => {
-        try {
-            const userData = await getCurrentUserData();
-            if (userData && userData.active !== false) {
-                document.getElementById('loadingScreen').classList.remove('hidden');
-                if (userData.role === 'delegate') {
-                    window.location.href = 'delegate.html';
-                } else {
-                    window.location.href = 'admin-panel.html';
-                }
-            }
-        } catch (e) {
-            // تجاهل الخطأ، خله في صفحة الدخول
-        }
     });
 </script>
 
