@@ -18,6 +18,8 @@
         .badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 700; }
         .status-pending { background: #f59e0b; color: white; }
         .status-verified { background: #10b981; color: white; }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
     </style>
 </head>
 <body class="p-4">
@@ -48,8 +50,8 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div id="cardProjects" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5">
+        <div id="statsCards" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div id="cardProjects" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-sm">المشاريع النشطة</p>
@@ -60,7 +62,7 @@
                     </div>
                 </div>
             </div>
-            <div id="cardDelegates" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5">
+            <div id="cardDelegates" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-sm">مناديب المشروع</p>
@@ -71,7 +73,7 @@
                     </div>
                 </div>
             </div>
-            <div id="cardBonds" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5">
+            <div id="cardBonds" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-sm">سندات المشروع</p>
@@ -82,7 +84,7 @@
                     </div>
                 </div>
             </div>
-            <div id="cardIncome" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5">
+            <div id="cardIncome" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-5 card-hover">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-gray-500 text-sm">إجمالي القبض</p>
@@ -97,7 +99,7 @@
 
         <div id="chartSection" class="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 mb-6">
             <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-chart-line text-blue-600"></i>حركة القبض والصرف - أنواع السندات
+                <i class="fas fa-chart-line text-blue-600"></i><span id="chartTitle">حركة السندات</span>
             </h3>
             <div class="h-64"><canvas id="bondsChart"></canvas></div>
         </div>
@@ -181,7 +183,6 @@
 
             <div id="bondSettingsTab" class="tab-content hidden p-6">
                 <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2"><i class="fas fa-file-signature text-blue-600"></i>إعدادات السندات</h2>
-                
                 <div class="space-y-6">
                     <div class="border-2 border-blue-100 rounded-xl p-5">
                         <h3 class="text-lg font-bold mb-4 text-blue-700 flex items-center gap-2"><i class="fas fa-building"></i>بيانات الشركة</h3>
@@ -273,14 +274,12 @@
 
             <div id="delegateLimitsTab" class="tab-content hidden p-6">
                 <h2 class="text-xl font-extrabold mb-6 flex items-center gap-2"><i class="fas fa-user-lock text-blue-600"></i>قيود وصلاحيات المناديب</h2>
-                
                 <div class="mb-6">
                     <label class="block text-sm font-bold text-gray-700 mb-2">اختر المندوب لتحديد القيود</label>
                     <select id="limitDelegateSelect" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
                         <option value="">اختر المندوب</option>
                     </select>
                 </div>
-
                 <div id="delegateLimitForm" class="hidden space-y-5">
                     <div class="border-2 border-blue-100 rounded-xl p-5">
                         <h3 class="text-lg font-bold mb-4 text-blue-700"><i class="fas fa-sliders ml-2"></i>القيود الأساسية</h3>
@@ -431,6 +430,7 @@
     let allBonds = [];
     let bondsChart = null;
     let currentLimitDelegate = null;
+    let editingManagerId = null;
 
     const DEFAULT_BOND_FIELDS = [
         { id: 'bondNumber', name: 'رقم السند', required: true },
@@ -450,22 +450,32 @@
         superadmin: { canManageProjects: true, canManageManagers: true, canManageDelegates: true, canEditSettings: true, canDelete: true, canViewAllBonds: true },
         admin: { canManageProjects: false, canManageManagers: false, canManageDelegates: true, canEditSettings: false, canDelete: false, canViewAllBonds: false },
         manager: { canManageProjects: false, canManageManagers: false, canManageDelegates: true, canEditSettings: false, canDelete: false, canViewAllBonds: false },
-        delegate: { canManageProjects: false, canManageManagers: false, canManageDelegates: false, canEditSettings: false, canDelete: false, canViewAllBonds: false }
+        viewer: { canManageProjects: false, canManageManagers: false, canManageDelegates: false, canEditSettings: false, canDelete: false, canViewAllBonds: false }
     };
 
-    // 3. التهيئة
+    // 3. التهيئة - مصحح بدون طرد
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            window.location.href = 'index.html?logout=true';
+            window.location.href = 'index.html';
             return;
         }
         try {
             currentUser = await getCurrentUserData();
-            if (!currentUser) return;
+            if (!currentUser) {
+                await logout();
+                return;
+            }
             
             // توجيه المندوب لصفحته
             if (currentUser.role === 'delegate') {
                 window.location.href = 'delegate.html';
+                return;
+            }
+
+            // فحص حالة الحساب فقط - بدون signOut
+            if (currentUser.active === false) {
+                showError('تم إيقاف حسابك. تواصل مع الإدارة');
+                await logout();
                 return;
             }
 
@@ -478,27 +488,37 @@
     });
 
     async function loadUserProject() {
+        // السوبر ادمن ما له مشروع محدد - نجيب كل المشاريع
         if (currentUser.role === 'superadmin') {
             const projectsSnapshot = await getDocs(collection(db, 'projects'));
-            allProjects = projectsSnapshot.docs.map(d => ({ id: d.id,...d.data() }));
+            allProjects = projectsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            currentProjectSettings = null; // السوبر ادمن يختار المشروع من القائمة
             return;
         }
 
-        const projectDoc = await getDoc(doc(db, 'projects', currentUser.projectCode));
-        if (!projectDoc.exists()) throw new Error('المشروع غير موجود');
-        currentProjectSettings = { id: projectDoc.id,...projectDoc.data() };
-
-             if (!currentProjectSettings) return;
-
-        // تشييك حالة المشروع
-        if (currentProjectSettings.active === false) {
-            throw new Error('المشروع موقوف. تواصل مع الإدارة');
+        // باقي الرولز لازم يكون عندهم مشروع
+        if (!currentUser.projectCode) {
+            throw new Error('لم يتم تحديد مشروع للمستخدم');
         }
 
-        if (!currentProjectSettings.isLifetime && currentProjectSettings.expiryDate) {
-            const expiry = new Date(currentProjectSettings.expiryDate);
-            if (expiry < new Date()) {
-                throw new Error('انتهت صلاحية المشروع');
+             const projectDoc = await getDoc(doc(db, 'projects', currentUser.projectCode));
+        if (!projectDoc.exists()) {
+            throw new Error('المشروع غير موجود');
+        }
+        
+        currentProjectSettings = { id: projectDoc.id, ...projectDoc.data() };
+
+        // تشييك حالة المشروع - بس للمدير والمندوب، السوبر ادمن ما يطرد
+        if (currentUser.role !== 'superadmin') {
+            if (currentProjectSettings.active === false) {
+                throw new Error('المشروع موقوف. تواصل مع الإدارة');
+            }
+
+            if (!currentProjectSettings.isLifetime && currentProjectSettings.expiryDate) {
+                const expiry = new Date(currentProjectSettings.expiryDate);
+                if (expiry < new Date()) {
+                    throw new Error('انتهت صلاحية المشروع');
+                }
             }
         }
     }
@@ -511,7 +531,7 @@
         const perms = PERMISSIONS[currentUser.role];
         const roleNames = { superadmin: 'سوبر ادمن', admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
         document.getElementById('roleBadge').textContent = roleNames[currentUser.role];
-        document.getElementById('roleBadge').className = `badge ${currentUser.role === 'superadmin'? 'bg-red-100 text-red-700' : currentUser.role === 'admin'? 'bg-purple-100 text-purple-700' : currentUser.role === 'manager'? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`;
+        document.getElementById('roleBadge').className = `badge ${currentUser.role === 'superadmin' ? 'bg-red-100 text-red-700' : currentUser.role === 'admin' ? 'bg-purple-100 text-purple-700' : currentUser.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`;
 
         applyPermissions(perms);
         loadAllData();
@@ -546,6 +566,9 @@
                 document.getElementById(tab + 'Tab').classList.remove('hidden');
                 btn.classList.add('active', 'border-blue-600', 'bg-blue-50', 'text-blue-600');
                 btn.classList.remove('text-gray-600');
+                
+                if (tab === 'bondSettings') loadBondSettings();
+                if (tab === 'delegateLimits') loadDelegateLimitsTab();
             };
         });
 
@@ -579,11 +602,11 @@
     function loadAllData() {
         // المشاريع
         let projectsQuery = collection(db, 'projects');
-        if (currentUser.role!== 'superadmin') {
+        if (currentUser.role !== 'superadmin') {
             projectsQuery = query(collection(db, 'projects'), where('code', '==', currentUser.projectCode));
         }
         onSnapshot(projectsQuery, (snapshot) => {
-            allProjects = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
+            allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderProjects();
             renderProjectOptions();
             updateStats();
@@ -591,11 +614,11 @@
 
         // المستخدمين
         let usersQuery = collection(db, 'users');
-        if (currentUser.role!== 'superadmin') {
+        if (currentUser.role !== 'superadmin') {
             usersQuery = query(collection(db, 'users'), where('projectCode', '==', currentUser.projectCode));
         }
         onSnapshot(usersQuery, (snapshot) => {
-            const users = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
+            const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             allUsers = users.filter(u => ['admin', 'manager', 'viewer'].includes(u.role));
             allDelegates = users.filter(u => u.role === 'delegate');
             renderManagers();
@@ -605,11 +628,11 @@
 
         // السندات
         let bondsQuery = collection(db, 'bonds');
-        if (currentUser.role!== 'superadmin') {
+        if (currentUser.role !== 'superadmin') {
             bondsQuery = query(collection(db, 'bonds'), where('projectCode', '==', currentUser.projectCode));
         }
         onSnapshot(bondsQuery, (snapshot) => {
-            allBonds = snapshot.docs.map(doc => ({ id: doc.id,...doc.data() }));
+            allBonds = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderBonds();
             updateStats();
             renderChart();
@@ -620,79 +643,8 @@
         document.getElementById('statProjects').textContent = allProjects.length;
         document.getElementById('statDelegates').textContent = allDelegates.length;
         document.getElementById('statBonds').textContent = allBonds.length;
-
         const income = allBonds.filter(b => b.accountingEffect === 'income' || b.type === 'قبض').reduce((sum, b) => sum + (b.amount || 0), 0);
         document.getElementById('statIncome').textContent = formatMoney(income);
-
-        // إحصائيات المدير
-        if (currentUser.role!== 'superadmin') {
-            document.getElementById('statManagerDelegates').textContent = allDelegates.length;
-            document.getElementById('statManagerBonds').textContent = allBonds.length;
-            document.getElementById('statManagerIncome').textContent = formatMoney(income);
-            const expense = allBonds.filter(b => b.accountingEffect === 'expense' || b.type === 'صرف').reduce((sum, b) => sum + (b.amount || 0), 0);
-            document.getElementById('statManagerExpense').textContent = formatMoney(expense);
-        }
-    }
-
-    function renderChart() {
-        const ctx = document.getElementById('bondsChart');
-        if (!ctx) return;
-
-        if (currentUser.role === 'superadmin') {
-            document.getElementById('chartSection').classList.remove('hidden');
-            document.getElementById('chartTitle').textContent = 'حركة السندات - آخر 30 يوم';
-            const last30Days = {};
-            const today = new Date();
-            for (let i = 29; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                const key = d.toISOString().split('T')[0];
-                last30Days[key] = 0;
-            }
-            allBonds.forEach(b => {
-                const date = b.createdAt?.toDate? b.createdAt.toDate().toISOString().split('T')[0] : b.bondDate;
-                if (last30Days.hasOwnProperty(date)) last30Days[date]++;
-            });
-            if (bondsChart) bondsChart.destroy();
-            bondsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Object.keys(last30Days).map(d => d.split('-')[2] + '/' + d.split('-')[1]),
-                    datasets: [{
-                        label: 'عدد السندات',
-                        data: Object.values(last30Days),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        } else {
-            document.getElementById('chartSection').classList.remove('hidden');
-            document.getElementById('chartTitle').textContent = 'حركة القبض والصرف - أنواع السندات';
-            const bondTypes = currentProjectSettings?.bondSettings?.types || [];
-            const data = bondTypes.map(type => {
-                return allBonds.filter(b => b.bondTypeId === type.id).length;
-            });
-            const labels = bondTypes.map(t => t.name);
-            const colors = bondTypes.map(t => t.accountingEffect === 'income'? '#10b981' : '#ef4444');
-            if (bondsChart) bondsChart.destroy();
-            bondsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels.length? labels : ['لا توجد أنواع'],
-                    datasets: [{
-                        label: 'عدد السندات',
-                        data: data.length? data : [0],
-                        backgroundColor: colors.length? colors : ['#6b7280'],
-                        borderRadius: 8
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-            });
-        }
     }
 
     function renderProjects() {
@@ -701,9 +653,9 @@
             const status = getProjectStatus(p);
             const bondsCount = allBonds.filter(b => b.projectCode === p.code).length;
             const totalAmount = allBonds.filter(b => b.projectCode === p.code).reduce((sum, b) => sum + (b.amount || 0), 0);
-            const isActive = p.active!== false;
+            const isActive = p.active !== false;
             return `
-            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover ${!isActive? 'opacity-60 bg-red-50' : ''}">
+            <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover ${!isActive ? 'opacity-60 bg-red-50' : ''}">
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -714,19 +666,17 @@
                                 <b class="text-lg">${p.name}</b>
                                 <span class="badge ${status.class}"><i class="fas ${status.icon} ml-1"></i>${status.text}</span>
                             </div>
-                            <p class="text-sm text-gray-500">الكود: ${p.code} | ${p.isLifetime? 'مدى الحياة' : p.expiryDate || 'بدون تاريخ'}</p>
+                            <p class="text-sm text-gray-500">الكود: ${p.code} | ${p.isLifetime ? 'مدى الحياة' : p.expiryDate || 'بدون تاريخ'}</p>
                         </div>
-                    </div>
                     <div class="flex gap-2">
-                        ${perms.canEditSettings? `<button onclick="sendProjectWhatsApp('${p.id}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm" title="إرسال واتساب"><i class="fab fa-whatsapp"></i></button>` : ''}
-                        ${perms.canEditSettings? `<button onclick="toggleProjectStatus('${p.id}', ${isActive})" class="bg-${isActive? 'yellow' : 'green'}-500 hover:bg-${isActive? 'yellow' : 'green'}-600 text-white px-4 py-2 rounded-lg transition text-sm" title="${isActive? 'إيقاف' : 'تنشيط'}"><i class="fas fa-${isActive? 'pause' : 'play'}"></i></button>` : ''}
-                        ${perms.canDelete? `<button onclick="deleteItem('projects', '${p.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"><i class="fas fa-trash"></i></button>` : ''}
+                        ${perms.canEditSettings ? `<button onclick="sendProjectWhatsApp('${p.id}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition text-sm" title="إرسال واتساب"><i class="fab fa-whatsapp"></i></button>` : ''}
+                        ${perms.canEditSettings ? `<button onclick="toggleProjectStatus('${p.id}', ${isActive})" class="bg-${isActive ? 'yellow' : 'green'}-500 hover:bg-${isActive ? 'yellow' : 'green'}-600 text-white px-4 py-2 rounded-lg transition text-sm" title="${isActive ? 'إيقاف' : 'تنشيط'}"><i class="fas fa-${isActive ? 'pause' : 'play'}"></i></button>` : ''}
+                        ${perms.canDelete ? `<button onclick="deleteItem('projects', '${p.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"><i class="fas fa-trash"></i></button>` : ''}
                     </div>
-                </div>
                 <div class="grid grid-cols-3 gap-3 text-sm">
                     <div class="bg-blue-50 p-2 rounded-lg"><p class="text-gray-600">السندات</p><p class="font-bold text-blue-600">${bondsCount}</p></div>
                     <div class="bg-green-50 p-2 rounded-lg"><p class="text-gray-600">المبلغ الكلي</p><p class="font-bold text-green-600">${formatMoney(totalAmount)}</p></div>
-                    <div class="bg-purple-50 p-2 rounded-lg"><p class="text-gray-600">آخر نشاط</p><p class="font-bold text-purple-600 text-xs">${p.updatedAt? formatDate(p.updatedAt) : 'لا يوجد'}</p></div>
+                    <div class="bg-purple-50 p-2 rounded-lg"><p class="text-gray-600">آخر نشاط</p><p class="font-bold text-purple-600 text-xs">${p.updatedAt ? formatDate(p.updatedAt) : 'لا يوجد'}</p></div>
                 </div>
             </div>`;
         }).join('') || `<p class="text-gray-400 text-center py-8">لا توجد مشاريع</p>`;
@@ -750,11 +700,11 @@
         document.getElementById('settingsProjectCode').innerHTML = `<option value="">اختر المشروع</option>` + options;
         document.getElementById('filterProject').innerHTML = `<option value="">كل المشاريع</option>` + options;
     }
-
-    function renderManagers() {
+        function renderManagers() {
         const perms = PERMISSIONS[currentUser.role];
         const roleLabels = { admin: 'مدير عام', manager: 'مدير', viewer: 'مشاهد' };
         const roleColors = { admin: 'bg-purple-100 text-purple-700', manager: 'bg-blue-100 text-blue-700', viewer: 'bg-gray-100 text-gray-700' };
+        
         document.getElementById('managersList').innerHTML = allUsers.map(m => `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-center">
@@ -766,17 +716,23 @@
                             <div class="flex items-center gap-2">
                                 <b class="text-lg">${m.name}</b>
                                 <span class="badge ${roleColors[m.role]}">${roleLabels[m.role]}</span>
-                                ${m.active === false? '<span class="badge bg-red-100 text-red-700">موقوف</span>' : '<span class="badge bg-green-100 text-green-700">نشط</span>'}
+                                ${m.active === false ? '<span class="badge bg-red-100 text-red-700">موقوف</span>' : '<span class="badge bg-green-100 text-green-700">نشط</span>'}
                             </div>
                             <p class="text-sm text-gray-500">${m.phone} - ${m.projectCode}</p>
-                            <p class="text-xs text-gray-400">آخر دخول: ${m.lastLogin? formatDate(m.lastLogin) : 'لم يدخل بعد'}</p>
+                            <p class="text-xs text-gray-400">آخر دخول: ${m.lastLogin ? formatDate(m.lastLogin) : 'لم يدخل بعد'}</p>
                         </div>
                     </div>
-                    ${perms.canManageManagers? `
+                    ${perms.canManageManagers ? `
                     <div class="flex gap-2">
-                        <button onclick="editManager('${m.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition" title="تعديل"><i class="fas fa-edit"></i></button>
-                        <button onclick="toggleUserStatus('${m.id}', ${m.active!== false})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition" title="${m.active!== false? 'إيقاف' : 'تنشيط'}"><i class="fas fa-${m.active!== false? 'ban' : 'check'}"></i></button>
-                        <button onclick="deleteUser('${m.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition" title="حذف نهائي"><i class="fas fa-trash"></i></button>
+                        <button onclick="editManager('${m.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="toggleUserStatus('${m.id}', ${m.active !== false})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition" title="${m.active !== false ? 'إيقاف' : 'تنشيط'}">
+                            <i class="fas fa-${m.active !== false ? 'ban' : 'check'}"></i>
+                        </button>
+                        <button onclick="deleteUser('${m.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition" title="حذف نهائي">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>` : ''}
                 </div>
             </div>
@@ -785,20 +741,39 @@
 
     function renderDelegates() {
         const perms = PERMISSIONS[currentUser.role];
-        document.getElementById('delegatesList').innerHTML = allDelegates.map(d => `
+        document.getElementById('delegatesList').innerHTML = allDelegates.map(d => {
+            const limits = d.limits || {};
+            const hasLimits = limits.dailyCount || limits.singleAmount || limits.totalCount || limits.totalAmount || limits.expiryDate;
+            return `
             <div class="border-2 border-gray-100 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 transition card-hover">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                         <i class="fas fa-user-tie text-green-600"></i>
                     </div>
                     <div>
-                        <b class="text-lg">${d.name}</b>
+                        <div class="flex items-center gap-2">
+                            <b class="text-lg">${d.name}</b>
+                            ${hasLimits ? '<span class="badge bg-orange-100 text-orange-700"><i class="fas fa-lock ml-1"></i>مقيد</span>' : ''}
+                            ${d.active === false ? '<span class="badge bg-red-100 text-red-700">موقوف</span>' : '<span class="badge bg-green-100 text-green-700">نشط</span>'}
+                        </div>
                         <p class="text-sm text-gray-500">${d.phone} - ${d.projectCode}</p>
-                        <p class="text-xs text-gray-400">آخر دخول: ${d.lastLogin? formatDate(d.lastLogin) : 'لم يدخل بعد'}</p>
+                        <p class="text-xs text-gray-400">آخر دخول: ${d.lastLogin ? formatDate(d.lastLogin) : 'لم يدخل بعد'}</p>
                     </div>
-                ${perms.canManageDelegates? `<button onclick="deleteUser('${d.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"><i class="fas fa-trash"></i></button>` : ''}
-            </div>
-        `).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مناديب</p>`;
+                </div>
+                ${perms.canManageDelegates ? `
+                <div class="flex gap-2">
+                    <button onclick="editDelegateLimits('${d.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition" title="تعديل القيود">
+                        <i class="fas fa-user-lock"></i>
+                    </button>
+                    <button onclick="toggleUserStatus('${d.id}', ${d.active !== false})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg transition" title="${d.active !== false ? 'إيقاف' : 'تنشيط'}">
+                        <i class="fas fa-${d.active !== false ? 'ban' : 'check'}"></i>
+                    </button>
+                    <button onclick="deleteUser('${d.id}')" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>` : ''}
+            </div>`;
+        }).join('') || `<p class="text-gray-400 text-center py-8">لا يوجد مناديب</p>`;
     }
 
     function renderBonds() {
@@ -806,23 +781,27 @@
         const filterType = document.getElementById('filterType').value;
         const filterProject = document.getElementById('filterProject').value;
         let filtered = allBonds.filter(b => {
-            const matchSearch =!searchTerm || b.from?.toLowerCase().includes(searchTerm) || b.to?.toLowerCase().includes(searchTerm) || b.reason?.toLowerCase().includes(searchTerm);
-            const matchType =!filterType || b.type === filterType;
-            const matchProject =!filterProject || b.projectCode === filterProject;
+            const matchSearch = !searchTerm || b.from?.toLowerCase().includes(searchTerm) || b.to?.toLowerCase().includes(searchTerm) || b.reason?.toLowerCase().includes(searchTerm);
+            const matchType = !filterType || b.type === filterType || b.bondTypeId === filterType;
+            const matchProject = !filterProject || b.projectCode === filterProject;
             return matchSearch && matchType && matchProject;
         });
-        if (currentUser.role!== 'superadmin' && currentProjectSettings?.bondSettings?.types) {
+
+        // تحديث قائمة الأنواع حسب المشروع
+        if (currentProjectSettings?.bondSettings?.types) {
             const types = currentProjectSettings.bondSettings.types;
-            document.getElementById('filterType').innerHTML = '<option value="">الكل</option>' + types.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+            document.getElementById('filterType').innerHTML = '<option value="">الكل</option>' + types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
         }
+
         document.getElementById('bondsList').innerHTML = filtered.map(b => {
             const delegate = allDelegates.find(d => d.id === b.delegateId);
-            const date = b.createdAt?.toDate? b.createdAt.toDate().toLocaleString('ar-SA') : '-';
+            const date = b.createdAt?.toDate ? b.createdAt.toDate().toLocaleString('ar-SA') : b.bondDate || '-';
             const perms = PERMISSIONS[currentUser.role];
             const bondType = currentProjectSettings?.bondSettings?.types?.find(t => t.id === b.bondTypeId);
-            const typeName = bondType?.name || b.type;
-            const typeColor = bondType?.accountingEffect === 'expense' || b.type === 'صرف'? 'bg-red-100' : 'bg-green-100';
-            const typeIcon = bondType?.accountingEffect === 'expense' || b.type === 'صرف'? 'fa-arrow-up text-red-600' : 'fa-arrow-down text-green-600';
+            const typeName = bondType?.name || b.type || 'غير محدد';
+            const typeColor = bondType?.accountingEffect === 'expense' || b.type === 'صرف' ? 'bg-red-100' : 'bg-green-100';
+            const typeIcon = bondType?.accountingEffect === 'expense' || b.type === 'صرف' ? 'fa-arrow-up text-red-600' : 'fa-arrow-down text-green-600';
+            
             return `
             <div class="border-2 border-gray-100 p-4 rounded-xl hover:bg-gray-50 transition card-hover">
                 <div class="flex justify-between items-start mb-2">
@@ -836,12 +815,12 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        ${perms.canDelete? `<button onclick="deleteItem('bonds', '${b.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition"><i class="fas fa-trash"></i></button>` : ''}
+                        ${perms.canDelete ? `<button onclick="deleteItem('bonds', '${b.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition"><i class="fas fa-trash"></i></button>` : ''}
                     </div>
-                </div>
                 <div class="text-sm text-gray-600 mr-15">
                     <p><b>من:</b> ${b.from} | <b>إلى:</b> ${b.to}</p>
                     <p><b>المندوب:</b> ${delegate?.name || 'غير محدد'} | <b>مقابل:</b> ${b.reason || '-'}</p>
+                    ${b.paymentMethod ? `<p><b>طريقة الدفع:</b> ${b.paymentMethod}</p>` : ''}
                 </div>
             </div>`;
         }).join('') || `<p class="text-gray-400 text-center py-8">لا توجد سندات</p>`;
@@ -849,94 +828,200 @@
 
     async function addProject() {
         if (!PERMISSIONS[currentUser.role].canManageProjects) return showError('ليس لديك صلاحية إنشاء مشاريع');
-        const name = document.getElementById('projectName').value.trim();
-        const code = document.getElementById('projectCodeInput').value.trim().toUpperCase();
-        const expiry = document.getElementById('projectExpiry').value;
-        const lifetime = document.getElementById('projectLifetime').checked;
-        if (!name ||!code) return showError('املأ اسم وكود المشروع');
-        if (!lifetime &&!expiry) return showError('حدد تاريخ الانتهاء أو اختر مدى الحياة');
+        
+        const name = await Swal.fire({
+            title: 'اسم المشروع',
+            input: 'text',
+            inputPlaceholder: 'مثال: شركة التقوى',
+            showCancelButton: true,
+            confirmButtonText: 'التالي',
+            cancelButtonText: 'إلغاء'
+        });
+        if (!name.value) return;
+
+        const code = await Swal.fire({
+            title: 'كود المشروع',
+            input: 'text',
+            inputPlaceholder: 'مثال: TAQWA01',
+            inputValue: name.value.substring(0, 5).toUpperCase() + '01',
+            showCancelButton: true,
+            confirmButtonText: 'التالي',
+            cancelButtonText: 'إلغاء'
+        });
+        if (!code.value) return;
+
+        const expiry = await Swal.fire({
+            title: 'تاريخ الانتهاء',
+            input: 'date',
+            showCancelButton: true,
+            confirmButtonText: 'إنشاء',
+            cancelButtonText: 'إلغاء'
+        });
+
         try {
-            await setDoc(doc(db, 'projects', code), {
-                code, name,
-                expiryDate: lifetime? null : expiry,
-                isLifetime: lifetime,
+            await setDoc(doc(db, 'projects', code.value.toUpperCase()), {
+                code: code.value.toUpperCase(),
+                name: name.value,
+                expiryDate: expiry.value || null,
+                isLifetime: !expiry.value,
                 createdBy: currentUser.uid,
                 createdAt: serverTimestamp(),
                 active: true,
-                settings: { logo: '', terms: '', showCreateBond: true, showBondsTab: true, features: { whatsapp: true, excel: true, pdf: true, print: true, qr: true }, forceTermsAccept: true },
-                bondSettings: { types: [{ id: 'rec1', name: 'سند قبض', accountingEffect: 'income', startNumber: 1 }, { id: 'pay1', name: 'سند صرف', accountingEffect: 'expense', startNumber: 1 }], company: { name: name, logo: '', phone: '', tax: '', cr: '', address: '' }, paymentMethods: ['كاش', 'شبكة', 'تحويل بنكي'], cashboxes: [{ id: 'main', name: 'الصندوق الرئيسي', balance: 0 }], accountants: [], printTemplate: 'classic', bondFooter: '', enableTafqeet: true, visibleFields: DEFAULT_BOND_FIELDS.map(f => f.id) }
+                settings: {
+                    logo: '',
+                    terms: '',
+                    showCreateBond: true,
+                    showBondsTab: true,
+                    features: { whatsapp: true, excel: true, pdf: true, print: true, qr: true },
+                    forceTermsAccept: true
+                },
+                bondSettings: {
+                    types: [
+                        { id: 'rec1', name: 'سند قبض', accountingEffect: 'income', startNumber: 1 },
+                        { id: 'pay1', name: 'سند صرف', accountingEffect: 'expense', startNumber: 1 }
+                    ],
+                    company: { name: name.value, logo: '', phone: '', tax: '', cr: '', address: '' },
+                    paymentMethods: ['كاش', 'شبكة', 'تحويل بنكي'],
+                    cashboxes: [{ id: 'main', name: 'الصندوق الرئيسي', balance: 0 }],
+                    accountants: [],
+                    printTemplate: 'classic',
+                    bondFooter: '',
+                    enableTafqeet: true,
+                    visibleFields: DEFAULT_BOND_FIELDS.map(f => f.id)
+                }
             });
-            document.getElementById('projectName').value = '';
-            document.getElementById('projectCodeInput').value = '';
-            document.getElementById('projectExpiry').value = '';
-            document.getElementById('projectLifetime').checked = false;
             showSuccess('تم إنشاء المشروع بنجاح');
-        } catch (error) { showError(error.message); }
+        } catch (error) {
+            showError(error.message);
+        }
     }
 
     async function addManager() {
         if (!PERMISSIONS[currentUser.role].canManageManagers) return showError('ليس لديك صلاحية إضافة مدراء');
-        const name = document.getElementById('managerName').value.trim();
-        const phone = document.getElementById('managerPhone').value.trim();
-        const projectCode = document.getElementById('managerProjectCode').value;
-        const password = document.getElementById('managerPassword').value;
-        const role = document.getElementById('managerRole').value;
-        if (!name ||!phone ||!projectCode ||!password) return showError('املأ جميع الحقول');
-        try {
-            await createUser(projectCode, phone, password, role, name);
-            document.getElementById('managerName').value = '';
-            document.getElementById('managerPhone').value = '';
-            document.getElementById('managerPassword').value = '';
-            showSuccess('تم إضافة المدير بنجاح');
-        } catch (error) { showError(error.message); }
+        
+        const { value: formValues } = await Swal.fire({
+            title: 'إضافة مدير جديد',
+            html: `
+                <input id="swal-name" class="swal2-input" placeholder="اسم المدير">
+                <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" dir="ltr">
+                <input id="swal-password" type="password" class="swal2-input" placeholder="كلمة المرور">
+                <select id="swal-project" class="swal2-input">
+                    <option value="">اختر المشروع</option>
+                    ${allProjects.map(p => `<option value="${p.code}">${p.name} - ${p.code}</option>`).join('')}
+                </select>
+                <select id="swal-role" class="swal2-input">
+                    <option value="admin">مدير عام - صلاحيات كاملة</option>
+                    <option value="manager">مدير - إدارة المناديب فقط</option>
+                    <option value="viewer">مشاهد - عرض فقط</option>
+                </select>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'إضافة',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                const name = document.getElementById('swal-name').value;
+                const phone = document.getElementById('swal-phone').value;
+                const password = document.getElementById('swal-password').value;
+                const projectCode = document.getElementById('swal-project').value;
+                const role = document.getElementById('swal-role').value;
+                if (!name || !phone || !password || !projectCode) {
+                    Swal.showValidationMessage('املأ جميع الحقول');
+                    return false;
+                }
+                return { name, phone, password, projectCode, role };
+            }
+        });
+
+        if (formValues) {
+            try {
+                await createUser(formValues.projectCode, formValues.phone, formValues.password, formValues.role, formValues.name);
+                showSuccess('تم إضافة المدير بنجاح');
+            } catch (error) {
+                showError(error.message);
+            }
+        }
     }
 
     async function addDelegate() {
         if (!PERMISSIONS[currentUser.role].canManageDelegates) return showError('ليس لديك صلاحية إضافة مناديب');
+        
         const name = document.getElementById('delegateName').value.trim();
         const phone = document.getElementById('delegatePhone').value.trim();
         const projectCode = document.getElementById('delegateProjectCode').value;
         const password = document.getElementById('delegatePassword').value;
-        if (!name ||!phone ||!projectCode ||!password) return showError('املأ جميع الحقول');
+        
+        if (!name || !phone || !projectCode || !password) return showError('املأ جميع الحقول');
+        
         try {
             await createUser(projectCode, phone, password, 'delegate', name);
             document.getElementById('delegateName').value = '';
             document.getElementById('delegatePhone').value = '';
             document.getElementById('delegatePassword').value = '';
             showSuccess('تم إضافة المندوب بنجاح');
-        } catch (error) { showError(error.message); }
+        } catch (error) {
+            showError(error.message);
+        }
     }
 
     window.editManager = async (id) => {
         const manager = allUsers.find(m => m.id === id);
         if (!manager) return;
-        document.getElementById('managerName').value = manager.name;
-        document.getElementById('managerPhone').value = manager.phone;
-        document.getElementById('managerProjectCode').value = manager.projectCode;
-        document.getElementById('managerRole').value = manager.role;
-        document.getElementById('managerPassword').value = '';
-        document.getElementById('managerPassword').placeholder = 'اتركه فاضي لو ما تبي تغير الباسورد';
-        document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-save ml-2"></i>حفظ التعديل';
-        document.getElementById('addManagerBtn').onclick = async () => {
-            const updateData = { name: document.getElementById('managerName').value.trim(), phone: document.getElementById('managerPhone').value.trim(), projectCode: document.getElementById('managerProjectCode').value, role: document.getElementById('managerRole').value, active: true };
-            if (document.getElementById('managerPassword').value) updateData.password = document.getElementById('managerPassword').value;
+        
+        const { value: formValues } = await Swal.fire({
+            title: 'تعديل المدير',
+            html: `
+                <input id="swal-name" class="swal2-input" placeholder="اسم المدير" value="${manager.name}">
+                <input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" dir="ltr" value="${manager.phone}">
+                <select id="swal-project" class="swal2-input">
+                    ${allProjects.map(p => `<option value="${p.code}" ${p.code === manager.projectCode ? 'selected' : ''}>${p.name} - ${p.code}</option>`).join('')}
+                </select>
+                <select id="swal-role" class="swal2-input">
+                    <option value="admin" ${manager.role === 'admin' ? 'selected' : ''}>مدير عام</option>
+                    <option value="manager" ${manager.role === 'manager' ? 'selected' : ''}>مدير</option>
+                    <option value="viewer" ${manager.role === 'viewer' ? 'selected' : ''}>مشاهد</option>
+                </select>
+                <input id="swal-password" type="password" class="swal2-input" placeholder="كلمة مرور جديدة - اتركه فاضي لو ما تبي تغير">
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'حفظ',
+            cancelButtonText: 'إلغاء',
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('swal-name').value,
+                    phone: document.getElementById('swal-phone').value,
+                    projectCode: document.getElementById('swal-project').value,
+                    role: document.getElementById('swal-role').value,
+                    password: document.getElementById('swal-password').value
+                };
+            }
+        });
+
+        if (formValues) {
+            const updateData = {
+                name: formValues.name,
+                phone: formValues.phone,
+                projectCode: formValues.projectCode,
+                role: formValues.role,
+                updatedAt: serverTimestamp()
+            };
             await updateDoc(doc(db, 'users', id), updateData);
             showSuccess('تم تحديث المدير بنجاح');
-            document.getElementById('managerName').value = '';
-            document.getElementById('managerPhone').value = '';
-            document.getElementById('managerPassword').value = '';
-            document.getElementById('managerPassword').placeholder = 'كلمة المرور';
-            document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
-            document.getElementById('addManagerBtn').onclick = addManager;
-        };
+        }
     };
 
     window.toggleUserStatus = async (id, currentStatus) => {
-        if (!PERMISSIONS[currentUser.role].canManageManagers) return showError('ليس لديك صلاحية إيقاف/تنشيط المستخدمين');
-        const action = currentStatus? 'إيقاف' : 'تنشيط';
-        const result = await showConfirm(`${action} المستخدم؟`, currentStatus? 'سيتم منع المستخدم من الدخول' : 'سيتم السماح للمستخدم بالدخول');
+        if (!PERMISSIONS[currentUser.role].canManageManagers && !PERMISSIONS[currentUser.role].canManageDelegates) {
+            return showError('ليس لديك صلاحية إيقاف/تنشيط المستخدمين');
+        }
+        const action = currentStatus ? 'إيقاف' : 'تنشيط';
+        const result = await showConfirm(`${action} المستخدم؟`, currentStatus ? 'سيتم منع المستخدم من الدخول' : 'سيتم السماح للمستخدم بالدخول');
         if (result.isConfirmed) {
-            await updateDoc(doc(db, 'users', id), { active:!currentStatus, updatedAt: serverTimestamp() });
+            await updateDoc(doc(db, 'users', id), {
+                active: !currentStatus,
+                updatedAt: serverTimestamp()
+            });
             showSuccess(`تم ${action} المستخدم بنجاح`);
         }
     };
@@ -947,50 +1032,6 @@
         if (result.isConfirmed) {
             await deleteDoc(doc(db, 'users', id));
             showSuccess('تم حذف المستخدم من قاعدة البيانات. لا تنسى تحذفه من Authentication');
-        }
-    };
-
-    async function saveProjectSettings() {
-        if (!PERMISSIONS[currentUser.role].canEditSettings) return showError('ليس لديك صلاحية تعديل الإعدادات');
-        const projectCode = document.getElementById('settingsProjectCode').value;
-        if (!projectCode) return;
-        const project = allProjects.find(p => p.code === projectCode);
-        if (!project) return;
-        const settings = { logo: document.getElementById('projectLogo').value.trim(), terms: document.getElementById('projectTerms').value.trim(), showCreateBond: document.getElementById('showCreateBond').checked, showBondsTab: document.getElementById('showBondsTab').checked, features: { whatsapp: document.getElementById('featureWhatsApp').checked, excel: document.getElementById('featureExcel').checked, pdf: document.getElementById('featurePDF').checked, print: document.getElementById('featurePrint').checked, qr: document.getElementById('featureQR').checked }, forceTermsAccept: document.getElementById('forceTermsAccept').checked };
-        const expiryDate = document.getElementById('projectExpiryEdit').value;
-        const isLifetime = document.getElementById('projectLifetimeEdit').checked;
-        try {
-            await updateDoc(doc(db, 'projects', project.id), { settings, expiryDate: isLifetime? null : expiryDate, isLifetime: isLifetime, updatedAt: serverTimestamp() });
-            showSuccess('تم حفظ الإعدادات');
-        } catch (error) { showError(error.message); }
-    }
-
-    document.getElementById('settingsProjectCode').onchange = (e) => {
-        const projectCode = e.target.value;
-        const form = document.getElementById('projectSettingsForm');
-        if (!projectCode) {
-            form.classList.add('hidden');
-            return;
-        }
-        const project = allProjects.find(p => p.code === projectCode);
-        if (project && project.settings) {
-            document.getElementById('projectLogo').value = project.settings.logo || '';
-            document.getElementById('projectTerms').value = project.settings.terms || '';
-            document.getElementById('projectExpiryEdit').value = project.expiryDate || '';
-            document.getElementById('projectLifetimeEdit').checked = project.isLifetime || false;
-            document.getElementById('projectExpiryEdit').disabled = project.isLifetime || false;
-            document.getElementById('showCreateBond').checked = project.settings.showCreateBond!== false;
-            document.getElementById('showBondsTab').checked = project.settings.showBondsTab!== false;
-            document.getElementById('featureWhatsApp').checked = project.settings.features?.whatsapp!== false;
-            document.getElementById('featureExcel').checked = project.settings.features?.excel!== false;
-            document.getElementById('featurePDF').checked = project.settings.features?.pdf!== false;
-            document.getElementById('featurePrint').checked = project.settings.features?.print!== false;
-            document.getElementById('featureQR').checked = project.settings.features?.qr!== false;
-            document.getElementById('forceTermsAccept').checked = project.settings.forceTermsAccept!== false;
-            const termsTextarea = document.getElementById('projectTerms');
-            termsTextarea.style.height = '';
-            termsTextarea.style.height = termsTextarea.scrollHeight + 'px';
-            form.classList.remove('hidden');
         }
     };
 
@@ -1006,19 +1047,39 @@
     window.sendProjectWhatsApp = async (projectId) => {
         const project = allProjects.find(p => p.id === projectId);
         if (!project) return;
+        
         const managers = allUsers.filter(m => m.projectCode === project.code);
         const delegates = allDelegates.filter(d => d.projectCode === project.code);
         const bondsCount = allBonds.filter(b => b.projectCode === project.code).length;
         const totalAmount = allBonds.filter(b => b.projectCode === project.code).reduce((sum, b) => sum + (b.amount || 0), 0);
-        let msg = `*📊 تقرير مشروع: ${project.name}*\n━━━━━━━━━━━━━━━━━━\n\n*🏢 معلومات المشروع:*\n• الكود: ${project.code}\n• الحالة: ${project.active === false? '🔴 موقوف' : '🟢 نشط'}\n• الانتهاء: ${project.isLifetime? 'مدى الحياة ♾' : project.expiryDate || 'غير محدد'}\n• تاريخ الإنشاء: ${project.createdAt?.toDate? formatDate(project.createdAt) : 'غير محدد'}\n\n*👥 المستخدمين:*\n• عدد المدراء: ${managers.length}\n`;
-        managers.forEach(m => { msg += ` - ${m.name} (${m.phone}) - ${m.role === 'admin'? 'مدير عام' : m.role === 'manager'? 'مدير' : 'مشاهد'}\n`; });
-        msg += `• عدد المناديب: ${delegates.length}\n\n*💰 الإحصائيات:*\n• عدد السندات: ${bondsCount}\n• المبلغ الكلي: ${formatMoney(totalAmount)}\n\n*⚙ الإعدادات المفعلة:*\n`;
+        
+        const status = getProjectStatus(project);
+        let msg = `*📊 تقرير مشروع: ${project.name}*\n━━━━━━━━━━━━━━━━━━\n\n`;
+        msg += `*🏢 معلومات المشروع:*\n`;
+        msg += `• الكود: ${project.code}\n`;
+        msg += `• الحالة: ${status.text}\n`;
+        msg += `• الانتهاء: ${project.isLifetime ? 'مدى الحياة ♾' : project.expiryDate || 'غير محدد'}\n`;
+        msg += `• تاريخ الإنشاء: ${project.createdAt?.toDate ? formatDate(project.createdAt) : 'غير محدد'}\n\n`;
+        
+        msg += `*👥 المستخدمين:*\n`;
+        msg += `• عدد المدراء: ${managers.length}\n`;
+        managers.forEach(m => {
+            const roleName = m.role === 'admin' ? 'مدير عام' : m.role === 'manager' ? 'مدير' : 'مشاهد';
+            msg += ` - ${m.name} (${m.phone}) - ${roleName}\n`;
+        });
+        msg += `• عدد المناديب: ${delegates.length}\n\n`;
+        
+        msg += `*💰 الإحصائيات:*\n`;
+        msg += `• عدد السندات: ${bondsCount}\n`;
+        msg += `• المبلغ الكلي: ${formatMoney(totalAmount)}\n\n`;
+        
+        msg += `*⚙ الإعدادات المفعلة:*\n`;
         const features = project.settings?.features || {};
-               msg += `• اكسل: ${features.excel!== false? '✅' : '❌'}\n`;
-        msg += `• PDF: ${features.pdf!== false? '✅' : '❌'}\n`;
-        msg += `• طباعة: ${features.print!== false? '✅' : '❌'}\n`;
-        msg += `• QR: ${features.qr!== false? '✅' : '❌'}\n`;
-        msg += `• واتساب: ${features.whatsapp!== false? '✅' : '❌'}\n\n`;
+        msg += `• اكسل: ${features.excel !== false ? '✅' : '❌'}\n`;
+        msg += `• PDF: ${features.pdf !== false ? '✅' : '❌'}\n`;
+        msg += `• طباعة: ${features.print !== false ? '✅' : '❌'}\n`;
+        msg += `• QR: ${features.qr !== false ? '✅' : '❌'}\n`;
+        msg += `• واتساب: ${features.whatsapp !== false ? '✅' : '❌'}\n\n`;
         msg += `━━━━━━━━━━━━━━━━━━\n`;
         msg += `_تم الإرسال من لوحة تحكم سندات برو_\n`;
         msg += `_التاريخ: ${new Date().toLocaleString('ar-SA')}_`;
@@ -1030,22 +1091,26 @@
 
     window.toggleProjectStatus = async (projectId, currentStatus) => {
         if (!PERMISSIONS[currentUser.role].canEditSettings) return showError('ليس لديك صلاحية إيقاف/تنشيط المشاريع');
-        const action = currentStatus? 'إيقاف' : 'تنشيط';
-        const result = await showConfirm(`${action} المشروع؟`, currentStatus? 'سيتم إيقاف كل المدراء والمناديب التابعين لهذا المشروع ولن يتمكنوا من الدخول' : 'سيتم السماح لكل المستخدمين بالدخول مرة أخرى');
+        
+        const action = currentStatus ? 'إيقاف' : 'تنشيط';
+        const result = await showConfirm(`${action} المشروع؟`, currentStatus ? 'سيتم إيقاف كل المدراء والمناديب التابعين لهذا المشروع ولن يتمكنوا من الدخول' : 'سيتم السماح لكل المستخدمين بالدخول مرة أخرى');
+        
         if (result.isConfirmed) {
             try {
                 await updateDoc(doc(db, 'projects', projectId), {
-                    active:!currentStatus,
+                    active: !currentStatus,
                     updatedAt: serverTimestamp(),
                     updatedBy: currentUser.uid
                 });
+                
                 const project = allProjects.find(p => p.id === projectId);
                 const usersQuery = query(collection(db, 'users'), where('projectCode', '==', project.code));
                 const usersSnap = await getDocs(usersQuery);
                 const promises = usersSnap.docs.map(userDoc =>
-                    updateDoc(userDoc.ref, { active:!currentStatus, updatedAt: serverTimestamp() })
+                    updateDoc(userDoc.ref, { active: !currentStatus, updatedAt: serverTimestamp() })
                 );
                 await Promise.all(promises);
+                
                 showSuccess(`تم ${action} المشروع و ${usersSnap.size} مستخدم تابع له`);
             } catch (error) {
                 showError(error.message);
@@ -1053,25 +1118,128 @@
         }
     };
 
+    // ===== قيود المندوب =====
+    function loadDelegateLimits() {
+        const select = document.getElementById('limitDelegateSelect');
+        select.innerHTML = '<option value="">اختر المندوب</option>' + 
+            allDelegates.map(d => `<option value="${d.id}">${d.name} - ${d.phone}</option>`).join('');
+    }
+
+    document.getElementById('limitDelegateSelect').onchange = (e) => {
+        const delegateId = e.target.value;
+        if (!delegateId) {
+            document.getElementById('delegateLimitForm').classList.add('hidden');
+            return;
+        }
+        const delegate = allDelegates.find(d => d.id === delegateId);
+        if (!delegate) return;
+        
+        currentLimitDelegate = delegate;
+        const limits = delegate.limits || {};
+        
+        document.getElementById('limitDailyCount').value = limits.dailyCount || '';
+        document.getElementById('limitSingleAmount').value = limits.singleAmount || '';
+        document.getElementById('limitTotalCount').value = limits.totalCount || '';
+        document.getElementById('limitTotalAmount').value = limits.totalAmount || '';
+        document.getElementById('limitRequireDoc').checked = limits.requireDoc !== false;
+        
+        if (limits.expiryDate) {
+            document.getElementById('limitWithExpiry').checked = true;
+            document.getElementById('limitExpiryDate').value = limits.expiryDate;
+            document.getElementById('expiryDateDiv').classList.remove('hidden');
+        } else {
+            document.getElementById('limitNoRestriction').checked = true;
+            document.getElementById('expiryDateDiv').classList.add('hidden');
+        }
+        
+        // تحميل أنواع السندات
+        const project = allProjects.find(p => p.code === delegate.projectCode);
+        const bondTypes = project?.bondSettings?.types || [];
+        const allowedTypes = limits.allowedBondTypes || bondTypes.map(t => t.id);
+        document.getElementById('limitBondTypes').innerHTML = bondTypes.map(t => `
+            <label class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                <input type="checkbox" value="${t.id}" ${allowedTypes.includes(t.id) ? 'checked' : ''} class="limit-bond-type">
+                <span class="text-sm">${t.name}</span>
+            </label>
+        `).join('');
+        
+        // تحميل طرق الدفع
+        const paymentMethods = project?.bondSettings?.paymentMethods || ['كاش', 'شبكة', 'تحويل بنكي'];
+        const allowedMethods = limits.allowedPaymentMethods || paymentMethods;
+        document.getElementById('limitPaymentMethods').innerHTML = paymentMethods.map(m => `
+            <label class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                <input type="checkbox" value="${m}" ${allowedMethods.includes(m) ? 'checked' : ''} class="limit-payment-method">
+                <span class="text-sm">${m}</span>
+            </label>
+        `).join('');
+        
+        document.getElementById('delegateLimitForm').classList.remove('hidden');
+    };
+
+    document.querySelectorAll('input[name="limitType"]').forEach(radio => {
+        radio.onchange = (e) => {
+            document.getElementById('expiryDateDiv').classList.toggle('hidden', e.target.value === 'none');
+        };
+    });
+
+    document.getElementById('saveDelegateLimitBtn').onclick = async () => {
+        if (!currentLimitDelegate) return;
+        
+        const limits = {
+            dailyCount: parseInt(document.getElementById('limitDailyCount').value) || 0,
+            singleAmount: parseFloat(document.getElementById('limitSingleAmount').value) || 0,
+            totalCount: parseInt(document.getElementById('limitTotalCount').value) || 0,
+            totalAmount: parseFloat(document.getElementById('limitTotalAmount').value) || 0,
+            requireDoc: document.getElementById('limitRequireDoc').checked,
+            allowedBondTypes: Array.from(document.querySelectorAll('.limit-bond-type:checked')).map(cb => cb.value),
+            allowedPaymentMethods: Array.from(document.querySelectorAll('.limit-payment-method:checked')).map(cb => cb.value),
+            expiryDate: document.getElementById('limitWithExpiry').checked ? document.getElementById('limitExpiryDate').value : null
+        };
+        
+        try {
+            await updateDoc(doc(db, 'users', currentLimitDelegate.id), {
+                limits: limits,
+                updatedAt: serverTimestamp()
+            });
+            showSuccess('تم حفظ القيود بنجاح');
+        } catch (error) {
+            showError(error.message);
+        }
+    };
+
+    window.editDelegateLimits = (delegateId) => {
+        document.getElementById('tab-delegateLimits').click();
+        setTimeout(() => {
+            document.getElementById('limitDelegateSelect').value = delegateId;
+            document.getElementById('limitDelegateSelect').dispatchEvent(new Event('change'));
+        }, 100);
+    };
+
     // ===== إعدادات السندات =====
     function loadBondSettings() {
-        if (!currentProjectSettings) return;
+        if (!currentProjectSettings) {
+            // السوبر ادمن - اختار مشروع أول
+            showError('اختر مشروع من تبويب المشاريع أولاً');
+            return;
+        }
+        
         const bs = currentProjectSettings.bondSettings || {};
-
         document.getElementById('companyName').value = bs.company?.name || currentProjectSettings.name;
         document.getElementById('companyPhone').value = bs.company?.phone || '';
         document.getElementById('companyTax').value = bs.company?.tax || '';
         document.getElementById('companyCR').value = bs.company?.cr || '';
         document.getElementById('companyLogo').value = bs.company?.logo || currentProjectSettings.settings?.logo || '';
         document.getElementById('companyAddress').value = bs.company?.address || '';
-
+        
         renderBondTypes(bs.types || []);
         renderPaymentMethods(bs.paymentMethods || ['كاش', 'شبكة', 'تحويل بنكي']);
         renderCashboxes(bs.cashboxes || [{ id: 'main', name: 'الصندوق الرئيسي', balance: 0 }]);
         renderAccountants(bs.accountants || []);
+        
         document.getElementById('printTemplate').value = bs.printTemplate || 'classic';
         document.getElementById('bondFooter').value = bs.bondFooter || '';
-        document.getElementById('enableTafqeet').checked = bs.enableTafqeet!== false;
+        document.getElementById('enableTafqeet').checked = bs.enableTafqeet !== false;
+        
         renderBondFieldsToggle(bs.visibleFields || DEFAULT_BOND_FIELDS.map(f => f.id));
     }
 
@@ -1080,8 +1248,8 @@
             <div class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl">
                 <input value="${t.name}" data-idx="${idx}" data-field="name" placeholder="اسم النوع" class="flex-1 border p-2 rounded-lg bond-type-input">
                 <select data-idx="${idx}" data-field="accountingEffect" class="border p-2 rounded-lg bond-type-input">
-                    <option value="income" ${t.accountingEffect === 'income'? 'selected' : ''}>قبض - يزيد الصندوق</option>
-                    <option value="expense" ${t.accountingEffect === 'expense'? 'selected' : ''}>صرف - ينقص الصندوق</option>
+                    <option value="income" ${t.accountingEffect === 'income' ? 'selected' : ''}>قبض - يزيد الصندوق</option>
+                    <option value="expense" ${t.accountingEffect === 'expense' ? 'selected' : ''}>صرف - ينقص الصندوق</option>
                 </select>
                 <input type="number" value="${t.startNumber || 1}" data-idx="${idx}" data-field="startNumber" placeholder="بداية التسلسل" class="w-32 border p-2 rounded-lg bond-type-input">
                 <button onclick="removeBondType(${idx})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
@@ -1092,6 +1260,7 @@
     }
 
     document.getElementById('addBondTypeBtn').onclick = () => {
+        if (!currentProjectSettings) return showError('اختر مشروع أولاً');
         const bs = currentProjectSettings.bondSettings || {};
         bs.types = bs.types || [];
         bs.types.push({ id: 'type' + Date.now(), name: 'نوع جديد', accountingEffect: 'income', startNumber: 1 });
@@ -1099,6 +1268,7 @@
     };
 
     window.removeBondType = (idx) => {
+        if (!currentProjectSettings) return;
         const bs = currentProjectSettings.bondSettings || {};
         bs.types.splice(idx, 1);
         renderBondTypes(bs.types);
@@ -1116,6 +1286,7 @@
     }
 
     document.getElementById('addPaymentBtn').onclick = () => {
+        if (!currentProjectSettings) return showError('اختر مشروع أولاً');
         const val = document.getElementById('newPaymentMethod').value.trim();
         if (!val) return;
         const bs = currentProjectSettings.bondSettings || {};
@@ -1126,6 +1297,7 @@
     };
 
     window.removePaymentMethod = (idx) => {
+        if (!currentProjectSettings) return;
         const bs = currentProjectSettings.bondSettings || {};
         bs.paymentMethods.splice(idx, 1);
         renderPaymentMethods(bs.paymentMethods);
@@ -1144,6 +1316,7 @@
     }
 
     document.getElementById('addCashboxBtn').onclick = () => {
+        if (!currentProjectSettings) return showError('اختر مشروع أولاً');
         const name = document.getElementById('newCashboxName').value.trim();
         const balance = parseFloat(document.getElementById('newCashboxBalance').value) || 0;
         if (!name) return showError('ادخل اسم الصندوق');
@@ -1156,6 +1329,7 @@
     };
 
     window.removeCashbox = (idx) => {
+        if (!currentProjectSettings) return;
         const bs = currentProjectSettings.bondSettings || {};
         bs.cashboxes.splice(idx, 1);
         renderCashboxes(bs.cashboxes);
@@ -1174,9 +1348,10 @@
     }
 
     document.getElementById('addAccountantBtn').onclick = () => {
+        if (!currentProjectSettings) return showError('اختر مشروع أولاً');
         const name = document.getElementById('newAccountantName').value.trim();
         const phone = document.getElementById('newAccountantPhone').value.trim();
-        if (!name ||!phone) return showError('املأ الاسم والجوال');
+        if (!name || !phone) return showError('املأ الاسم والجوال');
         const bs = currentProjectSettings.bondSettings || {};
         bs.accountants = bs.accountants || [];
         bs.accountants.push({ id: 'acc' + Date.now(), name, phone });
@@ -1186,6 +1361,7 @@
     };
 
     window.removeAccountant = (idx) => {
+        if (!currentProjectSettings) return;
         const bs = currentProjectSettings.bondSettings || {};
         bs.accountants.splice(idx, 1);
         renderAccountants(bs.accountants);
@@ -1193,21 +1369,25 @@
 
     function renderBondFieldsToggle(visibleFields) {
         document.getElementById('bondFieldsToggle').innerHTML = DEFAULT_BOND_FIELDS.map(f => `
-            <button data-field="${f.id}" class="field-toggle p-3 rounded-xl border-2 border-gray-200 text-sm ${visibleFields.includes(f.id)? 'active' : ''}">
-                <i class="fas fa-${visibleFields.includes(f.id)? 'check' : 'times'} ml-1"></i>${f.name}
+            <button data-field="${f.id}" class="field-toggle p-3 rounded-xl border-2 border-gray-200 text-sm ${visibleFields.includes(f.id) ? 'active' : ''}">
+                <i class="fas fa-${visibleFields.includes(f.id) ? 'check' : 'times'} ml-1"></i>${f.name}
             </button>
         `).join('');
         document.querySelectorAll('.field-toggle').forEach(btn => {
             btn.onclick = () => {
                 btn.classList.toggle('active');
                 const icon = btn.querySelector('i');
-                icon.className = btn.classList.contains('active')? 'fas fa-check ml-1' : 'fas fa-times ml-1';
+                icon.className = btn.classList.contains('active') ? 'fas fa-check ml-1' : 'fas fa-times ml-1';
             };
         });
     }
 
     document.getElementById('saveBondSettingsBtn').onclick = async () => {
-        if (!currentProjectSettings) return;
+        if (!currentProjectSettings) return showError('اختر مشروع أولاً');
+        if (currentUser.role !== 'superadmin' && currentUser.projectCode !== currentProjectSettings.code) {
+            return showError('ليس لديك صلاحية تعديل إعدادات هذا المشروع');
+        }
+        
         const bs = currentProjectSettings.bondSettings || {};
         bs.company = {
             name: document.getElementById('companyName').value.trim(),
@@ -1217,24 +1397,28 @@
             logo: document.getElementById('companyLogo').value.trim(),
             address: document.getElementById('companyAddress').value.trim()
         };
+        
         document.querySelectorAll('.bond-type-input').forEach(input => {
             const idx = parseInt(input.dataset.idx);
             const field = input.dataset.field;
             if (!bs.types[idx]) bs.types[idx] = {};
-            bs.types[idx][field] = field === 'startNumber'? parseInt(input.value) : input.value;
+            bs.types[idx][field] = field === 'startNumber' ? parseInt(input.value) : input.value;
         });
+        
         document.querySelectorAll('.cashbox-input').forEach(input => {
             const idx = parseInt(input.dataset.idx);
             const field = input.dataset.field;
             if (!bs.cashboxes[idx]) bs.cashboxes[idx] = {};
-            bs.cashboxes[idx][field] = field === 'balance'? parseFloat(input.value) : input.value;
+            bs.cashboxes[idx][field] = field === 'balance' ? parseFloat(input.value) : input.value;
         });
+        
         document.querySelectorAll('.accountant-input').forEach(input => {
             const idx = parseInt(input.dataset.idx);
             const field = input.dataset.field;
             if (!bs.accountants[idx]) bs.accountants[idx] = {};
             bs.accountants[idx][field] = input.value;
         });
+        
         bs.printTemplate = document.getElementById('printTemplate').value;
         bs.bondFooter = document.getElementById('bondFooter').value.trim();
         bs.enableTafqeet = document.getElementById('enableTafqeet').checked;
@@ -1242,10 +1426,12 @@
         document.querySelectorAll('.field-toggle.active').forEach(btn => {
             bs.visibleFields.push(btn.dataset.field);
         });
+        
         try {
             await updateDoc(doc(db, 'projects', currentProjectSettings.id), {
                 bondSettings: bs,
-                updatedAt: serverTimestamp()
+                updatedAt: serverTimestamp(),
+                updatedBy: currentUser.uid
             });
             showSuccess('تم حفظ إعدادات السندات بنجاح');
         } catch (error) {
@@ -1254,6 +1440,296 @@
     };
 
     document.querySelector('[data-tab="bondSettings"]').addEventListener('click', loadBondSettings);
+
+    // ===== قيود المندوب =====
+    document.getElementById('limitDelegateSelect').onchange = async (e) => {
+        const delegateId = e.target.value;
+        if (!delegateId) {
+            document.getElementById('delegateLimitForm').classList.add('hidden');
+            return;
+        }
+        
+        currentLimitDelegate = allDelegates.find(d => d.id === delegateId);
+        if (!currentLimitDelegate) return;
+        
+        document.getElementById('delegateLimitForm').classList.remove('hidden');
+        
+        // تحميل القيود الحالية
+        const limits = currentLimitDelegate.limits || {};
+        document.getElementById('limitDailyCount').value = limits.dailyCount || '';
+        document.getElementById('limitSingleAmount').value = limits.singleAmount || '';
+        document.getElementById('limitTotalCount').value = limits.totalCount || '';
+        document.getElementById('limitTotalAmount').value = limits.totalAmount || '';
+        
+        if (limits.expiryDate) {
+            document.getElementById('limitWithExpiry').checked = true;
+            document.getElementById('limitExpiryDate').value = limits.expiryDate;
+            document.getElementById('expiryDateDiv').classList.remove('hidden');
+        } else {
+            document.getElementById('limitNoRestriction').checked = true;
+            document.getElementById('expiryDateDiv').classList.add('hidden');
+        }
+        
+        document.getElementById('limitRequireDoc').checked = limits.requireDoc !== false;
+        
+        // تحميل أنواع السندات المسموحة
+        const project = allProjects.find(p => p.code === currentLimitDelegate.projectCode);
+        const bondTypes = project?.bondSettings?.types || [];
+        document.getElementById('limitBondTypes').innerHTML = bondTypes.map(t => `
+            <label class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border">
+                <input type="checkbox" value="${t.id}" class="w-4 h-4" ${!limits.blockedBondTypes?.includes(t.id) ? 'checked' : ''}>
+                <span class="text-sm">${t.name}</span>
+            </label>
+        `).join('');
+        
+        // تحميل طرق الدفع المسموحة
+        const paymentMethods = project?.bondSettings?.paymentMethods || ['كاش', 'شبكة', 'تحويل بنكي'];
+        document.getElementById('limitPaymentMethods').innerHTML = paymentMethods.map(m => `
+            <label class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border">
+                <input type="checkbox" value="${m}" class="w-4 h-4" ${!limits.blockedPaymentMethods?.includes(m) ? 'checked' : ''}>
+                <span class="text-sm">${m}</span>
+            </label>
+        `).join('');
+    };
+
+    document.querySelectorAll('input[name="limitType"]').forEach(radio => {
+        radio.onchange = (e) => {
+            document.getElementById('expiryDateDiv').classList.toggle('hidden', e.target.value === 'none');
+        };
+    });
+
+    document.getElementById('saveDelegateLimitBtn').onclick = async () => {
+        if (!currentLimitDelegate) return showError('اختر مندوب أولاً');
+        
+        const limits = {
+            dailyCount: parseInt(document.getElementById('limitDailyCount').value) || 0,
+            singleAmount: parseFloat(document.getElementById('limitSingleAmount').value) || 0,
+            totalCount: parseInt(document.getElementById('limitTotalCount').value) || 0,
+            totalAmount: parseFloat(document.getElementById('limitTotalAmount').value) || 0,
+            expiryDate: document.getElementById('limitWithExpiry').checked ? document.getElementById('limitExpiryDate').value : null,
+            requireDoc: document.getElementById('limitRequireDoc').checked,
+            blockedBondTypes: [],
+            blockedPaymentMethods: []
+        };
+        
+        // أنواع السندات المحظورة
+        document.querySelectorAll('#limitBondTypes input:not(:checked)').forEach(cb => {
+            limits.blockedBondTypes.push(cb.value);
+        });
+        
+        // طرق الدفع المحظورة
+        document.querySelectorAll('#limitPaymentMethods input:not(:checked)').forEach(cb => {
+            limits.blockedPaymentMethods.push(cb.value);
+        });
+        
+        try {
+            await updateDoc(doc(db, 'users', currentLimitDelegate.id), {
+                limits: limits,
+                updatedAt: serverTimestamp(),
+                updatedBy: currentUser.uid
+            });
+            showSuccess('تم حفظ قيود المندوب بنجاح');
+        } catch (error) {
+            showError(error.message);
+        }
+    };
+
+    // ===== إعدادات المشروع =====
+    document.getElementById('settingsProjectCode').onchange = (e) => {
+        const projectCode = e.target.value;
+        const form = document.getElementById('projectSettingsForm');
+        if (!projectCode) {
+            form.classList.add('hidden');
+            return;
+        }
+        const project = allProjects.find(p => p.code === projectCode);
+        if (project && project.settings) {
+            document.getElementById('projectLogo').value = project.settings.logo || '';
+            document.getElementById('projectTerms').value = project.settings.terms || '';
+            document.getElementById('projectExpiryEdit').value = project.expiryDate || '';
+            document.getElementById('projectLifetimeEdit').checked = project.isLifetime || false;
+            document.getElementById('projectExpiryEdit').disabled = project.isLifetime || false;
+            document.getElementById('showCreateBond').checked = project.settings.showCreateBond !== false;
+            document.getElementById('showBondsTab').checked = project.settings.showBondsTab !== false;
+            document.getElementById('featureWhatsApp').checked = project.settings.features?.whatsapp !== false;
+            document.getElementById('featureExcel').checked = project.settings.features?.excel !== false;
+            document.getElementById('featurePDF').checked = project.settings.features?.pdf !== false;
+            document.getElementById('featurePrint').checked = project.settings.features?.print !== false;
+            document.getElementById('featureQR').checked = project.settings.features?.qr !== false;
+            document.getElementById('forceTermsAccept').checked = project.settings.forceTermsAccept !== false;
+            const termsTextarea = document.getElementById('projectTerms');
+            termsTextarea.style.height = '';
+            termsTextarea.style.height = termsTextarea.scrollHeight + 'px';
+            form.classList.remove('hidden');
+        }
+    };
+
+    document.getElementById('projectLifetimeEdit').onchange = (e) => {
+        document.getElementById('projectExpiryEdit').disabled = e.target.checked;
+        if (e.target.checked) document.getElementById('projectExpiryEdit').value = '';
+    };
+
+    document.getElementById('saveSettingsBtn').onclick = async () => {
+        const projectCode = document.getElementById('settingsProjectCode').value;
+        if (!projectCode) return;
+        const project = allProjects.find(p => p.code === projectCode);
+        if (!project) return;
+        
+        const settings = {
+            logo: document.getElementById('projectLogo').value.trim(),
+            terms: document.getElementById('projectTerms').value.trim(),
+            showCreateBond: document.getElementById('showCreateBond').checked,
+            showBondsTab: document.getElementById('showBondsTab').checked,
+            features: {
+                whatsapp: document.getElementById('featureWhatsApp').checked,
+                excel: document.getElementById('featureExcel').checked,
+                pdf: document.getElementById('featurePDF').checked,
+                print: document.getElementById('featurePrint').checked,
+                qr: document.getElementById('featureQR').checked
+            },
+            forceTermsAccept: document.getElementById('forceTermsAccept').checked
+        };
+        
+        const expiryDate = document.getElementById('projectExpiryEdit').value;
+        const isLifetime = document.getElementById('projectLifetimeEdit').checked;
+        
+        try {
+            await updateDoc(doc(db, 'projects', project.id), {
+                settings: settings,
+                expiryDate: isLifetime ? null : expiryDate,
+                isLifetime: isLifetime,
+                updatedAt: serverTimestamp(),
+                updatedBy: currentUser.uid
+            });
+            showSuccess('تم حفظ الإعدادات بنجاح');
+        } catch (error) {
+            showError(error.message);
+        }
+    };
+
+    // ===== دوال مساعدة =====
+    window.deleteItem = async (type, id) => {
+        const perms = PERMISSIONS[currentUser.role];
+        if (!perms.canDelete) return showError('ليس لديك صلاحية الحذف');
+        const result = await showConfirm('تأكيد الحذف', 'سيتم الحذف نهائياً');
+        if (result.isConfirmed) {
+            await deleteDoc(doc(db, type, id));
+            showSuccess('تم الحذف بنجاح');
+        }
+    };
+
+    window.sendProjectWhatsApp = async (projectId) => {
+        const project = allProjects.find(p => p.id === projectId);
+        if (!project) return;
+        const managers = allUsers.filter(m => m.projectCode === project.code);
+        const delegates = allDelegates.filter(d => d.projectCode === project.code);
+        const bondsCount = allBonds.filter(b => b.projectCode === project.code).length;
+        const totalAmount = allBonds.filter(b => b.projectCode === project.code).reduce((sum, b) => sum + (b.amount || 0), 0);
+        
+        let msg = `*📊 تقرير مشروع: ${project.name}*\n━━━━━━━━━━━━━━━━━━\n\n`;
+        msg += `*🏢 معلومات المشروع:*\n`;
+        msg += `• الكود: ${project.code}\n`;
+        msg += `• الحالة: ${project.active === false ? '🔴 موقوف' : '🟢 نشط'}\n`;
+        msg += `• الانتهاء: ${project.isLifetime ? 'مدى الحياة ♾' : project.expiryDate || 'غير محدد'}\n`;
+        msg += `• تاريخ الإنشاء: ${project.createdAt?.toDate ? formatDate(project.createdAt) : 'غير محدد'}\n\n`;
+        msg += `*👥 المستخدمين:*\n`;
+        msg += `• عدد المدراء: ${managers.length}\n`;
+        managers.forEach(m => {
+            msg += ` - ${m.name} (${m.phone}) - ${m.role === 'admin' ? 'مدير عام' : m.role === 'manager' ? 'مدير' : 'مشاهد'}\n`;
+        });
+        msg += `• عدد المناديب: ${delegates.length}\n\n`;
+        msg += `*💰 الإحصائيات:*\n`;
+        msg += `• عدد السندات: ${bondsCount}\n`;
+        msg += `• المبلغ الكلي: ${formatMoney(totalAmount)}\n\n`;
+        msg += `*⚙ الإعدادات المفعلة:*\n`;
+        const features = project.settings?.features || {};
+        msg += `• اكسل: ${features.excel !== false ? '✅' : '❌'}\n`;
+        msg += `• PDF: ${features.pdf !== false ? '✅' : '❌'}\n`;
+        msg += `• طباعة: ${features.print !== false ? '✅' : '❌'}\n`;
+        msg += `• QR: ${features.qr !== false ? '✅' : '❌'}\n`;
+        msg += `• واتساب: ${features.whatsapp !== false ? '✅' : '❌'}\n\n`;
+        msg += `━━━━━━━━━━━━━━━━━━\n`;
+        msg += `_تم الإرسال من لوحة تحكم سندات برو_\n`;
+        msg += `_التاريخ: ${new Date().toLocaleString('ar-SA')}_`;
+        
+        const phone = '0597087767';
+        const url = `https://wa.me/966${phone.substring(1)}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    };
+
+    window.toggleProjectStatus = async (projectId, currentStatus) => {
+        if (!PERMISSIONS[currentUser.role].canEditSettings) return showError('ليس لديك صلاحية إيقاف/تنشيط المشاريع');
+        const action = currentStatus ? 'إيقاف' : 'تنشيط';
+        const result = await showConfirm(`${action} المشروع؟`, currentStatus ? 'سيتم إيقاف كل المدراء والمناديب التابعين لهذا المشروع ولن يتمكنوا من الدخول' : 'سيتم السماح لكل المستخدمين بالدخول مرة أخرى');
+        if (result.isConfirmed) {
+            try {
+                await updateDoc(doc(db, 'projects', projectId), {
+                    active: !currentStatus,
+                    updatedAt: serverTimestamp(),
+                    updatedBy: currentUser.uid
+                });
+                const project = allProjects.find(p => p.id === projectId);
+                const usersQuery = query(collection(db, 'users'), where('projectCode', '==', project.code));
+                const usersSnap = await getDocs(usersQuery);
+                const promises = usersSnap.docs.map(userDoc =>
+                    updateDoc(userDoc.ref, { active: !currentStatus, updatedAt: serverTimestamp() })
+                );
+                await Promise.all(promises);
+                showSuccess(`تم ${action} المشروع و ${usersSnap.size} مستخدم تابع له`);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+    };
+
+    window.toggleUserStatus = async (id, currentStatus) => {
+        if (!PERMISSIONS[currentUser.role].canManageManagers) return showError('ليس لديك صلاحية إيقاف/تنشيط المستخدمين');
+        const action = currentStatus ? 'إيقاف' : 'تنشيط';
+        const result = await showConfirm(`${action} المستخدم؟`, currentStatus ? 'سيتم منع المستخدم من الدخول' : 'سيتم السماح للمستخدم بالدخول');
+        if (result.isConfirmed) {
+            await updateDoc(doc(db, 'users', id), { active: !currentStatus, updatedAt: serverTimestamp() });
+            showSuccess(`تم ${action} المستخدم بنجاح`);
+        }
+    };
+
+    window.deleteUser = async (id) => {
+        if (!PERMISSIONS[currentUser.role].canDelete) return showError('ليس لديك صلاحية الحذف النهائي');
+        const result = await showConfirm('حذف نهائي؟', 'سيتم حذف المستخدم من قاعدة البيانات. لازم تحذفه يدوي من Authentication عشان يقبل نفس الرقم مرة ثانية');
+        if (result.isConfirmed) {
+            await deleteDoc(doc(db, 'users', id));
+            showSuccess('تم حذف المستخدم من قاعدة البيانات. لا تنسى تحذفه من Authentication');
+        }
+    };
+
+    window.editManager = async (id) => {
+        const manager = allUsers.find(m => m.id === id);
+        if (!manager) return;
+        document.getElementById('managerName').value = manager.name;
+        document.getElementById('managerPhone').value = manager.phone;
+        document.getElementById('managerProjectCode').value = manager.projectCode;
+        document.getElementById('managerRole').value = manager.role;
+        document.getElementById('managerPassword').value = '';
+        document.getElementById('managerPassword').placeholder = 'اتركه فاضي لو ما تبي تغير الباسورد';
+        document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-save ml-2"></i>حفظ التعديل';
+        document.getElementById('addManagerBtn').onclick = async () => {
+            const updateData = {
+                name: document.getElementById('managerName').value.trim(),
+                phone: document.getElementById('managerPhone').value.trim(),
+                projectCode: document.getElementById('managerProjectCode').value,
+                role: document.getElementById('managerRole').value,
+                active: true
+            };
+            if (document.getElementById('managerPassword').value) updateData.password = document.getElementById('managerPassword').value;
+            await updateDoc(doc(db, 'users', id), updateData);
+            showSuccess('تم تحديث المدير بنجاح');
+            document.getElementById('managerName').value = '';
+            document.getElementById('managerPhone').value = '';
+            document.getElementById('managerPassword').value = '';
+            document.getElementById('managerPassword').placeholder = 'كلمة المرور';
+            document.getElementById('addManagerBtn').innerHTML = '<i class="fas fa-plus ml-2"></i>إضافة';
+            document.getElementById('addManagerBtn').onclick = addManager;
+        };
+    };
 
 </script>
 
