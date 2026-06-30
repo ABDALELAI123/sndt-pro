@@ -65,7 +65,7 @@
     import { showSuccess, showError } from './core.js?v=999999';
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    let isLoggingIn = false; // منع الطرد وقت تسجيل الدخول
+    let isLoggingIn = false;
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('logout') === 'true') {
@@ -73,12 +73,17 @@
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // هذا الجزء المصحح - ما يطردك إلا لو أنت فعلاً موقوف
+    // المصحح: ما يطرد ولا يعلق
     onAuthStateChanged(auth, async (user) => {
-        if (!user) return; // ما في يوزر، خله في صفحة الدخول
+        if (!user) {
+            isLoggingIn = false;
+            return;
+        }
         
-        // لو جاي من زر تسجيل الدخول، لا تشيك الحين
-        if (isLoggingIn) return;
+        // لو جاي من زر الدخول، كمل التحويل مباشرة
+        if (isLoggingIn) {
+            isLoggingIn = false; // مهم: رجعه false عشان يكمل
+        }
         
         document.getElementById('loadingScreen').classList.remove('hidden');
         
@@ -99,13 +104,14 @@
                 return;
             }
 
-            // توجيه حسب الرول - السوبر ادمن والمدير للوحة التحكم
+            // توجيه حسب الرول
             if (userData.role === 'delegate') {
                 window.location.href = 'delegate.html';
             } else {
                 window.location.href = 'admin-panel.html';
             }
         } catch (error) {
+            console.error('Auth error:', error);
             await signOut(auth);
             showError('خطأ في التحقق من الصلاحيات');
             document.getElementById('loadingScreen').classList.add('hidden');
@@ -122,11 +128,11 @@
         }
 
         document.getElementById('loadingScreen').classList.remove('hidden');
-        isLoggingIn = true; // قفل الطرد التلقائي
+        isLoggingIn = true;
 
         try {
             await login(projectCode, phone, password);
-            // onAuthStateChanged بيتكفل بالتوجيه بعد ما يخلص login
+            // onAuthStateChanged بيتكفل بالتوجيه
         } catch (error) {
             isLoggingIn = false;
             document.getElementById('loadingScreen').classList.add('hidden');
@@ -139,7 +145,6 @@
         }
     };
 
-    // Enter يسجل دخول
     document.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') document.getElementById('loginBtn').click();
     });
