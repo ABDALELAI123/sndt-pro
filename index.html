@@ -60,10 +60,12 @@
     </div>
 
 <script type="module">
-    import { auth, db } from './firebase.js?v=999999';
+    import { auth } from './firebase.js?v=999999';
     import { login, getCurrentUserData } from './auth.js?v=999999';
     import { showSuccess, showError } from './core.js?v=999999';
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    let isLoggingIn = false; // منع الطرد وقت تسجيل الدخول
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('logout') === 'true') {
@@ -71,31 +73,42 @@
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    // هذا الجزء المصحح - ما يطردك إلا لو أنت فعلاً موقوف
     onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            document.getElementById('loadingScreen').classList.remove('hidden');
+        if (!user) return; // ما في يوزر، خله في صفحة الدخول
+        
+        // لو جاي من زر تسجيل الدخول، لا تشيك الحين
+        if (isLoggingIn) return;
+        
+        document.getElementById('loadingScreen').classList.remove('hidden');
+        
+        try {
             const userData = await getCurrentUserData();
             
             if (!userData) {
-                await auth.signOut();
+                await signOut(auth);
                 showError('المستخدم غير موجود في قاعدة البيانات');
                 document.getElementById('loadingScreen').classList.add('hidden');
                 return;
             }
 
             if (userData.active === false) {
-                await auth.signOut();
+                await signOut(auth);
                 showError('تم إيقاف حسابك. تواصل مع المدير');
                 document.getElementById('loadingScreen').classList.add('hidden');
                 return;
             }
 
-            // توجيه حسب الرول
+            // توجيه حسب الرول - السوبر ادمن والمدير للوحة التحكم
             if (userData.role === 'delegate') {
                 window.location.href = 'delegate.html';
             } else {
                 window.location.href = 'admin-panel.html';
             }
+        } catch (error) {
+            await signOut(auth);
+            showError('خطأ في التحقق من الصلاحيات');
+            document.getElementById('loadingScreen').classList.add('hidden');
         }
     });
 
@@ -109,16 +122,19 @@
         }
 
         document.getElementById('loadingScreen').classList.remove('hidden');
+        isLoggingIn = true; // قفل الطرد التلقائي
 
         try {
             await login(projectCode, phone, password);
-            // onAuthStateChanged بيتكفل بالتوجيه
+            // onAuthStateChanged بيتكفل بالتوجيه بعد ما يخلص login
         } catch (error) {
+            isLoggingIn = false;
             document.getElementById('loadingScreen').classList.add('hidden');
             let msg = 'خطأ في تسجيل الدخول';
             if (error.code === 'auth/invalid-credential') msg = 'رقم الجوال أو كلمة المرور غلط';
             if (error.code === 'auth/user-not-found') msg = 'المستخدم غير موجود';
             if (error.message.includes('project')) msg = 'كود المشروع غير صحيح';
+            if (error.message.includes('active')) msg = 'تم إيقاف حسابك';
             showError(msg);
         }
     };
