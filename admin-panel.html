@@ -461,10 +461,7 @@
         }
         try {
             currentUser = await getCurrentUserData();
-            if (!currentUser) {
-                await logout();
-                return;
-            }
+          
             
             // توجيه المندوب لصفحته
             if (currentUser.role === 'delegate') {
@@ -478,15 +475,12 @@
                 await logout();
                 return;
             }
-
-            await loadUserProject();
-            await initializeDashboard();
-        } catch (error) {
-            showError(error.message);
-            await logout();
-        }
-    });
-
+              await loadUserProject();
+        await initializeDashboard();
+    } catch (error) {
+        showError(error.message);
+        console.error(error);
+    }
    async function loadUserProject() {
     // السوبر ادمن ما له مشروع محدد - نجيب كل المشاريع ونطلع
     if (currentUser.role === 'superadmin') {
