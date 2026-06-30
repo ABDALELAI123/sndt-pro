@@ -1,11 +1,11 @@
 // auth.js - نظام الدخول الموحد لسندات برو
-// v2.1.0 - 2026/06/30 - إصلاح مشكلة الطرد التلقائي
+// v2.2.0 - 2026/06/30 - حماية السوبر ادمن من الطرد نهائياً
 
-import { auth, db } from './firebase.js?v=999999';
+import { auth, db } from './firebase.js?v=9999999';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { showError, showSuccess, cleanPhone } from './core.js?v=999999';
-import { appConfig } from './config.js?v=999999';
+import { showError, showSuccess, cleanPhone } from './core.js?v=9999999';
+import { appConfig } from './config.js?v=9999999';
 
 const SUPER_ADMIN_EMAIL = appConfig.superAdminEmail;
 const SUPER_ADMIN_CODE = appConfig.superAdminCode;
@@ -36,7 +36,7 @@ export async function login(projectCode, phone, password) {
                     throw error;
                 }
             }
-            return await getCurrentUserData(); // نرجع البيانات و index.html يحول
+            return await getCurrentUserData();
         }
 
         // 2. حالة المدراء والمناديب
@@ -44,7 +44,7 @@ export async function login(projectCode, phone, password) {
         const email = `${projectCode}-${cleanPhoneNum.replace('+', '')}@sanadat.pro`;
         
         await signInWithEmailAndPassword(auth, email, password);
-        return await getCurrentUserData(); // نرجع البيانات و index.html يحول
+        return await getCurrentUserData();
 
     } catch (error) {
         console.error('Login Error:', error);
@@ -86,12 +86,12 @@ export async function createUser(projectCode, phone, password, role, name) {
     }
 }
 
-// جلب بيانات المستخدم الحالي - بدون تسجيل خروج تلقائي
+// جلب بيانات المستخدم الحالي - حماية صارمة للسوبر ادمن
 export async function getCurrentUserData() {
     const user = auth.currentUser;
     if (!user) return null;
 
-    // سوبر ادمن
+    // سوبر ادمن - يرجع دائماً active: true حتى لو انحذف من Firestore
     if (user.email === SUPER_ADMIN_EMAIL) {
         return {
             uid: user.uid,
@@ -100,11 +100,11 @@ export async function getCurrentUserData() {
             name: 'السوبر ادمن',
             projectCode: SUPER_ADMIN_CODE,
             phone: SUPER_ADMIN_PHONE,
-            active: true
+            active: true // ← إجباري true للسوبر ادمن
         };
     }
 
-    // باقي المستخدمين
+    // باقي المستخدمين - من قاعدة البيانات
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     if (!userDoc.exists()) {
         return null; // نخلي index.html يتعامل معاه
